@@ -445,35 +445,56 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
           )}
 
           {/* ═══ PREVIEW ═══ */}
-          {page==="preview"&&(
-            <div>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
-                <div style={{ fontSize:13, color:"#64748b" }}>Live preview of your clinic website</div>
-                <div style={{ display:"flex", gap:10 }}>
-                  <a href={`/${clinic?.slug}`} target="_blank" style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.12)", color:"#94a3b8", borderRadius:8, padding:"8px 16px", fontSize:13, textDecoration:"none" }}>🔗 Open Full Site</a>
-                  <button onClick={handlePublish} style={{ background:"linear-gradient(135deg,#1565c0,#1e88e5)", border:"none", color:"white", borderRadius:8, padding:"8px 20px", fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"inherit" }}>🚀 Publish</button>
-                </div>
-              </div>
-              <div style={{ background:"#1a1a2e", borderRadius:14, overflow:"hidden", border:"1px solid rgba(255,255,255,0.08)" }}>
-                <div style={{ background:"#0f0f1a", padding:"10px 16px", display:"flex", alignItems:"center", gap:10, borderBottom:"1px solid rgba(255,255,255,0.06)" }}>
-                  <div style={{ display:"flex", gap:6 }}>
-                    {["#ef4444","#f59e0b","#22c55e"].map(c=><div key={c} style={{ width:10, height:10, borderRadius:"50%", background:c }}/>)}
-                  </div>
-                  <div style={{ flex:1, background:"rgba(255,255,255,0.05)", borderRadius:6, padding:"4px 12px", fontSize:12, color:"#475569", fontFamily:"monospace" }}>
-                    🔒 {clinic?.slug}.clinicsite.in
-                  </div>
-                </div>
-                <div style={{ background:"white", height:400, display:"flex", alignItems:"center", justifyContent:"center", flexDirection:"column", gap:12 }}>
-                  <div style={{ fontSize:32 }}>👁️</div>
-                  <div style={{ fontSize:14, color:"#0b2545", fontWeight:600 }}>{clinic?.name}</div>
-                  <div style={{ fontSize:12, color:"#94a3b8" }}>{clinic?.specialty} · {clinic?.city}</div>
-                  <a href={`/${clinic?.slug}`} target="_blank" style={{ background:"#1565c0", color:"white", borderRadius:8, padding:"10px 20px", textDecoration:"none", fontSize:13, fontWeight:600 }}>Open Live Preview →</a>
-                </div>
-              </div>
-            </div>
-          )}
+{page === "preview" && (
+  <div>
+    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+      <div style={{ fontSize:13, color:"#64748b" }}>Live preview of your clinic website</div>
+      <div style={{ display:"flex", gap:10 }}>
+        <a href={`/${clinic?.slug}`} target="_blank"
+          style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.12)", color:"#94a3b8", borderRadius:8, padding:"8px 16px", fontSize:13, textDecoration:"none" }}>
+          🔗 Open Full Site
+        </a>
+        <button onClick={handlePublish} style={{ background:"linear-gradient(135deg,#1565c0,#1e88e5)", border:"none", color:"white", borderRadius:8, padding:"8px 20px", fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"inherit" }}>
+          🚀 {clinic?.is_published ? "Unpublish" : "Publish"}
+        </button>
+      </div>
+    </div>
+    <div style={{ background:"#1a1a2e", borderRadius:14, overflow:"hidden", border:"1px solid rgba(255,255,255,0.08)" }}>
+      {/* Browser chrome */}
+      <div style={{ background:"#0f0f1a", padding:"10px 16px", display:"flex", alignItems:"center", gap:10, borderBottom:"1px solid rgba(255,255,255,0.06)" }}>
+        <div style={{ display:"flex", gap:6 }}>
+          {["#ef4444","#f59e0b","#22c55e"].map(c => (
+            <div key={c} style={{ width:10, height:10, borderRadius:"50%", background:c }}/>
+          ))}
+        </div>
+        <div style={{ flex:1, background:"rgba(255,255,255,0.05)", borderRadius:6, padding:"4px 12px", fontSize:12, color:"#475569", fontFamily:"monospace" }}>
+          🔒 {clinic?.slug}.clinicsite.in
         </div>
       </div>
+
+      {/* ── ACTUAL PREVIEW using iframe ── */}
+      {clinic?.is_published ? (
+        <iframe
+          src={`/${clinic?.slug}`}
+          style={{ width:"100%", height:500, border:"none", background:"white" }}
+          title="Clinic site preview"
+        />
+      ) : (
+        <div style={{ background:"white", height:400, display:"flex", alignItems:"center", justifyContent:"center", flexDirection:"column", gap:16 }}>
+          <div style={{ fontSize:40 }}>👁️</div>
+          <div style={{ fontSize:16, fontWeight:700, color:"#0b2545" }}>{clinic?.name}</div>
+          <div style={{ fontSize:13, color:"#94a3b8" }}>{clinic?.specialty} · {clinic?.city}</div>
+          <div style={{ fontSize:12, color:"#f59e0b", marginBottom:8 }}>Site is currently hidden — publish to preview</div>
+          <button onClick={handlePublish} style={{ background:"#1565c0", color:"white", border:"none", borderRadius:8, padding:"12px 24px", fontSize:14, fontWeight:600, cursor:"pointer", fontFamily:"inherit" }}>
+            🚀 Publish & Preview
+          </button>
+        </div>
+      )}
+    </div>
+    {publishMsg && (
+      <div style={{ marginTop:12, textAlign:"center", fontSize:13, color:"#22c55e", fontFamily:"monospace" }}>{publishMsg}</div>
+    )}
+  </div>
 
       {/* Upgrade Modal */}
       {showUpgrade&&<UpgradeModal clinic={clinic} user={user} onClose={()=>setShowUpgrade(false)} onUpgraded={(updated)=>{setClinic(updated);onClinicUpdate?.(updated);}}/>}
