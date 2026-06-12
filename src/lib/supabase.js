@@ -1,6 +1,10 @@
 // src/lib/supabase.js
-// Supabase client + all API functions
-// Auth: Email OTP (FREE — no Twilio, no SMS cost)
+// Fixes:
+//   - getSeoData: use .maybeSingle() instead of .single() → no 406 when row missing
+//   - getClinicBySlug: graceful null return instead of throw
+//   - getMyClinic: graceful null return on PGRST116
+//   - publishClinic: blocks publish if reg_number missing
+//   - bookAppointment: includes DPDP consent fields
 
 import { createClient } from '@supabase/supabase-js';
 
@@ -10,10 +14,9 @@ const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ═══════════════════════════════════════════════════
-// AUTH — Email OTP (free, built into Supabase)
+// AUTH — Email OTP (free, no Twilio)
 // ═══════════════════════════════════════════════════
 
-// Send 6-digit OTP to email
 export async function sendEmailOTP(email) {
   const { error } = await supabase.auth.signInWithOtp({
     email: email.trim().toLowerCase(),
@@ -23,24 +26,21 @@ export async function sendEmailOTP(email) {
   return true;
 }
 
-// Verify the OTP entered by user
 export async function verifyEmailOTP(email, token) {
   const { data, error } = await supabase.auth.verifyOtp({
     email: email.trim().toLowerCase(),
     token,
-    type: "email",
+    type: 'email',
   });
   if (error) throw error;
   return data;
 }
 
-// Get current logged-in user
 export async function getUser() {
   const { data: { user } } = await supabase.auth.getUser();
   return user;
 }
 
-// Sign out
 export async function signOut() {
   await supabase.auth.signOut();
 }
@@ -56,9 +56,9 @@ export async function getMyClinic() {
     .from('clinics')
     .select('*')
     .eq('owner_id', user.id)
-    .single();
+    .maybeSingle();               // ← maybeSingle: returns null (not error) if no row
   if (error) throw error;
-  return data;
+  return data;                    // null if no clinic yet → triggers OnboardingWizard
 }
 
 export async function getClinicBySlug(slug) {
@@ -67,15 +67,30 @@ export async function getClinicBySlug(slug) {
     .select('*')
     .eq('slug', slug)
     .eq('is_published', true)
-    .single();
+    .maybeSingle();               // ← no 406 when clinic not found
+  if (error) throw error;
+  return data;                    // null if not found — caller checks
+}
+
+// Get clinic by slug regardless of publish status (for admin preview)
+export async function getClinicBySlugAny(slug) {
+  const { data, error } = await supabase
+    .from('clinics')
+    .select('*')
+    .eq('slug', slug)
+    .maybeSingle();
   if (error) throw error;
   return data;
 }
 
 export async function updateClinic(clinicId, updates) {
+  // Strip undefined values before sending to Supabase
+  const clean = Object.fromEntries(
+    Object.entries(updates).filter(([, v]) => v !== undefined)
+  );
   const { data, error } = await supabase
     .from('clinics')
-    .update({ ...updates, updated_at: new Date().toISOString() })
+    .update({ ...clean, updated_at: new Date().toISOString() })
     .eq('id', clinicId)
     .select()
     .single();
@@ -84,6 +99,21 @@ export async function updateClinic(clinicId, updates) {
 }
 
 export async function publishClinic(clinicId, publish = true) {
+  // Block publish if reg_number is missing (compliance D1)
+  if (publish) {
+    const { data: doctor } = await supabase
+      .from('doctors')
+      .select('reg_number')
+      .eq('clinic_id', clinicId)
+      .maybeSingle();
+    if (!doctor?.reg_number) {
+      throw new Error(
+        'Cannot publish: Medical Council Registration Number is missing.\n' +
+        'Go to Doctor Profile → add your Reg No.\n' +
+        'Required by IMC Ethics Regulations, 2002.'
+      );
+    }
+  }
   return updateClinic(clinicId, { is_published: publish });
 }
 
@@ -98,7 +128,7 @@ export async function getServices(clinicId) {
     .eq('clinic_id', clinicId)
     .order('sort_order');
   if (error) throw error;
-  return data;
+  return data || [];
 }
 
 export async function updateService(serviceId, updates) {
@@ -138,7 +168,7 @@ export async function getDoctors(clinicId) {
     .eq('clinic_id', clinicId)
     .eq('is_active', true);
   if (error) throw error;
-  return data;
+  return data || [];
 }
 
 export async function updateDoctor(doctorId, updates) {
@@ -176,22 +206,26 @@ export async function getAppointments(clinicId, status = null) {
   if (status) query = query.eq('status', status);
   const { data, error } = await query;
   if (error) throw error;
-  return data;
+  return data || [];
 }
 
 export async function bookAppointment(clinicId, appointment) {
   const { data, error } = await supabase
     .from('appointments')
     .insert({
-      clinic_id:    clinicId,
-      patient_name: appointment.name,
-      phone:        appointment.phone,
-      email:        appointment.email || null,
-      service:      appointment.service,
-      appt_date:    appointment.date,
-      appt_time:    appointment.time || null,
-      notes:        appointment.notes || null,
-      status:       'pending',
+      clinic_id:               clinicId,
+      patient_name:            appointment.name,
+      phone:                   appointment.phone,
+      email:                   appointment.email    || null,
+      service:                 appointment.service,
+      appt_date:               appointment.date,
+      appt_time:               appointment.time     || null,
+      notes:                   appointment.notes    || null,
+      status:                  'pending',
+      // DPDP Act 2023 — consent audit trail
+      consent_appointment:     appointment.consent_appointment    ?? true,
+      consent_communications:  appointment.consent_communications ?? true,
+      consent_timestamp:       appointment.consent_timestamp      || new Date().toISOString(),
     })
     .select()
     .single();
@@ -221,7 +255,7 @@ export async function getWorkingHours(clinicId) {
     .eq('clinic_id', clinicId)
     .order('id');
   if (error) throw error;
-  return data;
+  return data || [];
 }
 
 export async function updateWorkingHour(hourId, updates) {
@@ -236,32 +270,37 @@ export async function updateWorkingHour(hourId, updates) {
 }
 
 // ═══════════════════════════════════════════════════
-// REVIEWS
+// CLINIC MEDIA (replaces reviews — compliance B1/B3)
 // ═══════════════════════════════════════════════════
 
-export async function getReviews(clinicId) {
+export async function getClinicMedia(clinicId) {
   const { data, error } = await supabase
-    .from('reviews')
+    .from('clinic_media')
     .select('*')
     .eq('clinic_id', clinicId)
-    .order('created_at', { ascending: false });
+    .eq('is_active', true)
+    .order('sort_order');
   if (error) throw error;
-  return data;
+  return data || [];
 }
 
-export async function toggleReview(reviewId, isVisible) {
+export async function addClinicMedia(clinicId, item) {
   const { data, error } = await supabase
-    .from('reviews')
-    .update({ is_visible: isVisible })
-    .eq('id', reviewId)
+    .from('clinic_media')
+    .insert({ clinic_id: clinicId, ...item })
     .select()
     .single();
   if (error) throw error;
   return data;
 }
 
+export async function deleteClinicMedia(itemId) {
+  const { error } = await supabase.from('clinic_media').delete().eq('id', itemId);
+  if (error) throw error;
+}
+
 // ═══════════════════════════════════════════════════
-// SEO
+// SEO — maybeSingle fixes 406 when no row exists
 // ═══════════════════════════════════════════════════
 
 export async function getSeoData(clinicId) {
@@ -269,15 +308,22 @@ export async function getSeoData(clinicId) {
     .from('seo_data')
     .select('*')
     .eq('clinic_id', clinicId)
-    .single();
-  if (error && error.code !== 'PGRST116') throw error;
-  return data;
+    .maybeSingle();               // ← KEY FIX: no 406 error when row doesn't exist yet
+  // error is null when row missing with maybeSingle
+  if (error) {
+    console.warn('getSeoData error (non-critical):', error.message);
+    return null;                  // graceful fallback — caller uses auto-generated SEO
+  }
+  return data;                    // null if no row yet — perfectly fine
 }
 
 export async function upsertSeoData(clinicId, seo) {
   const { data, error } = await supabase
     .from('seo_data')
-    .upsert({ clinic_id: clinicId, ...seo, updated_at: new Date().toISOString() })
+    .upsert(
+      { clinic_id: clinicId, ...seo, updated_at: new Date().toISOString() },
+      { onConflict: 'clinic_id' }  // ← explicit conflict target prevents duplicate inserts
+    )
     .select()
     .single();
   if (error) throw error;
@@ -285,7 +331,89 @@ export async function upsertSeoData(clinicId, seo) {
 }
 
 // ═══════════════════════════════════════════════════
-// REALTIME — live appointment updates in admin
+// BLOG POSTS
+// ═══════════════════════════════════════════════════
+
+export async function getBlogPosts(clinicId, { publishedOnly = false } = {}) {
+  let query = supabase
+    .from('blog_posts')
+    .select('id, title, slug, excerpt, word_count, status, created_at, views, specialty')
+    .eq('clinic_id', clinicId)
+    .order('created_at', { ascending: false });
+  if (publishedOnly) query = query.eq('status', 'published');
+  const { data, error } = await query;
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getBlogPost(clinicId, slug) {
+  const { data, error } = await supabase
+    .from('blog_posts')
+    .select('*')
+    .eq('clinic_id', clinicId)
+    .eq('slug', slug)
+    .maybeSingle();               // ← no 406 when post not found
+  if (error) throw error;
+  // Increment view count (fire and forget — don't await)
+  if (data?.id) {
+    supabase.rpc('increment_blog_views', { post_id: data.id }).catch(() => {});
+  }
+  return data;
+}
+
+export async function saveBlogPost(clinicId, post) {
+  const { data, error } = await supabase
+    .from('blog_posts')
+    .insert({ clinic_id: clinicId, ...post })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateBlogPost(postId, updates) {
+  const { data, error } = await supabase
+    .from('blog_posts')
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq('id', postId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// ═══════════════════════════════════════════════════
+// PRIVACY POLICY
+// ═══════════════════════════════════════════════════
+
+export async function getPrivacyPolicy(clinicId) {
+  const { data, error } = await supabase
+    .from('privacy_policies')
+    .select('*')
+    .eq('clinic_id', clinicId)
+    .maybeSingle();               // ← no 406 when not generated yet
+  if (error) {
+    console.warn('getPrivacyPolicy:', error.message);
+    return null;
+  }
+  return data;
+}
+
+export async function upsertPrivacyPolicy(clinicId, content) {
+  const { data, error } = await supabase
+    .from('privacy_policies')
+    .upsert(
+      { clinic_id: clinicId, content, last_updated: new Date().toISOString() },
+      { onConflict: 'clinic_id' }
+    )
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// ═══════════════════════════════════════════════════
+// REALTIME — live appointment feed in admin
 // ═══════════════════════════════════════════════════
 
 export function subscribeToAppointments(clinicId, callback) {
