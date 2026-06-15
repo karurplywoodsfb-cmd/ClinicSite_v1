@@ -100,6 +100,7 @@ const NAV_ITEMS = [
   { id:"seo",          label:"SEO",            icon:"🔍" },
   { id:"compliance",   label:"Compliance",     icon:"⚖️"  },
   { id:"preview",      label:"Preview Site",   icon:"👁️"  },
+  { id:"domain", label:"Domain", icon:"🌐" },
 ];
 
 // ── Main component ────────────────────────────────────────────────
@@ -871,6 +872,11 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
               clinic={clinic}
               doctor={doctor}
               onNavigate={setPage}/>
+          )}
+
+          {/* ═══ DOMAIN ═══ */}
+          {page === "domain" && (
+            <DomainManager clinic={clinic}/>
           )}
 
           {/* ═══ PREVIEW ═══ */}
