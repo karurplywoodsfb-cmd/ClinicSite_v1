@@ -166,7 +166,7 @@ export default function NordicSanctuary({ clinic, services = [], doctors = [], m
                     <div style={{ fontSize:28, marginBottom:12 }}>{svc.icon||"🌿"}</div>
                     <div style={{ fontSize:14, fontWeight:500, color:C.text, marginBottom:6 }}>{svc.name}</div>
                     {svc.description && <div style={{ fontSize:12, color:C.muted, lineHeight:1.6 }}>{svc.description}</div>}
-                    {svc.price && <div style={{ fontSize:12, fontWeight:500, color:C.accent, marginTop:10 }}>Fee: {svc.price}</div>}
+                    {svc.price && !svc.hide_price && <div style={{ fontSize:12, fontWeight:500, color:C.accent, marginTop:10 }}>Fee: {svc.price}</div>}
                   </div>
                 </Reveal>
               ))}

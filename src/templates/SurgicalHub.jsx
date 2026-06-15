@@ -186,7 +186,7 @@ export default function SurgicalHub({ clinic, services = [], doctors = [], media
                     <div style={{ fontSize:28, marginBottom:12 }}>{svc.icon||"🏥"}</div>
                     <div style={{ fontSize:14, fontWeight:600, color:C.dark, marginBottom:6 }}>{svc.name}</div>
                     {svc.description && <div style={{ fontSize:12, color:C.muted, lineHeight:1.6 }}>{svc.description}</div>}
-                    {svc.price && <div style={{ fontSize:12, fontWeight:700, color:C.accent, marginTop:10, textTransform:"uppercase", letterSpacing:.5 }}>Fee: {svc.price}</div>}
+                    {svc.price && !svc.hide_price && <div style={{ fontSize:12, fontWeight:700, color:C.accent, marginTop:10, textTransform:"uppercase", letterSpacing:.5 }}>Fee: {svc.price}</div>}
                   </div>
                 </Reveal>
               ))}

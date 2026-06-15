@@ -16,8 +16,22 @@ import { getMyClinic }         from "./lib/supabase";
 // ── helpers ───────────────────────────────────────────────────────
 function getSubdomainSlug() {
   const h = window.location.hostname;
+
+  // Local development
+  if (h.includes("localhost")) return null;
+
+  // Vercel preview / production domains
+  if (h.endsWith(".vercel.app")) return null;
+
+  // Only accept your real wildcard domain
+  if (!h.endsWith(".clinicsite.in")) return null;
+
   const p = h.split(".");
-  if (p.length >= 3 && !["www","app","admin","superadmin","localhost"].includes(p[0])) return p[0];
+
+  if (p.length >= 3) {
+    return p[0];
+  }
+
   return null;
 }
 

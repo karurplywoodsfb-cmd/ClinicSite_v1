@@ -206,7 +206,7 @@ export default function CorporateGiant({ clinic, services = [], doctors = [], me
                     <div style={{ fontSize:28, marginBottom:12 }}>{svc.icon||"🏥"}</div>
                     <div style={{ fontSize:14, fontWeight:600, color:C.white, marginBottom:6 }}>{svc.name}</div>
                     {svc.description && <div style={{ fontSize:12, color:C.muted, lineHeight:1.5 }}>{svc.description}</div>}
-                    {svc.price && <div style={{ fontSize:12, fontWeight:600, color:C.accent, marginTop:10 }}>Fee: {svc.price}</div>}
+                    {svc.price && !svc.hide_price && <div style={{ fontSize:12, fontWeight:600, color:C.accent, marginTop:10 }}>Fee: {svc.price}</div>}
                   </div>
                 </Reveal>
               ))}

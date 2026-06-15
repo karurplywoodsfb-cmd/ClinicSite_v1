@@ -3,14 +3,13 @@
 // Templates: default | corporate-giant | nordic-sanctuary | elite-aesthetics | telehealth-platform | surgical-hub
 
 import { useState, useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
 import {
   getClinicBySlug,
   getServices,
   getDoctors,
   getClinicMedia,
   getSeoData,
-} from "../lib/clinicApi";
+} from "../lib/supabase";
 
 // ── Template imports ──────────────────────────────────────────────
 import CorporateGiant      from "../templates/CorporateGiant";
@@ -163,8 +162,15 @@ function PageLoader({ message }) {
 
 // ── Template registry ─────────────────────────────────────────────
 // Maps clinic.template value → component
-// Add new templates here as you build them
+// Supports both short IDs (from TEMPLATES object) and long slugs
 const TEMPLATE_MAP = {
+  // Short IDs — what AdminPanel saves via TEMPLATES object
+  "corporate":     CorporateGiant,
+  "nordic":        NordicSanctuary,
+  "elite":         EliteAesthetics,
+  "telehealth":    TelehealthPlatform,
+  "surgical":      SurgicalHub,
+  // Long slug aliases (fallback)
   "corporate-giant":     CorporateGiant,
   "nordic-sanctuary":    NordicSanctuary,
   "elite-aesthetics":    EliteAesthetics,
@@ -355,7 +361,7 @@ function DefaultClinicLayout({ clinic, services, doctors, media, seoData, onBook
                     <div style={{ fontSize:28, marginBottom:12 }}>{svc.icon || "🏥"}</div>
                     <div style={{ fontSize:14, fontWeight:600, color:"#0b2545", marginBottom:6 }}>{svc.name}</div>
                     {svc.description && <div style={{ fontSize:12, color:"#5a7a96", lineHeight:1.5, marginBottom:10 }}>{svc.description}</div>}
-                    {svc.price && <div style={{ fontSize:13, fontWeight:600, color:"#1565c0" }}>Fee: {svc.price}</div>}
+                    {svc.price && !svc.hide_price && <div style={{ fontSize:13, fontWeight:600, color:"#1565c0" }}>Fee: {svc.price}</div>}
                   </div>
                 </Reveal>
               ))}
@@ -469,10 +475,9 @@ function DefaultClinicLayout({ clinic, services, doctors, media, seoData, onBook
 }
 
 // ── Main export ───────────────────────────────────────────────────
-export default function ClinicSite({ slug: slugProp }) {
+export default function ClinicSite({ slug }) {
   // Support both prop-based and route-based slug
-  const params = useParams();
-  const slug = slugProp || params?.slug;
+  // slug passed as prop from Router
 
   const [clinic,   setClinic]   = useState(null);
   const [services, setServices] = useState([]);
