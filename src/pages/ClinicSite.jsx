@@ -1,126 +1,28 @@
-// src/pages/ClinicSite.jsx — FINAL v2
-// Fixes:
-//   - getSeoData 406: uses maybeSingle via supabase.js (graceful null)
-//   - getClinicBySlug 406: maybeSingle, returns null cleanly
-//   - getClinicMedia replaces getReviews (compliance B1/B3)
-//   - Template-aware rendering
-//   - ClinicFooter (mandatory Reg No — compliance D1)
-//   - DPDP consent in BookingEngine (compliance D3)
-//   - No patient testimonials / star ratings (compliance A1/A2/B1)
-//   - Compliant hero copy — no superlatives
+// src/pages/ClinicSite.jsx
+// Patient-facing clinic site — switches template based on clinic.template field
+// Templates: default | corporate-giant | nordic-sanctuary | elite-aesthetics | telehealth-platform | surgical-hub
 
 import { useState, useEffect, useRef } from "react";
+import { useParams } from "react-router-dom";
 import {
-  supabase,
   getClinicBySlug,
   getServices,
   getDoctors,
   getClinicMedia,
   getSeoData,
-} from "../lib/supabase";
-import BookingEngine      from "../components/BookingEngine";
-import ClinicFooter       from "../components/ClinicFooter";
-import ClinicMediaSection from "../components/ClinicMediaSection";
-import { TEMPLATES, suggestTemplate } from "../templates";
+} from "../lib/clinicApi";
 
-// ── SEO injector ──────────────────────────────────────────────────
-function injectSEO(clinic, services, doctor, seoData) {
-  const city      = clinic.city      || "India";
-  const specialty = clinic.specialty || "Medical";
-  const name      = clinic.name;
+// ── Template imports ──────────────────────────────────────────────
+import CorporateGiant      from "../templates/CorporateGiant";
+import NordicSanctuary     from "../templates/NordicSanctuary";
+import EliteAesthetics     from "../templates/EliteAesthetics";
+import TelehealthPlatform  from "../templates/TelehealthPlatform";
+import SurgicalHub         from "../templates/SurgicalHub";
 
-  // Title: prefer seo_data row, else auto-generate
-  document.title = seoData?.meta_title
-    || `${name} | ${specialty} Clinic in ${city} | Book Appointment`;
+// ── Default template components (inline) ─────────────────────────
+// Keep the original default layout here so nothing breaks for
+// clinics that haven't chosen a template yet.
 
-  const setMeta = (nameAttr, content) => {
-    let el = document.querySelector(`meta[name="${nameAttr}"]`);
-    if (!el) {
-      el = document.createElement("meta");
-      el.setAttribute("name", nameAttr);
-      document.head.appendChild(el);
-    }
-    el.setAttribute("content", content);
-  };
-
-  const setOG = (prop, content) => {
-    let el = document.querySelector(`meta[property="${prop}"]`);
-    if (!el) {
-      el = document.createElement("meta");
-      el.setAttribute("property", prop);
-      document.head.appendChild(el);
-    }
-    el.setAttribute("content", content);
-  };
-
-  const desc = seoData?.meta_description
-    || `${name} — Expert ${specialty.toLowerCase()} care in ${city}. `
-    + `${(services || []).slice(0,3).map(s => s.name).join(", ")}. Book appointment online.`;
-
-  setMeta("description", desc);
-  setMeta("keywords",
-    `${specialty.toLowerCase()} in ${city}, ${name.toLowerCase()}, `
-    + `dental clinic ${city}, ${specialty.toLowerCase()} doctor ${city}`
-  );
-  setMeta("robots", "index, follow");
-
-  // Canonical
-  let canon = document.querySelector("link[rel='canonical']");
-  if (!canon) {
-    canon = document.createElement("link");
-    canon.setAttribute("rel", "canonical");
-    document.head.appendChild(canon);
-  }
-  canon.setAttribute("href", `https://${clinic.slug}.clinicsite.in`);
-
-  // OG tags
-  setOG("og:title",       `${name} — ${specialty} in ${city}`);
-  setOG("og:description", desc);
-  setOG("og:type",        "website");
-  setOG("og:url",         `https://${clinic.slug}.clinicsite.in`);
-
-  // JSON-LD schema — use stored schema if available, else auto-generate
-  const schema = seoData?.schema_json || {
-    "@context": "https://schema.org",
-    "@type":    ["MedicalClinic", "LocalBusiness"],
-    "name":     name,
-    "medicalSpecialty": specialty,
-    "address": {
-      "@type":           "PostalAddress",
-      "addressLocality": city,
-      "addressRegion":   "Tamil Nadu",
-      "addressCountry":  "IN",
-    },
-    "telephone": clinic.phone,
-    ...(clinic.email && { "email": clinic.email }),
-    "availableService": (services || []).map(s => ({
-      "@type": "MedicalProcedure",
-      "name":   s.name,
-    })),
-    ...(doctor?.reg_number && {
-      "employee": {
-        "@type":      "Physician",
-        "name":       doctor.name,
-        "identifier": doctor.reg_number,
-        "hasCredential": {
-          "@type":            "EducationalOccupationalCredential",
-          "credentialCategory": doctor.degree,
-        },
-      },
-    }),
-  };
-
-  let schemaEl = document.getElementById("clinic-schema");
-  if (!schemaEl) {
-    schemaEl = document.createElement("script");
-    schemaEl.id   = "clinic-schema";
-    schemaEl.type = "application/ld+json";
-    document.head.appendChild(schemaEl);
-  }
-  schemaEl.textContent = JSON.stringify(schema);
-}
-
-// ── Intersection-observer reveal ──────────────────────────────────
 function Reveal({ children, delay = 0 }) {
   const ref = useRef(null);
   const [vis, setVis] = useState(false);
@@ -134,98 +36,59 @@ function Reveal({ children, delay = 0 }) {
   }, []);
   return (
     <div ref={ref} style={{
-      opacity:   vis ? 1 : 0,
-      transform: vis ? "none" : "translateY(22px)",
-      transition: `opacity .55s ${delay}s ease, transform .55s ${delay}s ease`,
+      opacity: vis ? 1 : 0,
+      transform: vis ? "none" : "translateY(20px)",
+      transition: `opacity .5s ${delay}s ease, transform .5s ${delay}s ease`,
     }}>
       {children}
     </div>
   );
 }
 
-// ── Sticky navbar ─────────────────────────────────────────────────
-function Navbar({ clinic, onBookClick }) {
-  const [scrolled, setScrolled] = useState(false);
+// ── SEO head injection ────────────────────────────────────────────
+function ClinicSEOHead({ clinic, seoData }) {
   useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", fn);
-    return () => window.removeEventListener("scroll", fn);
-  }, []);
-
-  return (
-    <nav style={{
-      position:"fixed", top:0, left:0, right:0, zIndex:100,
-      background:    scrolled ? "rgba(255,255,255,0.97)" : "rgba(255,255,255,0.92)",
-      backdropFilter:"blur(12px)",
-      borderBottom:  scrolled ? "1px solid #dce8f5" : "1px solid transparent",
-      boxShadow:     scrolled ? "0 2px 20px rgba(11,37,69,0.07)" : "none",
-      transition:    "all .3s",
-      padding:"0 40px", height:64,
-      display:"flex", alignItems:"center", justifyContent:"space-between",
-      fontFamily:"'DM Sans',sans-serif",
-    }}>
-      <a href={`/${clinic.slug}`} style={{ display:"flex", alignItems:"center", gap:10, textDecoration:"none" }}>
-        <div style={{ width:36, height:36, borderRadius:10,
-          background:"linear-gradient(135deg,#1565c0,#1e88e5)",
-          display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>🦷</div>
-        <div>
-          <div style={{ fontSize:15, fontWeight:700, color:"#0b2545", lineHeight:1.1 }}>{clinic.name}</div>
-          {clinic.tagline && (
-            <div style={{ fontSize:10, color:"#5a7a96" }}>{clinic.tagline}</div>
-          )}
-        </div>
-      </a>
-
-      <div style={{ display:"flex", gap:20 }}>
-        {[["Services","#services"],["Doctor","#doctor"],["Facility","#facility"],
-          ["FAQ","#faq"],["Contact","#contact"]].map(([l, href]) => (
-          <a key={l} href={href}
-            style={{ textDecoration:"none", color:"#5a7a96", fontSize:13, fontWeight:500,
-              transition:"color .15s" }}
-            onMouseEnter={e => e.target.style.color = "#1565c0"}
-            onMouseLeave={e => e.target.style.color = "#5a7a96"}>
-            {l}
-          </a>
-        ))}
-        <a href={`/${clinic.slug}/blog`}
-          style={{ textDecoration:"none", color:"#5a7a96", fontSize:13, fontWeight:500 }}>
-          Articles
-        </a>
-      </div>
-
-      <button onClick={onBookClick} style={{
-        background:"#1565c0", color:"white", border:"none",
-        borderRadius:8, padding:"9px 20px", fontSize:13, fontWeight:600,
-        cursor:"pointer", fontFamily:"inherit",
-        boxShadow:"0 4px 14px rgba(21,101,192,0.25)", transition:"all .2s",
-      }}>
-        📅 Book Appointment
-      </button>
-    </nav>
-  );
+    if (!clinic) return;
+    const title = seoData?.meta_title || `${clinic.name} — ${clinic.specialty || "Clinic"} in ${clinic.city}`;
+    const desc  = seoData?.meta_description || clinic.about || `Book appointments at ${clinic.name} in ${clinic.city}.`;
+    document.title = title;
+    const setMeta = (name, content, prop = "name") => {
+      let el = document.querySelector(`meta[${prop}="${name}"]`);
+      if (!el) { el = document.createElement("meta"); el.setAttribute(prop, name); document.head.appendChild(el); }
+      el.setAttribute("content", content);
+    };
+    setMeta("description", desc);
+    setMeta("og:title",       title,        "property");
+    setMeta("og:description", desc,         "property");
+    setMeta("og:type",        "website",    "property");
+    setMeta("twitter:card",   "summary_large_image");
+    setMeta("twitter:title",  title);
+    setMeta("twitter:description", desc);
+  }, [clinic, seoData]);
+  return null;
 }
 
 // ── Specialty-aware FAQ ───────────────────────────────────────────
 const FAQ_MAP = {
   Dental: [
     ["Is dental implant treatment painful?",
-     "Dental implants are placed under local anaesthesia. Most patients compare the experience to a routine filling. Some mild soreness for 1–2 days afterwards is normal and manageable with standard pain relief. Your dentist will discuss what to expect before any procedure."],
+     "Dental implants are placed under local anaesthesia. Most patients compare the experience to a routine filling. Some mild soreness for 1–2 days afterwards is normal and manageable with standard pain relief."],
     ["How long does a root canal take?",
-     "Most root canal treatments are completed in one or two appointments of approximately 60–90 minutes each, depending on the tooth and complexity. Your dentist will advise on the expected timeline after examining you."],
+     "Most root canal treatments are completed in one or two appointments of approximately 60–90 minutes each, depending on the tooth and complexity."],
     ["What does professional dental cleaning involve?",
-     "A professional cleaning (scaling and polishing) removes plaque and tartar that cannot be removed by brushing alone. It is generally comfortable and takes around 30–45 minutes. It is recommended every 6 months as preventive care."],
+     "A professional cleaning (scaling and polishing) removes plaque and tartar that cannot be removed by brushing alone. It takes around 30–45 minutes and is recommended every 6 months."],
     ["Do you provide treatment for children?",
-     "Yes. We provide child-friendly dental care from age 3 onwards, including preventive treatments, fluoride application, and routine checkups. Our team is experienced in making young patients feel comfortable."],
+     "Yes. We provide child-friendly dental care from age 3 onwards, including preventive treatments, fluoride application, and routine checkups."],
     ["How do I book an appointment?",
      "You can book using the form on this page, call us directly, or send a WhatsApp message. We confirm appointments within 30 minutes during clinic hours."],
   ],
   Dermatology: [
     ["When should I see a dermatologist for acne?",
-     "If over-the-counter products have not helped after 2–3 months, or if acne is leaving scars or significantly affecting your confidence, a dermatologist consultation is recommended. Early intervention generally produces better outcomes."],
+     "If over-the-counter products have not helped after 2–3 months, or if acne is leaving scars, a dermatologist consultation is recommended. Early intervention generally produces better outcomes."],
     ["Is laser treatment safe for Indian skin?",
-     "Many laser and light-based treatments are suitable for Indian skin tones, but the specific device and parameters matter. Your dermatologist will assess your skin type (Fitzpatrick IV–VI) and recommend the safest, most effective option for your concern."],
+     "Many laser and light-based treatments are suitable for Indian skin tones, but the specific device and parameters matter. Your dermatologist will assess your skin type and recommend the safest option."],
     ["How do I prepare for my first skin consultation?",
-     "Come with clean skin if possible, bring a list of any products you currently use, and note any medications you take. Photos of flare-ups (if intermittent) are helpful. Avoid applying makeup to the area of concern on the day."],
+     "Come with clean skin, bring a list of current products you use, and note any medications. Photos of flare-ups are helpful. Avoid applying makeup to the area of concern on the day."],
     ["How do I book an appointment?",
      "Use the form on this page, call us, or send a WhatsApp message. We respond within 30 minutes during clinic hours."],
   ],
@@ -246,8 +109,6 @@ const FAQ_MAP = {
 function FAQSection({ clinic }) {
   const [open, setOpen] = useState(null);
   const faqs = FAQ_MAP[clinic.specialty] || FAQ_MAP.default;
-
-  // FAQ JSON-LD schema
   const schema = {
     "@context": "https://schema.org",
     "@type":    "FAQPage",
@@ -257,40 +118,29 @@ function FAQSection({ clinic }) {
       "acceptedAnswer": { "@type": "Answer", "text": a },
     })),
   };
-
   return (
     <section id="faq" style={{ padding:"80px 40px", background:"white", fontFamily:"'DM Sans',sans-serif" }}>
-      {/* Schema injected via dangerouslySetInnerHTML to avoid runtime script issues */}
-      <div dangerouslySetInnerHTML={{ __html:
-        `<script type="application/ld+json">${JSON.stringify(schema)}</script>` }}/>
-
+      <div dangerouslySetInnerHTML={{ __html: `<script type="application/ld+json">${JSON.stringify(schema)}</script>` }}/>
       <div style={{ maxWidth:1100, margin:"0 auto" }}>
         <Reveal>
-          <div style={{ fontSize:12, fontWeight:600, letterSpacing:2,
-            textTransform:"uppercase", color:"#1565c0", marginBottom:10 }}>FAQ</div>
-          <h2 style={{ fontFamily:"'DM Serif Display',serif",
-            fontSize:"clamp(26px,3vw,36px)", color:"#0b2545", marginBottom:40 }}>
+          <div style={{ fontSize:12, fontWeight:600, letterSpacing:2, textTransform:"uppercase", color:"#1565c0", marginBottom:10 }}>FAQ</div>
+          <h2 style={{ fontFamily:"'DM Serif Display',serif", fontSize:"clamp(26px,3vw,36px)", color:"#0b2545", marginBottom:40 }}>
             Frequently Asked Questions
           </h2>
         </Reveal>
         <div style={{ maxWidth:720 }}>
           {faqs.map(([q, a], i) => (
             <div key={i} style={{ borderBottom:"1px solid #dce8f5" }}>
-              <button
-                onClick={() => setOpen(open === i ? null : i)}
-                style={{ width:"100%", display:"flex", justifyContent:"space-between",
-                  alignItems:"center", padding:"18px 0", cursor:"pointer",
-                  fontSize:15, fontWeight:600, background:"none", border:"none",
-                  color: open === i ? "#1565c0" : "#0b2545", gap:16,
-                  fontFamily:"'DM Sans',sans-serif", textAlign:"left" }}>
+              <button onClick={() => setOpen(open === i ? null : i)}
+                style={{ width:"100%", display:"flex", justifyContent:"space-between", alignItems:"center",
+                  padding:"18px 0", cursor:"pointer", fontSize:15, fontWeight:600, background:"none", border:"none",
+                  color: open === i ? "#1565c0" : "#0b2545", gap:16, fontFamily:"'DM Sans',sans-serif", textAlign:"left" }}>
                 {q}
                 <span style={{ fontSize:18, color:"#1565c0", transition:"transform .3s",
                   transform: open === i ? "rotate(180deg)" : "none", flexShrink:0 }}>⌄</span>
               </button>
               {open === i && (
-                <div style={{ fontSize:14, color:"#5a7a96", lineHeight:1.75, paddingBottom:16 }}>
-                  {a}
-                </div>
+                <div style={{ fontSize:14, color:"#5a7a96", lineHeight:1.75, paddingBottom:16 }}>{a}</div>
               )}
             </div>
           ))}
@@ -300,20 +150,330 @@ function FAQSection({ clinic }) {
   );
 }
 
-// ── Loading spinner ───────────────────────────────────────────────
 function PageLoader({ message }) {
   return (
     <div style={{ minHeight:"100vh", background:"#f0f7ff", display:"flex",
       alignItems:"center", justifyContent:"center",
       fontFamily:"'DM Sans',sans-serif", flexDirection:"column", gap:16 }}>
-      <div style={{ fontSize:40 }}>🦷</div>
+      <div style={{ fontSize:40 }}>🏥</div>
       <div style={{ color:"#5a7a96", fontSize:14 }}>{message || "Loading..."}</div>
     </div>
   );
 }
 
-// ── Main ──────────────────────────────────────────────────────────
-export default function ClinicSite({ slug }) {
+// ── Template registry ─────────────────────────────────────────────
+// Maps clinic.template value → component
+// Add new templates here as you build them
+const TEMPLATE_MAP = {
+  "corporate-giant":     CorporateGiant,
+  "nordic-sanctuary":    NordicSanctuary,
+  "elite-aesthetics":    EliteAesthetics,
+  "telehealth-platform": TelehealthPlatform,
+  "surgical-hub":        SurgicalHub,
+};
+
+// ── Default layout (used when no template is selected) ────────────
+function DefaultClinicLayout({ clinic, services, doctors, media, seoData, onBookClick }) {
+  const [showBook, setShowBook] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const doctor = doctors[0];
+  const activeServices = services.filter(s => s.is_active !== false);
+
+  const handleBook = () => { if (onBookClick) onBookClick(); else setShowBook(true); };
+
+  useEffect(() => {
+    const fn = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", fn);
+    return () => window.removeEventListener("scroll", fn);
+  }, []);
+
+  // Dynamic imports for BookingEngine & ClinicFooter
+  const [BookingEngine, setBookingEngine]   = useState(null);
+  const [ClinicFooter,  setClinicFooter]    = useState(null);
+  const [ClinicMedia,   setClinicMedia]     = useState(null);
+
+  useEffect(() => {
+    import("../components/BookingEngine").then(m => setBookingEngine(() => m.default));
+    import("../components/ClinicFooter").then(m => setClinicFooter(() => m.default));
+    import("../components/ClinicMediaSection").then(m => setClinicMedia(() => m.default));
+  }, []);
+
+  return (
+    <div style={{ fontFamily:"'DM Sans',sans-serif", background:"#f4f8fd", overflowX:"hidden" }}>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+      {/* Booking Modal */}
+      {showBook && BookingEngine && (
+        <div onClick={e => e.target === e.currentTarget && setShowBook(false)}
+          style={{ position:"fixed", inset:0, zIndex:300,
+            background:"rgba(11,37,69,0.65)", backdropFilter:"blur(6px)",
+            display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
+          <div style={{ position:"relative", width:"100%", maxWidth:520 }}>
+            <button onClick={() => setShowBook(false)} style={{ position:"absolute", top:-14, right:-14, zIndex:10,
+              width:32, height:32, borderRadius:"50%", background:"white",
+              border:"none", cursor:"pointer", fontSize:16 }}>✕</button>
+            <BookingEngine clinic={clinic} services={activeServices}/>
+          </div>
+        </div>
+      )}
+
+      {/* Navbar */}
+      <nav style={{
+        position:"fixed", top:0, left:0, right:0, zIndex:100,
+        background: scrolled ? "rgba(244,248,253,0.97)" : "transparent",
+        backdropFilter: scrolled ? "blur(12px)" : "none",
+        borderBottom: scrolled ? "1px solid #dce8f5" : "1px solid transparent",
+        transition:"all .3s", padding:"0 40px", height:64,
+        display:"flex", alignItems:"center", justifyContent:"space-between",
+      }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <div style={{ width:34, height:34, borderRadius:8, background:"linear-gradient(135deg,#1565c0,#1e88e5)",
+            display:"flex", alignItems:"center", justifyContent:"center", fontSize:16 }}>🏥</div>
+          <div>
+            <div style={{ fontSize:15, fontWeight:600, color:"#0b2545" }}>{clinic.name}</div>
+            {clinic.specialty && <div style={{ fontSize:10, color:"#1565c0", letterSpacing:1.2, textTransform:"uppercase" }}>{clinic.specialty}</div>}
+          </div>
+        </div>
+        <div style={{ display:"flex", gap:24, alignItems:"center" }}>
+          {[["Services","#services"],["Doctor","#doctor"],["Articles","#articles"],["Contact","#contact"]].map(([l,h]) => (
+            <a key={l} href={h} style={{ textDecoration:"none", color:"#5a7a96", fontSize:13, fontWeight:500 }}>{l}</a>
+          ))}
+          <button onClick={handleBook} style={{
+            background:"#1565c0", color:"white", border:"none", borderRadius:8, padding:"9px 20px",
+            fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"inherit",
+            boxShadow:"0 4px 14px rgba(21,101,192,0.25)" }}>
+            📅 Book Appointment
+          </button>
+        </div>
+      </nav>
+
+      {/* Hero */}
+      <section style={{
+        minHeight:"100vh", paddingTop:64, background:"linear-gradient(160deg,#ffffff 0%,#e8f4fd 60%,#d4ecfc 100%)",
+        display:"flex", alignItems:"center", padding:"80px 40px",
+      }}>
+        <div style={{ maxWidth:1100, margin:"0 auto", display:"grid", gridTemplateColumns:"1.2fr 1fr", gap:80, alignItems:"center", width:"100%" }}>
+          <div>
+            <div style={{ display:"inline-flex", alignItems:"center", gap:8,
+              background:"rgba(21,101,192,0.08)", border:"1px solid rgba(21,101,192,0.15)", borderRadius:20,
+              padding:"5px 14px", fontSize:11, color:"#1565c0", fontWeight:600, letterSpacing:1.5,
+              textTransform:"uppercase", marginBottom:24 }}>
+              {clinic.specialty} · {clinic.city}
+            </div>
+            <h1 style={{ fontFamily:"'DM Serif Display',serif",
+              fontSize:"clamp(36px,4.5vw,56px)", color:"#0b2545", lineHeight:1.1, marginBottom:20 }}>
+              {clinic.heroTagline || (<>Expert {clinic.specialty} Care<br/>in {clinic.city}</>)}
+            </h1>
+            <p style={{ fontSize:16, color:"#5a7a96", lineHeight:1.8, marginBottom:36, maxWidth:460 }}>
+              {clinic.about || `${clinic.name} provides specialist ${(clinic.specialty||"").toLowerCase()} care in ${clinic.city}.`}
+            </p>
+            <div style={{ display:"flex", gap:12 }}>
+              <button onClick={handleBook} style={{
+                background:"linear-gradient(135deg,#1565c0,#1e88e5)", color:"white", border:"none",
+                borderRadius:10, padding:"14px 28px", fontSize:15, fontWeight:600, cursor:"pointer",
+                fontFamily:"inherit", boxShadow:"0 8px 24px rgba(21,101,192,0.3)" }}>
+                📅 Book Appointment
+              </button>
+              <a href={`https://wa.me/${(clinic.whatsapp||clinic.phone||"").replace(/\D/g,"")}`}
+                target="_blank" rel="noopener noreferrer"
+                style={{ background:"#25d366", color:"white", borderRadius:10, padding:"14px 20px",
+                  fontSize:15, fontWeight:600, textDecoration:"none" }}>
+                💬 WhatsApp
+              </a>
+              <a href={`tel:${clinic.phone}`}
+                style={{ background:"transparent", color:"#1565c0", border:"1.5px solid #1565c0",
+                  borderRadius:10, padding:"13px 18px", fontSize:15, fontWeight:600, textDecoration:"none" }}>
+                📞 Call
+              </a>
+            </div>
+            <div style={{ display:"flex", gap:32, marginTop:40 }}>
+              {[
+                doctor?.experience && [doctor.experience, "Clinical Experience"],
+                activeServices.length > 0 && [`${activeServices.length}+`, "Services"],
+                doctor?.reg_number && ["Registered", "Medical Practitioner"],
+              ].filter(Boolean).map(([n, l]) => (
+                <div key={l}>
+                  <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:24, color:"#0b2545" }}>{n}</div>
+                  <div style={{ fontSize:12, color:"#5a7a96" }}>{l}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Booking card */}
+          <div style={{ background:"white", borderRadius:20, boxShadow:"0 24px 64px rgba(11,37,69,0.12)", overflow:"hidden" }}>
+            <div style={{ background:"linear-gradient(135deg,#0b2545,#1565c0)", padding:"24px 28px", color:"white" }}>
+              <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:20, marginBottom:4 }}>Book Appointment</div>
+              <div style={{ fontSize:13, opacity:.7 }}>Free consultation for new patients</div>
+            </div>
+            <div style={{ padding:24 }}>
+              {[["Full Name","Your name"],["Phone","98400 00000"]].map(([l, p]) => (
+                <div key={l} style={{ marginBottom:14 }}>
+                  <div style={{ fontSize:11, color:"#64748b", fontFamily:"monospace", marginBottom:5, fontWeight:600 }}>{l.toUpperCase()}</div>
+                  <input placeholder={p} style={{
+                    width:"100%", background:"#f4f8fd", border:"1.5px solid #dce8f5", borderRadius:8,
+                    padding:"10px 12px", fontSize:14, color:"#0b2545", fontFamily:"inherit", outline:"none", boxSizing:"border-box" }}/>
+                </div>
+              ))}
+              {activeServices.length > 0 && (
+                <div style={{ marginBottom:14 }}>
+                  <div style={{ fontSize:11, color:"#64748b", fontFamily:"monospace", marginBottom:5, fontWeight:600 }}>SERVICE</div>
+                  <select style={{ width:"100%", background:"#f4f8fd", border:"1.5px solid #dce8f5", borderRadius:8,
+                    padding:"10px 12px", fontSize:14, color:"#0b2545", fontFamily:"inherit", outline:"none" }}>
+                    {activeServices.map(s => <option key={s.id}>{s.name}</option>)}
+                  </select>
+                </div>
+              )}
+              <button onClick={handleBook} style={{
+                width:"100%", background:"linear-gradient(135deg,#1565c0,#1e88e5)", color:"white",
+                border:"none", borderRadius:8, padding:"13px", fontSize:14, fontWeight:600,
+                cursor:"pointer", fontFamily:"inherit", boxShadow:"0 4px 14px rgba(21,101,192,0.3)" }}>
+                Check Available Slots →
+              </button>
+              <div style={{ fontSize:10, color:"#94a3b8", textAlign:"center", marginTop:10 }}>
+                🔒 Data protected under DPDP Act, 2023
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Services */}
+      {activeServices.length > 0 && (
+        <section id="services" style={{ padding:"80px 40px", background:"#f4f8fd" }}>
+          <div style={{ maxWidth:1100, margin:"0 auto" }}>
+            <Reveal>
+              <div style={{ fontSize:12, fontWeight:600, letterSpacing:2, textTransform:"uppercase", color:"#1565c0", marginBottom:10 }}>Our Services</div>
+              <h2 style={{ fontFamily:"'DM Serif Display',serif", fontSize:"clamp(26px,3vw,36px)", color:"#0b2545", marginBottom:48 }}>Clinical Services</h2>
+            </Reveal>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:16 }}>
+              {activeServices.map((svc, i) => (
+                <Reveal key={svc.id || i} delay={i * 0.06}>
+                  <div style={{ background:"white", borderRadius:14, padding:"22px 18px",
+                    border:"1px solid #dce8f5", transition:"all .25s", cursor:"pointer" }}
+                    onMouseEnter={e => { e.currentTarget.style.transform="translateY(-4px)"; e.currentTarget.style.boxShadow="0 12px 32px rgba(11,37,69,0.1)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="none"; }}>
+                    <div style={{ fontSize:28, marginBottom:12 }}>{svc.icon || "🏥"}</div>
+                    <div style={{ fontSize:14, fontWeight:600, color:"#0b2545", marginBottom:6 }}>{svc.name}</div>
+                    {svc.description && <div style={{ fontSize:12, color:"#5a7a96", lineHeight:1.5, marginBottom:10 }}>{svc.description}</div>}
+                    {svc.price && <div style={{ fontSize:13, fontWeight:600, color:"#1565c0" }}>Fee: {svc.price}</div>}
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Doctor */}
+      {doctors[0] && (
+        <section id="doctor" style={{ padding:"80px 40px", background:"white" }}>
+          <div style={{ maxWidth:1100, margin:"0 auto", display:"grid", gridTemplateColumns:"1fr 1.4fr", gap:60, alignItems:"center" }}>
+            <Reveal>
+              <div style={{ width:"100%", aspectRatio:"4/5", borderRadius:20,
+                background:"linear-gradient(160deg,#e3f2fd,#c8e6fa)",
+                display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden" }}>
+                {doctors[0].photo_url
+                  ? <img src={doctors[0].photo_url} alt={doctors[0].name} style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
+                  : <span style={{ fontSize:100 }}>👨‍⚕️</span>}
+              </div>
+            </Reveal>
+            <Reveal delay={0.15}>
+              <div style={{ fontSize:12, fontWeight:600, letterSpacing:2, textTransform:"uppercase", color:"#1565c0", marginBottom:10 }}>Your Doctor</div>
+              <h2 style={{ fontFamily:"'DM Serif Display',serif", fontSize:36, color:"#0b2545", marginBottom:6 }}>{doctors[0].name}</h2>
+              <div style={{ color:"#1565c0", fontWeight:600, fontSize:15, marginBottom:6 }}>{doctors[0].degree}</div>
+              {doctors[0].reg_number && (
+                <div style={{ fontSize:11, color:"#94a3b8", marginBottom:20, fontFamily:"monospace" }}>
+                  Reg No: {doctors[0].reg_number}{doctors[0].council_name ? ` — ${doctors[0].council_name}` : ""}
+                </div>
+              )}
+              {doctors[0].bio && <p style={{ color:"#5a7a96", lineHeight:1.8, fontSize:15, marginBottom:28 }}>{doctors[0].bio}</p>}
+              <button onClick={handleBook} style={{
+                background:"linear-gradient(135deg,#1565c0,#1e88e5)", color:"white", border:"none",
+                borderRadius:10, padding:"14px 28px", fontSize:15, fontWeight:600, cursor:"pointer",
+                fontFamily:"inherit", boxShadow:"0 8px 24px rgba(21,101,192,0.3)" }}>
+                Book a Consultation
+              </button>
+            </Reveal>
+          </div>
+        </section>
+      )}
+
+      {ClinicMedia && <ClinicMedia clinic={clinic} mediaItems={media}/>}
+
+      <FAQSection clinic={clinic}/>
+
+      {/* Contact */}
+      <section id="contact" style={{ padding:"80px 40px", background:"#f4f8fd" }}>
+        <div style={{ maxWidth:1100, margin:"0 auto", display:"grid", gridTemplateColumns:"1fr 1fr", gap:60 }}>
+          <Reveal>
+            <div style={{ fontSize:12, fontWeight:600, letterSpacing:2, textTransform:"uppercase", color:"#1565c0", marginBottom:10 }}>Find Us</div>
+            <h2 style={{ fontFamily:"'DM Serif Display',serif", fontSize:34, color:"#0b2545", marginBottom:32 }}>Visit {clinic.name}</h2>
+            {[["📍","Address",clinic.address||`${clinic.city}, Tamil Nadu`],["📞","Phone",clinic.phone],["✉️","Email",clinic.email]]
+              .filter(([,,v])=>v).map(([icon,label,value]) => (
+              <div key={label} style={{ display:"flex", gap:16, marginBottom:20, alignItems:"flex-start" }}>
+                <div style={{ width:42, height:42, borderRadius:10, background:"white", border:"1px solid #dce8f5",
+                  display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, flexShrink:0 }}>{icon}</div>
+                <div>
+                  <div style={{ fontSize:10, color:"#94a3b8", fontWeight:600, textTransform:"uppercase", letterSpacing:1, marginBottom:3 }}>{label}</div>
+                  <div style={{ fontSize:14, color:"#0b2545" }}>{value}</div>
+                </div>
+              </div>
+            ))}
+          </Reveal>
+          <Reveal delay={0.15}>
+            <div style={{ background:"white", borderRadius:14, padding:28, border:"1px solid #dce8f5" }}>
+              <div style={{ fontSize:13, fontWeight:600, color:"#0b2545", marginBottom:16 }}>Clinic Hours</div>
+              {[["Monday – Friday","9:00 AM – 8:00 PM",true],["Saturday","9:00 AM – 6:00 PM",true],["Sunday","Closed",false]].map(([d,h,o]) => (
+                <div key={d} style={{ display:"flex", justifyContent:"space-between", padding:"10px 0", borderBottom:"1px solid #f0f6ff", fontSize:13 }}>
+                  <span style={{ color:"#5a7a96" }}>{d}</span>
+                  <span style={{ fontWeight:600, color: o?"#1565c0":"#ef4444" }}>{h}</span>
+                </div>
+              ))}
+              <div style={{ display:"flex", gap:10, marginTop:24 }}>
+                <a href={`https://wa.me/${(clinic.whatsapp||clinic.phone||"").replace(/\D/g,"")}`} target="_blank" rel="noopener noreferrer"
+                  style={{ flex:1, background:"#25d366", color:"white", borderRadius:8, padding:"12px", textAlign:"center", fontSize:13, fontWeight:600, textDecoration:"none" }}>
+                  💬 WhatsApp
+                </a>
+                <a href={`tel:${clinic.phone}`}
+                  style={{ flex:1, background:"linear-gradient(135deg,#1565c0,#1e88e5)", color:"white", borderRadius:8, padding:"12px", textAlign:"center", fontSize:13, fontWeight:600, textDecoration:"none" }}>
+                  📞 Call Now
+                </a>
+              </div>
+              <div style={{ marginTop:14, textAlign:"center" }}>
+                <a href={`/${clinic.slug}/privacy-policy`} style={{ fontSize:11, color:"#94a3b8", textDecoration:"none" }}>Privacy Policy (DPDP Act, 2023)</a>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {ClinicFooter && <ClinicFooter clinic={clinic} doctor={doctors[0]}/>}
+
+      {/* Floating buttons */}
+      <div style={{ position:"fixed", bottom:24, right:24, zIndex:200, display:"flex", flexDirection:"column", gap:10 }}>
+        <a href={`https://wa.me/${(clinic.whatsapp||clinic.phone||"").replace(/\D/g,"")}`} target="_blank" rel="noopener noreferrer"
+          style={{ width:50, height:50, borderRadius:"50%", background:"#25d366",
+            display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, textDecoration:"none",
+            boxShadow:"0 4px 16px rgba(37,211,102,0.4)", transition:"transform .2s" }}
+          onMouseEnter={e=>e.currentTarget.style.transform="scale(1.1)"}
+          onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}>💬</a>
+        <a href={`tel:${clinic.phone}`}
+          style={{ width:50, height:50, borderRadius:"50%", background:"#1565c0",
+            display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, textDecoration:"none",
+            boxShadow:"0 4px 16px rgba(21,101,192,0.4)", transition:"transform .2s" }}
+          onMouseEnter={e=>e.currentTarget.style.transform="scale(1.1)"}
+          onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}>📞</a>
+      </div>
+    </div>
+  );
+}
+
+// ── Main export ───────────────────────────────────────────────────
+export default function ClinicSite({ slug: slugProp }) {
+  // Support both prop-based and route-based slug
+  const params = useParams();
+  const slug = slugProp || params?.slug;
+
   const [clinic,   setClinic]   = useState(null);
   const [services, setServices] = useState([]);
   const [doctors,  setDoctors]  = useState([]);
@@ -329,477 +489,99 @@ export default function ClinicSite({ slug }) {
     setLoading(true);
     setError("");
     try {
-      // getClinicBySlug now uses maybeSingle — no 406
       const c = await getClinicBySlug(slug);
       if (!c) {
         setError("Clinic not found or site is not published.");
         setLoading(false);
         return;
       }
-
-      // Run all data fetches in parallel — any failure is non-fatal
       const [svcs, docs, mediaItems, seo] = await Promise.allSettled([
         getServices(c.id),
         getDoctors(c.id),
         getClinicMedia(c.id),
-        getSeoData(c.id),   // maybeSingle — returns null if no row, no 406
+        getSeoData(c.id),
       ]);
-
-      const resolvedSvcs  = svcs.status      === "fulfilled" ? svcs.value      : [];
-      const resolvedDocs  = docs.status      === "fulfilled" ? docs.value      : [];
-      const resolvedMedia = mediaItems.status === "fulfilled" ? mediaItems.value : [];
-      const resolvedSeo   = seo.status       === "fulfilled" ? seo.value       : null;
-
       setClinic(c);
-      setServices(resolvedSvcs);
-      setDoctors(resolvedDocs);
-      setMedia(resolvedMedia);
-      setSeoData(resolvedSeo);
-
-      // Inject SEO (graceful whether seoData is null or populated)
-      injectSEO(c, resolvedSvcs, resolvedDocs[0], resolvedSeo);
-
-    } catch (e) {
-      console.error("ClinicSite loadAll:", e.message);
-      setError(e.message || "Failed to load clinic. Please try again.");
+      setServices(svcs.status === "fulfilled" ? svcs.value : []);
+      setDoctors(docs.status  === "fulfilled" ? docs.value  : []);
+      setMedia(mediaItems.status === "fulfilled" ? mediaItems.value : []);
+      setSeoData(seo.status === "fulfilled" ? seo.value : null);
+    } catch (err) {
+      setError("Something went wrong loading this page.");
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) return <PageLoader message={`Loading ${slug}...`}/>;
-
-  if (error || !clinic) return (
-    <div style={{ minHeight:"100vh", background:"#f0f7ff",
-      display:"flex", alignItems:"center", justifyContent:"center",
+  if (loading) return <PageLoader message="Loading clinic site…"/>;
+  if (error)   return (
+    <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center",
       fontFamily:"'DM Sans',sans-serif", flexDirection:"column", gap:12 }}>
-      <div style={{ fontSize:40 }}>⚠️</div>
-      <div style={{ color:"#ef4444", fontWeight:600, fontSize:16 }}>Clinic not found</div>
-      <div style={{ color:"#64748b", fontSize:14, textAlign:"center", maxWidth:400 }}>{error}</div>
-      <a href="/" style={{ marginTop:8, fontSize:13, color:"#1565c0" }}>← Back to ClinicSite</a>
+      <div style={{ fontSize:40 }}>😕</div>
+      <div style={{ color:"#64748b" }}>{error}</div>
     </div>
   );
+  if (!clinic) return null;
 
-  const doctor      = doctors[0];
-  const activeServices = services.filter(s => s.is_active !== false);
+  // ── Template switching ────────────────────────────────────────
+  // clinic.template should be one of the keys in TEMPLATE_MAP
+  // Falls back to DefaultClinicLayout if not set or unrecognised
+  const templateKey    = (clinic.template || "").toLowerCase().trim();
+  const TemplateComponent = TEMPLATE_MAP[templateKey];
+
+  const sharedProps = {
+    clinic,
+    services,
+    doctors,
+    media,
+    onBookClick: () => setShowBook(true),
+  };
 
   return (
-    <div style={{ fontFamily:"'DM Sans',sans-serif", color:"#0b2545",
-      background:"white", overflowX:"hidden" }}>
-      <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <>
+      <ClinicSEOHead clinic={clinic} seoData={seoData}/>
 
-      <Navbar clinic={clinic} onBookClick={() => setShowBook(true)}/>
+      {TemplateComponent
+        ? <TemplateComponent {...sharedProps}/>
+        : <DefaultClinicLayout {...sharedProps} seoData={seoData}/>
+      }
 
-      {/* ── Booking Modal ── */}
+      {/* Global BookingEngine modal — triggered by onBookClick from any template */}
       {showBook && (
-        <div
-          onClick={e => e.target === e.currentTarget && setShowBook(false)}
-          style={{ position:"fixed", inset:0, zIndex:200,
-            background:"rgba(11,37,69,0.65)", backdropFilter:"blur(4px)",
-            display:"flex", alignItems:"center", justifyContent:"center",
-            padding:20, overflowY:"auto" }}>
-          <div style={{ position:"relative", width:"100%", maxWidth:520 }}>
-            <button onClick={() => setShowBook(false)} style={{
-              position:"absolute", top:-14, right:-14, zIndex:10,
-              width:32, height:32, borderRadius:"50%", background:"white",
-              border:"none", cursor:"pointer", fontSize:16,
-              boxShadow:"0 4px 12px rgba(0,0,0,0.2)",
-              display:"flex", alignItems:"center", justifyContent:"center" }}>
-              ✕
-            </button>
-            <BookingEngine clinic={clinic} services={activeServices}/>
-          </div>
-        </div>
+        <GlobalBookingModal
+          clinic={clinic}
+          services={services.filter(s => s.is_active !== false)}
+          onClose={() => setShowBook(false)}
+        />
       )}
+    </>
+  );
+}
 
-      {/* ══════════════ HERO ══════════════ */}
-      <section style={{
-        minHeight:"100vh", paddingTop:64,
-        background:"radial-gradient(ellipse 80% 60% at 70% 50%,rgba(21,101,192,0.07),transparent),"
-                 + "linear-gradient(160deg,#f0f7ff 0%,#ffffff 60%)",
-        display:"flex", alignItems:"center",
-        padding:"80px 40px", position:"relative", overflow:"hidden",
-      }}>
-        <div style={{ maxWidth:1100, margin:"0 auto",
-          display:"grid", gridTemplateColumns:"1fr 1fr",
-          gap:60, alignItems:"center", width:"100%" }}>
+// ── Global Booking Modal ──────────────────────────────────────────
+// Shared across all templates — triggered via onBookClick prop
+function GlobalBookingModal({ clinic, services, onClose }) {
+  const [BookingEngine, setBookingEngine] = useState(null);
+  useEffect(() => {
+    import("../components/BookingEngine").then(m => setBookingEngine(() => m.default));
+  }, []);
 
-          {/* Left */}
-          <div>
-            {/* Compliant badge — specialty + location only, no superlatives */}
-            <div style={{ display:"inline-flex", alignItems:"center", gap:6,
-              background:"rgba(21,101,192,0.08)", border:"1px solid rgba(21,101,192,0.18)",
-              borderRadius:20, padding:"5px 14px", fontSize:12, fontWeight:600,
-              color:"#1565c0", marginBottom:20 }}>
-              🦷 {clinic.specialty} Clinic · {clinic.city}, Tamil Nadu
-            </div>
-
-            <h1 style={{ fontFamily:"'DM Serif Display',serif",
-              fontSize:"clamp(34px,4.5vw,54px)", color:"#0b2545",
-              lineHeight:1.15, marginBottom:20 }}>
-              {clinic.heroTagline || (
-                <>Your Health Deserves<br/>
-                <em style={{ fontStyle:"italic", color:"#1e88e5" }}>Specialist Care</em></>
-              )}
-            </h1>
-
-            <p style={{ fontSize:16, color:"#5a7a96", lineHeight:1.75,
-              marginBottom:32, maxWidth:460 }}>
-              {clinic.about ||
-                `${clinic.name} provides expert ${(clinic.specialty || "").toLowerCase()} care `
-                + `in ${clinic.city}, delivered by qualified specialists.`}
-            </p>
-
-            <div style={{ display:"flex", gap:12, flexWrap:"wrap", marginBottom:40 }}>
-              <button onClick={() => setShowBook(true)} style={{
-                background:"#1565c0", color:"white", border:"none",
-                borderRadius:10, padding:"14px 28px", fontSize:15, fontWeight:600,
-                cursor:"pointer", fontFamily:"inherit",
-                boxShadow:"0 4px 16px rgba(21,101,192,0.25)", transition:"all .2s" }}>
-                📅 Book Appointment
-              </button>
-              <a href={`https://wa.me/${(clinic.whatsapp || clinic.phone || "").replace(/\D/g,"")}`}
-                target="_blank" rel="noopener noreferrer"
-                style={{ background:"#25d366", color:"white", borderRadius:10,
-                  padding:"14px 28px", fontSize:15, fontWeight:600, textDecoration:"none" }}>
-                💬 WhatsApp
-              </a>
-              <a href={`tel:${clinic.phone}`}
-                style={{ background:"transparent", color:"#1565c0",
-                  border:"1.5px solid #1565c0", borderRadius:10,
-                  padding:"13px 24px", fontSize:15, fontWeight:600, textDecoration:"none" }}>
-                📞 Call
-              </a>
-            </div>
-
-            {/* Factual stats — no ratings, no "best", no comparisons */}
-            <div style={{ display:"flex", gap:32 }}>
-              {[
-                doctor?.experience && [doctor.experience, "Clinical Experience"],
-                activeServices.length > 0 && [`${activeServices.length}+`, "Services"],
-                doctor?.reg_number && ["Registered", "Medical Practitioner"],
-              ].filter(Boolean).map(([n, l]) => (
-                <div key={l}>
-                  <div style={{ fontFamily:"'DM Serif Display',serif",
-                    fontSize:24, color:"#0b2545" }}>{n}</div>
-                  <div style={{ fontSize:12, color:"#5a7a96" }}>{l}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Right — Booking card */}
-          <div style={{ background:"white", borderRadius:20,
-            boxShadow:"0 24px 64px rgba(11,37,69,0.12)", overflow:"hidden" }}>
-            <div style={{ background:"linear-gradient(135deg,#0b2545,#1565c0)",
-              padding:"24px 28px", color:"white" }}>
-              <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:20, marginBottom:4 }}>
-                Book Appointment
-              </div>
-              <div style={{ fontSize:13, opacity:.7 }}>Free consultation for new patients</div>
-            </div>
-            <div style={{ padding:24 }}>
-              {[["Full Name","Your name"],["Phone","98400 00000"]].map(([l, p]) => (
-                <div key={l} style={{ marginBottom:14 }}>
-                  <div style={{ fontSize:11, color:"#64748b", fontFamily:"monospace",
-                    marginBottom:5, fontWeight:600 }}>{l.toUpperCase()}</div>
-                  <input placeholder={p} style={{
-                    width:"100%", background:"#f4f8fd",
-                    border:"1.5px solid #dce8f5", borderRadius:8,
-                    padding:"10px 12px", fontSize:14, color:"#0b2545",
-                    fontFamily:"inherit", outline:"none", boxSizing:"border-box" }}/>
-                </div>
-              ))}
-              {activeServices.length > 0 && (
-                <div style={{ marginBottom:14 }}>
-                  <div style={{ fontSize:11, color:"#64748b", fontFamily:"monospace",
-                    marginBottom:5, fontWeight:600 }}>SERVICE</div>
-                  <select style={{ width:"100%", background:"#f4f8fd",
-                    border:"1.5px solid #dce8f5", borderRadius:8,
-                    padding:"10px 12px", fontSize:14, color:"#0b2545",
-                    fontFamily:"inherit", outline:"none" }}>
-                    {activeServices.map(s => <option key={s.id}>{s.name}</option>)}
-                  </select>
-                </div>
-              )}
-              <button onClick={() => setShowBook(true)} style={{
-                width:"100%",
-                background:"linear-gradient(135deg,#1565c0,#1e88e5)",
-                color:"white", border:"none", borderRadius:8, padding:"13px",
-                fontSize:14, fontWeight:600, cursor:"pointer", fontFamily:"inherit",
-                boxShadow:"0 4px 14px rgba(21,101,192,0.3)" }}>
-                Check Available Slots →
-              </button>
-              <div style={{ fontSize:10, color:"#94a3b8", textAlign:"center", marginTop:10 }}>
-                🔒 Data protected under DPDP Act, 2023
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════ SERVICES ══════════════ */}
-      {activeServices.length > 0 && (
-        <section id="services" style={{ padding:"80px 40px", background:"#f4f8fd" }}>
-          <div style={{ maxWidth:1100, margin:"0 auto" }}>
-            <Reveal>
-              <div style={{ fontSize:12, fontWeight:600, letterSpacing:2,
-                textTransform:"uppercase", color:"#1565c0", marginBottom:10 }}>
-                Our Services
-              </div>
-              <h2 style={{ fontFamily:"'DM Serif Display',serif",
-                fontSize:"clamp(26px,3vw,36px)", color:"#0b2545", marginBottom:14 }}>
-                Clinical Services
-              </h2>
-              <p style={{ fontSize:15, color:"#5a7a96", maxWidth:480,
-                lineHeight:1.6, marginBottom:48 }}>
-                Evidence-based treatments by qualified specialists.
-              </p>
-            </Reveal>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:16 }}>
-              {activeServices.map((svc, i) => (
-                <Reveal key={svc.id || i} delay={i * 0.06}>
-                  <div style={{ background:"white", borderRadius:14, padding:"22px 18px",
-                    border:"1px solid #dce8f5", transition:"all .25s", cursor:"pointer" }}
-                    onMouseEnter={e => {
-                      e.currentTarget.style.transform = "translateY(-4px)";
-                      e.currentTarget.style.boxShadow = "0 12px 32px rgba(11,37,69,0.1)";
-                    }}
-                    onMouseLeave={e => {
-                      e.currentTarget.style.transform = "none";
-                      e.currentTarget.style.boxShadow = "none";
-                    }}>
-                    <div style={{ fontSize:28, marginBottom:12 }}>{svc.icon || "🏥"}</div>
-                    <div style={{ fontSize:14, fontWeight:600, color:"#0b2545", marginBottom:6 }}>
-                      {svc.name}
-                    </div>
-                    {svc.description && (
-                      <div style={{ fontSize:12, color:"#5a7a96", lineHeight:1.5, marginBottom:10 }}>
-                        {svc.description}
-                      </div>
-                    )}
-                    {/* Compliant pricing — flat fee, no "Starting from" */}
-                    {svc.price && (
-                      <div style={{ fontSize:13, fontWeight:600, color:"#1565c0" }}>
-                        Consultation fee: {svc.price}
-                      </div>
-                    )}
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ══════════════ DOCTOR ══════════════ */}
-      {doctor && (
-        <section id="doctor" style={{ padding:"80px 40px", background:"white" }}>
-          <div style={{ maxWidth:1100, margin:"0 auto",
-            display:"grid", gridTemplateColumns:"1fr 1.4fr",
-            gap:60, alignItems:"center" }}>
-
-            <Reveal>
-              <div style={{ width:"100%", aspectRatio:"4/5", borderRadius:20,
-                background:"linear-gradient(160deg,#e3f2fd,#c8e6fa)",
-                display:"flex", alignItems:"center", justifyContent:"center",
-                position:"relative", overflow:"hidden" }}>
-                {doctor.photo_url
-                  ? <img src={doctor.photo_url}
-                      alt={`${doctor.name}${doctor.degree ? `, ${doctor.degree}` : ""}`}
-                      style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
-                  : <span style={{ fontSize:100 }}>👨‍⚕️</span>}
-                <div style={{ position:"absolute", bottom:20, left:"50%",
-                  transform:"translateX(-50%)", background:"white", borderRadius:12,
-                  padding:"10px 18px", boxShadow:"0 8px 24px rgba(11,37,69,0.12)",
-                  display:"flex", alignItems:"center", gap:10, whiteSpace:"nowrap" }}>
-                  <div style={{ width:10, height:10, borderRadius:"50%",
-                    background:"#22c55e",
-                    animation:"pulse 2s infinite" }}/>
-                  <span style={{ fontSize:13, fontWeight:600, color:"#0b2545" }}>
-                    Accepting Patients
-                  </span>
-                </div>
-              </div>
-            </Reveal>
-
-            <Reveal delay={0.15}>
-              <div style={{ fontSize:12, fontWeight:600, letterSpacing:2,
-                textTransform:"uppercase", color:"#1565c0", marginBottom:10 }}>
-                Your Doctor
-              </div>
-              <h2 style={{ fontFamily:"'DM Serif Display',serif",
-                fontSize:34, color:"#0b2545", marginBottom:6 }}>
-                {doctor.name}
-              </h2>
-              <div style={{ color:"#1565c0", fontWeight:600, fontSize:15, marginBottom:6 }}>
-                {doctor.degree}
-              </div>
-              {/* Mandatory Reg No display — compliance D1 */}
-              {doctor.reg_number && (
-                <div style={{ fontSize:12, color:"#94a3b8", marginBottom:20,
-                  fontFamily:"monospace" }}>
-                  Reg No: {doctor.reg_number}
-                  {doctor.council_name ? ` — ${doctor.council_name}` : ""}
-                </div>
-              )}
-              {doctor.bio && (
-                <p style={{ color:"#5a7a96", lineHeight:1.8, fontSize:15, marginBottom:28 }}>
-                  {doctor.bio}
-                </p>
-              )}
-              {[
-                ["🎓", doctor.degree,             "Qualification"],
-                ["🔬", doctor.specialization || clinic.specialty, "Specialization"],
-                doctor.experience && ["📅", doctor.experience + " of Practice", "Experience"],
-              ].filter(Boolean).map(([icon, title, sub]) => (
-                <div key={sub} style={{ display:"flex", gap:12, marginBottom:14, alignItems:"flex-start" }}>
-                  <div style={{ width:32, height:32, borderRadius:8,
-                    background:"#e3f2fd", display:"flex", alignItems:"center",
-                    justifyContent:"center", fontSize:15, flexShrink:0 }}>
-                    {icon}
-                  </div>
-                  <div>
-                    <div style={{ fontSize:14, color:"#0b2545", fontWeight:500 }}>{title}</div>
-                    <div style={{ fontSize:12, color:"#94a3b8" }}>{sub}</div>
-                  </div>
-                </div>
-              ))}
-              <button onClick={() => setShowBook(true)} style={{
-                marginTop:8, background:"#1565c0", color:"white",
-                border:"none", borderRadius:10, padding:"14px 28px",
-                fontSize:15, fontWeight:600, cursor:"pointer", fontFamily:"inherit",
-                boxShadow:"0 4px 16px rgba(21,101,192,0.25)" }}>
-                Book a Consultation
-              </button>
-            </Reveal>
-          </div>
-        </section>
-      )}
-
-      {/* ══════════════ FACILITY (replaces reviews — compliance B1/B3) ══════════════ */}
-      <ClinicMediaSection clinic={clinic} mediaItems={media}/>
-
-      {/* ══════════════ FAQ ══════════════ */}
-      <FAQSection clinic={clinic}/>
-
-      {/* ══════════════ CONTACT ══════════════ */}
-      <section id="contact" style={{ padding:"80px 40px", background:"#f4f8fd" }}>
-        <div style={{ maxWidth:1100, margin:"0 auto",
-          display:"grid", gridTemplateColumns:"1fr 1fr", gap:60 }}>
-          <Reveal>
-            <div style={{ fontSize:12, fontWeight:600, letterSpacing:2,
-              textTransform:"uppercase", color:"#1565c0", marginBottom:10 }}>
-              Find Us
-            </div>
-            <h2 style={{ fontFamily:"'DM Serif Display',serif",
-              fontSize:34, color:"#0b2545", marginBottom:32 }}>
-              Visit {clinic.name}
-            </h2>
-            {[
-              ["📍", "Address",  clinic.address || `${clinic.city}, Tamil Nadu`],
-              ["📞", "Phone",    clinic.phone],
-              ["💬", "WhatsApp", clinic.whatsapp || clinic.phone],
-              ["✉️", "Email",    clinic.email],
-            ].filter(([,, v]) => v).map(([icon, label, value]) => (
-              <div key={label} style={{ display:"flex", gap:16,
-                marginBottom:24, alignItems:"flex-start" }}>
-                <div style={{ width:44, height:44, borderRadius:12,
-                  background:"#e3f2fd", display:"flex",
-                  alignItems:"center", justifyContent:"center",
-                  fontSize:20, flexShrink:0 }}>{icon}</div>
-                <div>
-                  <div style={{ fontSize:11, color:"#94a3b8", fontWeight:600,
-                    textTransform:"uppercase", letterSpacing:.5, marginBottom:3 }}>
-                    {label}
-                  </div>
-                  <div style={{ fontSize:15, color:"#0b2545", fontWeight:500 }}>
-                    {value}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </Reveal>
-
-          <Reveal delay={0.15}>
-            <div style={{ background:"#f0f7ff", borderRadius:16, padding:28,
-              border:"1px solid #dce8f5" }}>
-              <div style={{ fontSize:13, fontWeight:600, color:"#0b2545", marginBottom:16 }}>
-                Working Hours
-              </div>
-              {[
-                ["Monday – Friday", "9:00 AM – 8:00 PM", true],
-                ["Saturday",        "9:00 AM – 6:00 PM", true],
-                ["Sunday",          "Closed",             false],
-              ].map(([day, hours, open]) => (
-                <div key={day} style={{ display:"flex", justifyContent:"space-between",
-                  padding:"10px 0", borderBottom:"1px solid #dce8f5", fontSize:14 }}>
-                  <span style={{ color:"#5a7a96" }}>{day}</span>
-                  <span style={{ fontWeight:600, color: open ? "#22c55e" : "#ef4444" }}>
-                    {hours}
-                  </span>
-                </div>
-              ))}
-              <div style={{ display:"flex", gap:10, marginTop:24 }}>
-                <a href={`https://wa.me/${(clinic.whatsapp || clinic.phone || "").replace(/\D/g,"")}`}
-                  target="_blank" rel="noopener noreferrer"
-                  style={{ flex:1, background:"#25d366", color:"white", borderRadius:10,
-                    padding:"12px", textAlign:"center", fontSize:13,
-                    fontWeight:600, textDecoration:"none" }}>
-                  💬 WhatsApp
-                </a>
-                <a href={`tel:${clinic.phone}`}
-                  style={{ flex:1, background:"#1565c0", color:"white", borderRadius:10,
-                    padding:"12px", textAlign:"center", fontSize:13,
-                    fontWeight:600, textDecoration:"none" }}>
-                  📞 Call Now
-                </a>
-              </div>
-              {/* Privacy policy link — DPDP requirement */}
-              <div style={{ marginTop:14, textAlign:"center" }}>
-                <a href={`/${clinic.slug}/privacy-policy`}
-                  style={{ fontSize:11, color:"#94a3b8", textDecoration:"none" }}>
-                  Privacy Policy (DPDP Act, 2023)
-                </a>
-              </div>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ══════════════ FOOTER — mandatory Reg No (compliance D1) ══════════════ */}
-      <ClinicFooter clinic={clinic} doctor={doctor}/>
-
-      {/* Floating action buttons */}
-      <div style={{ position:"fixed", bottom:24, right:24, zIndex:200,
-        display:"flex", flexDirection:"column", gap:10 }}>
-        <a href={`https://wa.me/${(clinic.whatsapp || clinic.phone || "").replace(/\D/g,"")}`}
-          target="_blank" rel="noopener noreferrer"
-          style={{ width:50, height:50, borderRadius:"50%", background:"#25d366",
-            display:"flex", alignItems:"center", justifyContent:"center",
-            fontSize:22, textDecoration:"none",
-            boxShadow:"0 4px 16px rgba(37,211,102,0.4)", transition:"transform .2s" }}
-          onMouseEnter={e => e.currentTarget.style.transform = "scale(1.1)"}
-          onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}>
-          💬
-        </a>
-        <a href={`tel:${clinic.phone}`}
-          style={{ width:50, height:50, borderRadius:"50%", background:"#1565c0",
-            display:"flex", alignItems:"center", justifyContent:"center",
-            fontSize:22, textDecoration:"none",
-            boxShadow:"0 4px 16px rgba(21,101,192,0.4)", transition:"transform .2s" }}
-          onMouseEnter={e => e.currentTarget.style.transform = "scale(1.1)"}
-          onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}>
-          📞
-        </a>
-      </div>
-
-      <style>{`
-        @keyframes pulse {
-          0%,100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
-          50%      { box-shadow: 0 0 0 6px rgba(34,197,94,0); }
+  return (
+    <div onClick={e => e.target === e.currentTarget && onClose()}
+      style={{ position:"fixed", inset:0, zIndex:400,
+        background:"rgba(0,0,0,0.7)", backdropFilter:"blur(8px)",
+        display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
+      <div style={{ position:"relative", width:"100%", maxWidth:520 }}>
+        <button onClick={onClose} style={{
+          position:"absolute", top:-14, right:-14, zIndex:10,
+          width:32, height:32, borderRadius:"50%", background:"white",
+          border:"none", cursor:"pointer", fontSize:16, boxShadow:"0 2px 8px rgba(0,0,0,0.15)" }}>✕</button>
+        {BookingEngine
+          ? <BookingEngine clinic={clinic} services={services}/>
+          : <div style={{ background:"white", borderRadius:16, padding:40, textAlign:"center", color:"#64748b" }}>Loading…</div>
         }
-      `}</style>
+      </div>
     </div>
   );
 }

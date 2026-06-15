@@ -21,6 +21,7 @@ import UpgradeModal    from "./UpgradeModal";
 import ComplianceTab   from "./ComplianceTab";
 import AIBlogGenerator from "./AIBlogGenerator";
 import { TEMPLATES }   from "../templates";
+import DomainManager from "../components/admin/DomainManager";
 
 // ── Small helpers ─────────────────────────────────────────────────
 function Badge({ status }) {

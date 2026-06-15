@@ -1,86 +1,292 @@
 // src/templates/TelehealthPlatform.jsx
-import { useState } from "react";
-export default function TelehealthPlatform({ data }) {
-  const doctors = [
-    { name:"Dr. Ananya Rao",   spec:"General Physician",  wait:"< 2 min",  online:true  },
-    { name:"Dr. Kiran Mehta",  spec:"Cardiologist",       wait:"< 5 min",  online:true  },
-    { name:"Dr. Priya Nair",   spec:"Dermatologist",      wait:"< 8 min",  online:true  },
-    { name:"Dr. Suresh Kumar", spec:"Pediatrician",       wait:"12 min",   online:false },
-  ];
+// Modern digital health — deep violet, electric blue, tech-forward
+// Accepts: clinic, services, doctors, media, onBookClick
+
+import { useState, useEffect, useRef } from "react";
+import BookingEngine      from "../components/BookingEngine";
+import ClinicFooter       from "../components/ClinicFooter";
+import ClinicMediaSection from "../components/ClinicMediaSection";
+
+function Reveal({ children, delay = 0 }) {
+  const ref = useRef(null);
+  const [vis, setVis] = useState(false);
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVis(true); }, { threshold: 0.08 });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
   return (
-    <div style={{ fontFamily:"'DM Sans',system-ui,sans-serif", background:"#09090b", minHeight:"100vh", color:"#f4f4f5" }}>
-      <div style={{ position:"fixed", inset:0, zIndex:0, pointerEvents:"none", overflow:"hidden" }}>
-        <div style={{ position:"absolute", width:700, height:700, borderRadius:"50%", background:"radial-gradient(circle,rgba(147,51,234,0.15),transparent 70%)", top:-200, left:"20%" }}/>
-        <div style={{ position:"absolute", width:500, height:500, borderRadius:"50%", background:"radial-gradient(circle,rgba(16,185,129,0.1),transparent 70%)", bottom:-100, right:"10%" }}/>
-      </div>
-      <div style={{ background:"rgba(147,51,234,0.15)", borderBottom:"1px solid rgba(147,51,234,0.2)", padding:"8px 24px", display:"flex", alignItems:"center", gap:12, position:"relative", zIndex:10 }}>
-        <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-          <div style={{ width:8, height:8, borderRadius:"50%", background:"#10b981", animation:"livepulse 1.5s infinite" }}/>
-          <style>{`@keyframes livepulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,0.6)}50%{box-shadow:0 0 0 6px rgba(16,185,129,0)}}`}</style>
-          <span style={{ fontSize:11, fontWeight:700, color:"#10b981", letterSpacing:1 }}>LIVE</span>
+    <div ref={ref} style={{ opacity:vis?1:0, transform:vis?"none":"translateY(18px)", transition:`opacity .5s ${delay}s ease, transform .5s ${delay}s ease` }}>
+      {children}
+    </div>
+  );
+}
+
+export default function TelehealthPlatform({ clinic, services = [], doctors = [], media = [], onBookClick }) {
+  const [showBook, setShowBook] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const doctor = doctors[0];
+  const activeServices = services.filter(s => s.is_active !== false);
+
+  const handleBook = () => { if (onBookClick) onBookClick(); else setShowBook(true); };
+  useEffect(() => {
+    const fn = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", fn); return () => window.removeEventListener("scroll", fn);
+  }, []);
+
+  const C = {
+    bg: "#0d0e1a",
+    surface: "#13152a",
+    card: "#1a1d35",
+    accent: "#6c63ff",
+    accentLight: "#a599ff",
+    teal: "#00d4aa",
+    text: "#e8eaf0",
+    muted: "#7b7f9e",
+    border: "rgba(108,99,255,0.2)",
+    white: "#ffffff",
+  };
+
+  return (
+    <div style={{ fontFamily:"'Space Grotesk',sans-serif", background:C.bg, color:C.text, overflowX:"hidden" }}>
+      <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+
+      {showBook && (
+        <div onClick={e=>e.target===e.currentTarget&&setShowBook(false)}
+          style={{ position:"fixed", inset:0, zIndex:300, background:"rgba(13,14,26,0.85)", backdropFilter:"blur(8px)",
+            display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
+          <div style={{ position:"relative", width:"100%", maxWidth:520 }}>
+            <button onClick={()=>setShowBook(false)} style={{ position:"absolute", top:-14, right:-14, zIndex:10,
+              width:32, height:32, borderRadius:"50%", background:C.white, border:"none", cursor:"pointer", fontSize:16 }}>✕</button>
+            <BookingEngine clinic={clinic} services={activeServices}/>
+          </div>
         </div>
-        <span style={{ fontSize:12, color:"rgba(255,255,255,0.6)" }}>127 doctors online right now · Avg wait: 4 minutes</span>
-        <button style={{ marginLeft:"auto", background:"rgba(16,185,129,0.15)", border:"1px solid rgba(16,185,129,0.3)", color:"#10b981", borderRadius:6, padding:"4px 12px", fontSize:11, cursor:"pointer", fontFamily:"inherit", fontWeight:600 }}>Consult Now →</button>
-      </div>
-      <nav style={{ padding:"18px 40px", display:"flex", alignItems:"center", justifyContent:"space-between", position:"relative", zIndex:10 }}>
+      )}
+
+      {/* Navbar */}
+      <nav style={{
+        position:"fixed", top:0, left:0, right:0, zIndex:100,
+        background: scrolled ? "rgba(13,14,26,0.95)" : "transparent",
+        backdropFilter: scrolled ? "blur(16px)" : "none",
+        borderBottom: scrolled ? `1px solid ${C.border}` : "1px solid transparent",
+        transition:"all .3s", padding:"0 48px", height:66,
+        display:"flex", alignItems:"center", justifyContent:"space-between",
+      }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          <div style={{ width:34, height:34, borderRadius:10, background:"linear-gradient(135deg,#7c3aed,#4f46e5)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16 }}>⚡</div>
-          <span style={{ fontSize:17, fontWeight:800, color:"#f4f4f5" }}>{data.clinicName}</span>
-        </div>
-        <div style={{ display:"flex", gap:10 }}>
-          <button style={{ background:"transparent", border:"1px solid rgba(255,255,255,0.15)", color:"#f4f4f5", borderRadius:10, padding:"8px 18px", fontSize:13, cursor:"pointer", fontFamily:"inherit" }}>Login</button>
-          <button style={{ background:"linear-gradient(135deg,#7c3aed,#4f46e5)", color:"white", border:"none", borderRadius:10, padding:"8px 20px", fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"inherit" }}>{data.secondaryCTA}</button>
-        </div>
-      </nav>
-      <div style={{ position:"relative", zIndex:10, padding:"60px 40px 40px", maxWidth:1200, margin:"0 auto", display:"grid", gridTemplateColumns:"1fr 1fr", gap:60, alignItems:"center" }}>
-        <div>
-          <h1 style={{ fontSize:"clamp(36px,4vw,56px)", fontWeight:900, color:"#f4f4f5", lineHeight:1.05, marginBottom:20, letterSpacing:-2 }}>{data.heroTagline}</h1>
-          <p style={{ fontSize:16, color:"#71717a", lineHeight:1.7, marginBottom:36, maxWidth:460 }}>{data.heroDescription}</p>
-          <div style={{ display:"flex", gap:12, marginBottom:40 }}>
-            <button style={{ background:"linear-gradient(135deg,#7c3aed,#4f46e5)", color:"white", border:"none", borderRadius:12, padding:"14px 28px", fontSize:15, fontWeight:700, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 8px 32px rgba(124,58,237,0.4)" }}>{data.primaryCTA}</button>
-            <button style={{ background:"rgba(255,255,255,0.05)", color:"#f4f4f5", border:"1px solid rgba(255,255,255,0.1)", borderRadius:12, padding:"14px 24px", fontSize:15, cursor:"pointer", fontFamily:"inherit" }}>{data.secondaryCTA}</button>
-          </div>
-          <div style={{ display:"flex", gap:20, flexWrap:"wrap" }}>
-            {(data.features||[]).map((f,i)=>(
-              <div key={i} style={{ display:"flex", alignItems:"center", gap:6, fontSize:12, color:"#a1a1aa" }}>
-                <span style={{ color:"#10b981" }}>✓</span>{f.label}
-              </div>
-            ))}
+          <div style={{ width:36, height:36, borderRadius:10,
+            background:`linear-gradient(135deg,${C.accent},${C.teal})`,
+            display:"flex", alignItems:"center", justifyContent:"center", fontSize:16 }}>🩺</div>
+          <div>
+            <div style={{ fontSize:15, fontWeight:600, color:C.white }}>{clinic.name}</div>
+            {clinic.specialty && <div style={{ fontSize:10, color:C.accentLight, letterSpacing:1.5, textTransform:"uppercase" }}>{clinic.specialty}</div>}
           </div>
         </div>
-        <div style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:24, padding:24, backdropFilter:"blur(12px)" }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
-            <div style={{ fontSize:13, fontWeight:700, color:"#f4f4f5" }}>Available Doctors</div>
-            <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-              <div style={{ width:7, height:7, borderRadius:"50%", background:"#10b981" }}/>
-              <span style={{ fontSize:11, color:"#10b981", fontWeight:600 }}>LIVE</span>
-            </div>
-          </div>
-          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-            {doctors.map((doc,i)=>(
-              <div key={i} style={{ display:"flex", alignItems:"center", gap:12, background:"rgba(255,255,255,0.04)", borderRadius:14, padding:"14px 16px", border:`1px solid ${doc.online?"rgba(16,185,129,0.15)":"rgba(255,255,255,0.06)"}` }}>
-                <div style={{ width:40, height:40, borderRadius:"50%", background:"linear-gradient(135deg,#7c3aed,#4f46e5)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16, position:"relative" }}>
-                  👨‍⚕️
-                  {doc.online&&<div style={{ position:"absolute", bottom:0, right:0, width:10, height:10, borderRadius:"50%", background:"#10b981", border:"2px solid #09090b" }}/>}
-                </div>
-                <div style={{ flex:1 }}>
-                  <div style={{ fontSize:13, fontWeight:600, color:"#f4f4f5" }}>{doc.name}</div>
-                  <div style={{ fontSize:11, color:"#71717a" }}>{doc.spec}</div>
-                </div>
-                <div style={{ textAlign:"right" }}>
-                  <div style={{ fontSize:11, color:doc.online?"#10b981":"#71717a", fontWeight:600 }}>{doc.wait}</div>
-                  <button style={{ marginTop:4, background:doc.online?"rgba(124,58,237,0.2)":"rgba(255,255,255,0.06)", border:`1px solid ${doc.online?"rgba(124,58,237,0.4)":"rgba(255,255,255,0.1)"}`, color:doc.online?"#c084fc":"#52525b", borderRadius:7, padding:"4px 10px", fontSize:11, cursor:doc.online?"pointer":"not-allowed", fontFamily:"inherit" }}>
-                    {doc.online?"📹 Connect":"Offline"}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-          <button style={{ width:"100%", marginTop:14, padding:"13px", background:"linear-gradient(135deg,#7c3aed,#10b981)", border:"none", borderRadius:12, color:"white", fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}>
-            🎥 {data.primaryCTA}
+        <div style={{ display:"flex", gap:28, alignItems:"center" }}>
+          {[["Services","#services"],["Doctor","#doctor"],["Contact","#contact"]].map(([l,h])=>(
+            <a key={l} href={h} style={{ textDecoration:"none", color:C.muted, fontSize:13, transition:"color .15s" }}
+              onMouseEnter={e=>e.target.style.color=C.accentLight}
+              onMouseLeave={e=>e.target.style.color=C.muted}>{l}</a>
+          ))}
+          <button onClick={handleBook} style={{
+            background:`linear-gradient(135deg,${C.accent},${C.accentLight})`,
+            color:C.white, border:"none", borderRadius:8, padding:"9px 22px",
+            fontSize:13, fontWeight:600, cursor:"pointer", letterSpacing:.3 }}>
+            Book Now
           </button>
         </div>
+      </nav>
+
+      {/* Hero */}
+      <section style={{
+        minHeight:"100vh", paddingTop:66,
+        background:`radial-gradient(ellipse 60% 70% at 80% 50%, rgba(108,99,255,0.12), transparent),
+                   radial-gradient(ellipse 40% 50% at 20% 80%, rgba(0,212,170,0.06), transparent), ${C.bg}`,
+        display:"flex", alignItems:"center", padding:"80px 48px",
+      }}>
+        <div style={{ maxWidth:1100, margin:"0 auto", display:"grid", gridTemplateColumns:"1.2fr 1fr", gap:80, alignItems:"center", width:"100%" }}>
+          <div>
+            <div style={{ display:"inline-flex", alignItems:"center", gap:8,
+              background:"rgba(108,99,255,0.12)", border:`1px solid ${C.border}`,
+              borderRadius:20, padding:"5px 14px", fontSize:11, color:C.accentLight,
+              fontWeight:600, letterSpacing:1.5, textTransform:"uppercase", marginBottom:28 }}>
+              <span style={{ width:6, height:6, borderRadius:"50%", background:C.teal, display:"inline-block" }}/>
+              {clinic.specialty} · {clinic.city}
+            </div>
+            <h1 style={{ fontFamily:"'Syne',sans-serif", fontSize:"clamp(36px,4.5vw,58px)",
+              fontWeight:800, color:C.white, lineHeight:1.1, marginBottom:24 }}>
+              {clinic.heroTagline || (<>Healthcare<br/><span style={{ background:`linear-gradient(90deg,${C.accent},${C.teal})`, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>Built for You</span></>)}
+            </h1>
+            <p style={{ fontSize:16, color:C.muted, lineHeight:1.8, marginBottom:40, maxWidth:460, fontWeight:300 }}>
+              {clinic.about || `${clinic.name} delivers modern ${(clinic.specialty||"").toLowerCase()} care in ${clinic.city}.`}
+            </p>
+            <div style={{ display:"flex", gap:14 }}>
+              <button onClick={handleBook} style={{
+                background:`linear-gradient(135deg,${C.accent},${C.accentLight})`,
+                color:C.white, border:"none", borderRadius:10, padding:"15px 32px",
+                fontSize:15, fontWeight:600, cursor:"pointer", letterSpacing:.4,
+                boxShadow:`0 8px 24px rgba(108,99,255,0.35)` }}>
+                📅 Book Appointment
+              </button>
+              <a href={`https://wa.me/${(clinic.whatsapp||clinic.phone||"").replace(/\D/g,"")}`}
+                target="_blank" rel="noopener noreferrer"
+                style={{ background:"transparent", color:C.teal, border:`1.5px solid rgba(0,212,170,0.3)`,
+                  borderRadius:10, padding:"14px 24px", fontSize:15, textDecoration:"none", fontWeight:500 }}>
+                💬 WhatsApp
+              </a>
+            </div>
+            <div style={{ display:"flex", gap:40, marginTop:48, paddingTop:32, borderTop:`1px solid ${C.border}` }}>
+              {[
+                doctor?.experience && [doctor.experience, "Clinical Experience"],
+                activeServices.length>0 && [`${activeServices.length}+`, "Services"],
+                doctor?.reg_number && ["Registered", "Practitioner"],
+              ].filter(Boolean).map(([n,l])=>(
+                <div key={l}>
+                  <div style={{ fontFamily:"'Syne',sans-serif", fontSize:20, fontWeight:700, color:C.accentLight }}>{n}</div>
+                  <div style={{ fontSize:11, color:C.muted, marginTop:2 }}>{l}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Booking card */}
+          <div style={{ background:C.card, borderRadius:16, border:`1px solid ${C.border}`, overflow:"hidden" }}>
+            <div style={{ background:`linear-gradient(135deg,${C.accent},${C.accentLight})`, padding:"24px 28px" }}>
+              <div style={{ fontFamily:"'Syne',sans-serif", fontSize:20, fontWeight:700, color:C.white, marginBottom:4 }}>Book Appointment</div>
+              <div style={{ fontSize:12, color:"rgba(255,255,255,0.7)" }}>Confirmed within clinic hours</div>
+            </div>
+            <div style={{ padding:24 }}>
+              {[["Full Name","Your name"],["Phone","98400 00000"]].map(([l,p])=>(
+                <div key={l} style={{ marginBottom:14 }}>
+                  <div style={{ fontSize:10, color:C.accentLight, fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:5 }}>{l}</div>
+                  <input placeholder={p} style={{ width:"100%", background:"rgba(255,255,255,0.05)",
+                    border:`1px solid ${C.border}`, borderRadius:8, padding:"10px 12px",
+                    fontSize:14, color:C.white, fontFamily:"inherit", outline:"none", boxSizing:"border-box" }}/>
+                </div>
+              ))}
+              <button onClick={handleBook} style={{
+                width:"100%", background:`linear-gradient(135deg,${C.accent},${C.accentLight})`,
+                color:C.white, border:"none", borderRadius:8, padding:"13px",
+                fontSize:14, fontWeight:600, cursor:"pointer", marginTop:4,
+                boxShadow:`0 4px 16px rgba(108,99,255,0.3)` }}>
+                Check Available Slots →
+              </button>
+              <div style={{ fontSize:10, color:C.muted, textAlign:"center", marginTop:10 }}>🔒 DPDP Act, 2023 compliant</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Services */}
+      {activeServices.length > 0 && (
+        <section id="services" style={{ padding:"80px 48px", background:C.surface }}>
+          <div style={{ maxWidth:1100, margin:"0 auto" }}>
+            <Reveal>
+              <div style={{ fontSize:11, fontWeight:700, letterSpacing:2.5, textTransform:"uppercase", color:C.accentLight, marginBottom:10 }}>Services</div>
+              <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:"clamp(26px,3vw,38px)", fontWeight:700, color:C.white, marginBottom:48 }}>What We Offer</h2>
+            </Reveal>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))", gap:16 }}>
+              {activeServices.map((svc,i)=>(
+                <Reveal key={svc.id||i} delay={i*0.05}>
+                  <div style={{ background:C.card, borderRadius:12, padding:"24px 20px",
+                    border:`1px solid ${C.border}`, transition:"all .25s" }}
+                    onMouseEnter={e=>{e.currentTarget.style.borderColor=C.accent; e.currentTarget.style.transform="translateY(-4px)"; e.currentTarget.style.boxShadow=`0 12px 32px rgba(108,99,255,0.2)`}}
+                    onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border; e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="none"}}>
+                    <div style={{ fontSize:28, marginBottom:12 }}>{svc.icon||"🩺"}</div>
+                    <div style={{ fontSize:14, fontWeight:600, color:C.white, marginBottom:6 }}>{svc.name}</div>
+                    {svc.description && <div style={{ fontSize:12, color:C.muted, lineHeight:1.5 }}>{svc.description}</div>}
+                    {svc.price && <div style={{ fontSize:12, fontWeight:600, color:C.teal, marginTop:10 }}>Fee: {svc.price}</div>}
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Doctor */}
+      {doctor && (
+        <section id="doctor" style={{ padding:"80px 48px", background:C.bg }}>
+          <div style={{ maxWidth:1100, margin:"0 auto", display:"grid", gridTemplateColumns:"1fr 1.4fr", gap:60, alignItems:"center" }}>
+            <Reveal>
+              <div style={{ width:"100%", aspectRatio:"4/5", borderRadius:16, background:C.surface,
+                border:`1px solid ${C.border}`, display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden" }}>
+                {doctor.photo_url ? <img src={doctor.photo_url} alt={doctor.name} style={{ width:"100%", height:"100%", objectFit:"cover" }}/> : <span style={{ fontSize:100 }}>👨‍⚕️</span>}
+              </div>
+            </Reveal>
+            <Reveal delay={0.15}>
+              <div style={{ fontSize:11, fontWeight:700, letterSpacing:2.5, textTransform:"uppercase", color:C.accentLight, marginBottom:10 }}>Your Doctor</div>
+              <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:36, fontWeight:700, color:C.white, marginBottom:6 }}>{doctor.name}</h2>
+              <div style={{ color:C.teal, fontWeight:500, fontSize:15, marginBottom:6 }}>{doctor.degree}</div>
+              {doctor.reg_number && <div style={{ fontSize:11, color:C.muted, marginBottom:20, fontFamily:"monospace" }}>Reg No: {doctor.reg_number}{doctor.council_name?` — ${doctor.council_name}`:""}</div>}
+              {doctor.bio && <p style={{ color:C.muted, lineHeight:1.8, fontSize:15, marginBottom:28 }}>{doctor.bio}</p>}
+              <button onClick={handleBook} style={{
+                background:`linear-gradient(135deg,${C.accent},${C.accentLight})`,
+                color:C.white, border:"none", borderRadius:10, padding:"14px 28px",
+                fontSize:15, fontWeight:600, cursor:"pointer",
+                boxShadow:`0 8px 24px rgba(108,99,255,0.3)` }}>
+                Book a Consultation
+              </button>
+            </Reveal>
+          </div>
+        </section>
+      )}
+
+      <ClinicMediaSection clinic={clinic} mediaItems={media}/>
+
+      {/* Contact */}
+      <section id="contact" style={{ padding:"80px 48px", background:C.surface }}>
+        <div style={{ maxWidth:1100, margin:"0 auto", display:"grid", gridTemplateColumns:"1fr 1fr", gap:60 }}>
+          <Reveal>
+            <div style={{ fontSize:11, fontWeight:700, letterSpacing:2.5, textTransform:"uppercase", color:C.accentLight, marginBottom:10 }}>Find Us</div>
+            <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:34, fontWeight:700, color:C.white, marginBottom:32 }}>Visit {clinic.name}</h2>
+            {[["📍","Address",clinic.address||`${clinic.city}, Tamil Nadu`],["📞","Phone",clinic.phone],["✉️","Email",clinic.email]]
+              .filter(([,,v])=>v).map(([icon,label,value])=>(
+              <div key={label} style={{ display:"flex", gap:16, marginBottom:20, alignItems:"flex-start" }}>
+                <div style={{ width:42, height:42, borderRadius:10, background:C.card, border:`1px solid ${C.border}`,
+                  display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, flexShrink:0 }}>{icon}</div>
+                <div>
+                  <div style={{ fontSize:10, color:C.accentLight, fontWeight:700, textTransform:"uppercase", letterSpacing:1, marginBottom:3 }}>{label}</div>
+                  <div style={{ fontSize:14, color:C.text }}>{value}</div>
+                </div>
+              </div>
+            ))}
+          </Reveal>
+          <Reveal delay={0.15}>
+            <div style={{ background:C.card, borderRadius:14, padding:28, border:`1px solid ${C.border}` }}>
+              <div style={{ fontSize:13, fontWeight:600, color:C.white, marginBottom:16 }}>Clinic Hours</div>
+              {[["Monday – Friday","9:00 AM – 8:00 PM",true],["Saturday","9:00 AM – 6:00 PM",true],["Sunday","Closed",false]].map(([d,h,o])=>(
+                <div key={d} style={{ display:"flex", justifyContent:"space-between", padding:"10px 0", borderBottom:`1px solid ${C.border}`, fontSize:13 }}>
+                  <span style={{ color:C.muted }}>{d}</span>
+                  <span style={{ fontWeight:600, color: o?C.teal:"#f87171" }}>{h}</span>
+                </div>
+              ))}
+              <div style={{ display:"flex", gap:10, marginTop:24 }}>
+                <a href={`https://wa.me/${(clinic.whatsapp||clinic.phone||"").replace(/\D/g,"")}`} target="_blank" rel="noopener noreferrer"
+                  style={{ flex:1, background:"#25d366", color:"white", borderRadius:8, padding:"12px", textAlign:"center", fontSize:13, fontWeight:500, textDecoration:"none" }}>💬 WhatsApp</a>
+                <a href={`tel:${clinic.phone}`}
+                  style={{ flex:1, background:`linear-gradient(135deg,${C.accent},${C.accentLight})`, color:C.white, borderRadius:8, padding:"12px", textAlign:"center", fontSize:13, fontWeight:600, textDecoration:"none" }}>📞 Call Now</a>
+              </div>
+              <div style={{ marginTop:14, textAlign:"center" }}>
+                <a href={`/${clinic.slug}/privacy-policy`} style={{ fontSize:11, color:C.muted, textDecoration:"none" }}>Privacy Policy (DPDP Act, 2023)</a>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      <ClinicFooter clinic={clinic} doctor={doctor}/>
+
+      <div style={{ position:"fixed", bottom:24, right:24, zIndex:200, display:"flex", flexDirection:"column", gap:10 }}>
+        <a href={`https://wa.me/${(clinic.whatsapp||clinic.phone||"").replace(/\D/g,"")}`} target="_blank" rel="noopener noreferrer"
+          style={{ width:50, height:50, borderRadius:"50%", background:"#25d366", display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, textDecoration:"none", boxShadow:"0 4px 16px rgba(37,211,102,0.4)", transition:"transform .2s" }}
+          onMouseEnter={e=>e.currentTarget.style.transform="scale(1.1)"}
+          onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}>💬</a>
+        <a href={`tel:${clinic.phone}`}
+          style={{ width:50, height:50, borderRadius:"50%", background:`linear-gradient(135deg,${C.accent},${C.accentLight})`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, textDecoration:"none", boxShadow:`0 4px 16px rgba(108,99,255,0.4)`, transition:"transform .2s" }}
+          onMouseEnter={e=>e.currentTarget.style.transform="scale(1.1)"}
+          onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}>📞</a>
       </div>
+
+      <style>{`@keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(0,212,170,0.4)} 50%{box-shadow:0 0 0 6px rgba(0,212,170,0)} }`}</style>
     </div>
   );
 }
