@@ -534,6 +534,7 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                 </table>
               </div>
             </div>
+          </div>
           )}
 
           {/* ═══ SERVICES ═══ */}
