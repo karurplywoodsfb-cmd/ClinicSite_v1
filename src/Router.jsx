@@ -1,6 +1,5 @@
-// src/Router.jsx — FINAL (all updates integrated)
+// src/Router.jsx — FIXED
 // Routes: / | /admin | /superadmin | /login | /:slug | /:slug/blog | /:slug/blog/:post | /:slug/privacy-policy
-// No Razorpay for internal trial (payments stub included but bypassed)
 
 import { useState, useEffect } from "react";
 import { supabase }            from "./lib/supabase";
@@ -16,28 +15,17 @@ import { getMyClinic }         from "./lib/supabase";
 // ── helpers ───────────────────────────────────────────────────────
 function getSubdomainSlug() {
   const h = window.location.hostname;
-
-  // Local development
   if (h.includes("localhost")) return null;
-
-  // Vercel preview / production domains
   if (h.endsWith(".vercel.app")) return null;
-
-  // Only accept your real wildcard domain
   if (!h.endsWith(".clinicsite.in")) return null;
-
   const p = h.split(".");
-
-  if (p.length >= 3) {
-    return p[0];
-  }
-
+  if (p.length >= 3) return p[0];
   return null;
 }
 
 function getRoute() {
   const path  = window.location.pathname;
-  const parts = path.split("/").filter(Boolean); // ["slug","blog","post-slug"]
+  const parts = path.split("/").filter(Boolean);
 
   if (path.startsWith("/superadmin")) return { type:"superadmin" };
   if (path.startsWith("/admin"))      return { type:"admin" };
@@ -65,7 +53,8 @@ function getRoute() {
 }
 
 async function checkSuperAdmin(userId) {
-  const { data } = await supabase.from("profiles").select("is_superadmin").eq("id", userId).single();
+  // FIX: Use maybeSingle() instead of single()
+  const { data } = await supabase.from("profiles").select("is_superadmin").eq("id", userId).maybeSingle();
   return data?.is_superadmin === true;
 }
 
@@ -145,10 +134,10 @@ export default function Router() {
       ]);
       setIsSuperAdmin(isSA);
       setClinic(c);
-      // Load doctor if clinic exists
       if (c?.id) {
-        const { data: docs } = await supabase.from("doctors").select("*").eq("clinic_id", c.id).limit(1);
-        setDoctor(docs?.[0] || null);
+        // FIX: Use maybeSingle() instead of limit(1) + array access
+        const { data: doc } = await supabase.from("doctors").select("*").eq("clinic_id", c.id).maybeSingle();
+        setDoctor(doc || null);
       }
     } catch (e) {
       console.error("loadUserData:", e.message);
@@ -184,11 +173,9 @@ export default function Router() {
         user={user}
         onComplete={async (newClinic) => {
           setClinic(newClinic);
-          // Auto-generate privacy policy
           try {
-            const { data: docs } = await supabase.from("doctors").select("*").eq("clinic_id", newClinic.id).limit(1);
-            const doc = docs?.[0];
-            setDoctor(doc);
+            const { data: doc } = await supabase.from("doctors").select("*").eq("clinic_id", newClinic.id).maybeSingle();
+            setDoctor(doc || null);
             const policy = generatePrivacyPolicy(newClinic, doc);
             await supabase.from("privacy_policies").upsert({ clinic_id: newClinic.id, content: policy.content, version: policy.version }).catch(() => {});
           } catch(e) { console.error(e); }
@@ -232,11 +219,11 @@ export default function Router() {
     return <ClinicSite slug={route.slug} />;
   }
 
-  // ── LANDING ──────────────────────────────────────────────────────
+  // ── LANDING ────────────────────────────────────────────────────────
   return <Landing onGetStarted={() => navigate("/login")} />;
 }
 
-// ── Privacy policy fetcher (per clinic) ──────────────────────────
+// ── Privacy policy fetcher (per clinic) ────────────────────────────
 function PrivacyPolicyClinic({ slug }) {
   const [clinic, setClinic]   = useState(null);
   const [doctor, setDoctor]   = useState(null);
@@ -245,11 +232,12 @@ function PrivacyPolicyClinic({ slug }) {
   useEffect(() => {
     (async () => {
       try {
-        const { data: c } = await supabase.from("clinics").select("*").eq("slug", slug).eq("is_published", true).single();
+        // FIX: Use maybeSingle() instead of single()
+        const { data: c } = await supabase.from("clinics").select("*").eq("slug", slug).eq("is_published", true).maybeSingle();
         if (c) {
           setClinic(c);
-          const { data: docs } = await supabase.from("doctors").select("*").eq("clinic_id", c.id).limit(1);
-          setDoctor(docs?.[0] || null);
+          const { data: doc } = await supabase.from("doctors").select("*").eq("clinic_id", c.id).maybeSingle();
+          setDoctor(doc || null);
         }
       } catch(e) { console.error(e); }
       setLoading(false);

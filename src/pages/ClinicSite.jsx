@@ -1,22 +1,21 @@
 /* ═══════════════════════════════════════════════════════════════
-   ClinicSite.jsx — REFACTORED
+   ClinicSite.jsx — FIXED v2
 
-   Fixes applied:
-   1. THEME SYSTEM: All styles now use CSS variables from theme CSS files
-   2. PUSH NOTIFICATIONS: Patient-facing subscription UI + admin alerts
-   3. CODE STRUCTURE: Split into smaller sections, proper error handling
-   4. ACCESSIBILITY: ARIA labels, semantic HTML, reduced motion support
+   Fixes:
+   1. Accepts slug as PROP (Router.jsx passes it, not react-router useParams)
+   2. Uses .maybeSingle() instead of .single() 
+   3. Better error handling with visible debug info
    ═══════════════════════════════════════════════════════════════ */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import ThemeProvider from "../components/ThemeProvider";
 import ClinicFooter from "../components/ClinicFooter";
 import DPDPConsentBlock from "../components/DPDPConsentBlock";
 import { usePushNotifications } from "../hooks/usePushNotifications";
-import "./ClinicSite.css"; // ← NEW: All component styles extracted here
+import "./ClinicSite.css";
 
-/* ── SVG Icons (inline for zero dependencies) ── */
+/* ── SVG Icons ── */
 const Icons = {
   tooth: () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -81,93 +80,52 @@ const Icons = {
 };
 
 /* ═══════════════════════════════════════════════════════════════
-   SECTION COMPONENTS (extracted from monolithic ClinicSite)
+   SECTION COMPONENTS
    ═══════════════════════════════════════════════════════════════ */
 
-/* ── Push Notification Bell ── */
 function NotificationBell({ clinicId }) {
-  const { isSupported, isSubscribed, isDenied, loading, error, subscribe, unsubscribe, sendTest } =
-    usePushNotifications({ supabase, clinicId });
-
-  const [showTooltip, setShowTooltip] = useState(false);
-
+  const { isSupported, isSubscribed, isDenied, loading, subscribe, unsubscribe } =
+    usePushNotifications({ supabase, clinicId, type: "patient" });
   if (!isSupported) return null;
-
   return (
     <div className="cs-notification-wrapper">
       <button
         className={`cs-notification-btn ${isSubscribed ? "cs-active" : ""} ${isDenied ? "cs-denied" : ""}`}
-        onClick={() => {
-          if (isDenied) return;
-          if (isSubscribed) {
-            unsubscribe();
-          } else {
-            subscribe();
-          }
-        }}
-        onMouseEnter={() => setShowTooltip(true)}
-        onMouseLeave={() => setShowTooltip(false)}
-        aria-label={isSubscribed ? "Unsubscribe from notifications" : "Subscribe to appointment notifications"}
+        onClick={() => isSubscribed ? unsubscribe() : subscribe()}
+        aria-label={isSubscribed ? "Unsubscribe" : "Subscribe to reminders"}
         disabled={loading || isDenied}
-        title={isDenied ? "Notifications blocked in browser settings" : isSubscribed ? "Click to unsubscribe" : "Get appointment reminders"}
+        title={isDenied ? "Blocked in browser settings" : isSubscribed ? "Click to unsubscribe" : "Get appointment reminders"}
       >
         {isSubscribed ? <Icons.bell /> : <Icons.bellOff />}
         {isSubscribed && <span className="cs-notification-dot" aria-hidden="true" />}
       </button>
-      {showTooltip && (
-        <div className="cs-notification-tooltip" role="tooltip">
-          {isDenied
-            ? "Notifications blocked. Enable in browser settings."
-            : isSubscribed
-            ? "You'll get appointment reminders. Click to stop."
-            : "Get notified about your appointments"}
-          {error && <span className="cs-notification-error">{error}</span>}
-        </div>
-      )}
     </div>
   );
 }
 
-/* ── Hero Section ── */
 function HeroSection({ clinic, doctor, activeServices, onBookClick }) {
   const stats = [
     doctor?.experience && [`${doctor.experience}+`, "Years Experience"],
     activeServices.length > 0 && [`${activeServices.length}`, "Services Offered"],
     doctor?.reg_number && ["Registered", "Medical Practitioner"],
   ].filter(Boolean);
-
   return (
     <section className="cs-hero" aria-label="Hero">
       <div className="cs-hero-inner">
-        {/* Left Content */}
         <div className="cs-hero-content">
           <div className="cs-badge">
             <Icons.tooth />
             <span>{clinic.specialty} Clinic · {clinic.city}, Tamil Nadu</span>
           </div>
-
           <h1 className="cs-hero-title">
-            {clinic.heroTagline || (
-              <>
-                Your Health Deserves <span className="cs-accent">Specialist Care</span>
-              </>
-            )}
+            {clinic.heroTagline || <>Your Health Deserves <span className="cs-accent">Specialist Care</span></>}
           </h1>
-
           <p className="cs-hero-desc">
-            {clinic.about ||
-              `${clinic.name} provides expert ${(clinic.specialty || "").toLowerCase()} care in ${clinic.city}, delivered by qualified specialists.`}
+            {clinic.about || `${clinic.name} provides expert ${(clinic.specialty || "").toLowerCase()} care in ${clinic.city}, delivered by qualified specialists.`}
           </p>
-
           <div className="cs-hero-actions">
             {clinic.whatsapp && (
-              <a
-                href={`https://wa.me/91${clinic.whatsapp.replace(/\D/g, "")}`}
-                className="cs-btn cs-btn-whatsapp"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Chat on WhatsApp"
-              >
+              <a href={`https://wa.me/91${clinic.whatsapp.replace(/\D/g, "")}`} className="cs-btn cs-btn-whatsapp" target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp">
                 <Icons.whatsapp /> WhatsApp
               </a>
             )}
@@ -177,66 +135,40 @@ function HeroSection({ clinic, doctor, activeServices, onBookClick }) {
               </a>
             )}
           </div>
-
           {stats.length > 0 && (
             <div className="cs-hero-stats">
               {stats.map(([n, l], i) => (
-                <div key={i} className="cs-stat">
-                  <span className="cs-stat-num">{n}</span>
-                  <span className="cs-stat-label">{l}</span>
-                </div>
+                <div key={i} className="cs-stat"><span className="cs-stat-num">{n}</span><span className="cs-stat-label">{l}</span></div>
               ))}
             </div>
           )}
         </div>
-
-        {/* Right — Booking Card */}
         <div className="cs-hero-card">
-          <div className="cs-card-header">
-            <h2>Book Appointment</h2>
-            <p>Free consultation for new patients</p>
-          </div>
-          <form
-            className="cs-booking-form"
-            onSubmit={(e) => {
-              e.preventDefault();
-              onBookClick();
-            }}
-          >
+          <div className="cs-card-header"><h2>Book Appointment</h2><p>Free consultation for new patients</p></div>
+          <form className="cs-booking-form" onSubmit={(e) => { e.preventDefault(); onBookClick(); }}>
             {[["Full Name", "Your name", "text"], ["Phone", "98400 00000", "tel"]].map(([l, p, t]) => (
-              <label key={l} className="cs-field">
-                <span>{l}</span>
-                <input type={t} placeholder={p} required aria-required="true" />
-              </label>
+              <label key={l} className="cs-field"><span>{l}</span><input type={t} placeholder={p} required aria-required="true" /></label>
             ))}
             {activeServices.length > 0 && (
               <label className="cs-field">
                 <span>Service</span>
                 <select required aria-required="true">
                   <option value="">Select a service</option>
-                  {activeServices.map((s) => (
-                    <option key={s.id || s.name} value={s.name}>{s.name}</option>
-                  ))}
+                  {activeServices.map((s) => <option key={s.id || s.name} value={s.name}>{s.name}</option>)}
                 </select>
               </label>
             )}
-            <button type="submit" className="cs-btn cs-btn-primary cs-btn-full">
-              Book Now <Icons.arrowRight />
-            </button>
+            <button type="submit" className="cs-btn cs-btn-primary cs-btn-full">Book Now <Icons.arrowRight /></button>
           </form>
-          <p className="cs-compliance-note">
-            <Icons.shield /> Data protected under DPDP Act, 2023
-          </p>
+          <p className="cs-compliance-note"><Icons.shield /> Data protected under DPDP Act, 2023</p>
         </div>
       </div>
     </section>
   );
 }
 
-/* ── Services Section ── */
 function ServicesSection({ services }) {
   if (services.length === 0) return null;
-
   return (
     <section className="cs-section cs-services" id="services" aria-label="Services">
       <div className="cs-container">
@@ -248,14 +180,10 @@ function ServicesSection({ services }) {
         <div className="cs-grid cs-grid-3">
           {services.map((svc) => (
             <article key={svc.id || svc.name} className="cs-service-card">
-              <div className="cs-service-icon" aria-hidden="true">
-                {svc.icon || "🏥"}
-              </div>
+              <div className="cs-service-icon" aria-hidden="true">{svc.icon || "🏥"}</div>
               <h3>{svc.name}</h3>
               {svc.description && <p>{svc.description}</p>}
-              {svc.price && (
-                <span className="cs-service-price">Consultation: {svc.price}</span>
-              )}
+              {svc.price && <span className="cs-service-price">Consultation: {svc.price}</span>}
             </article>
           ))}
         </div>
@@ -264,26 +192,19 @@ function ServicesSection({ services }) {
   );
 }
 
-/* ── Doctor Section ── */
 function DoctorSection({ doctor, clinic }) {
   if (!doctor) return null;
-
   const details = [
     ["🎓", doctor.degree, "Qualification"],
     ["🔬", doctor.specialization || clinic.specialty, "Specialization"],
     doctor.experience && ["📅", `${doctor.experience} Years`, "Experience"],
   ].filter(Boolean);
-
   return (
     <section className="cs-section cs-doctor" id="doctor" aria-label="Doctor Profile">
       <div className="cs-container">
         <div className="cs-doctor-grid">
           <div className="cs-doctor-photo">
-            {doctor.photo_url ? (
-              <img src={doctor.photo_url} alt={`Dr. ${doctor.name}`} loading="lazy" />
-            ) : (
-              <div className="cs-doctor-avatar" aria-hidden="true">👨‍⚕️</div>
-            )}
+            {doctor.photo_url ? <img src={doctor.photo_url} alt={`Dr. ${doctor.name}`} loading="lazy" /> : <div className="cs-doctor-avatar" aria-hidden="true">👨‍⚕️</div>}
             <span className="cs-doctor-badge">Accepting Patients</span>
           </div>
           <div className="cs-doctor-info">
@@ -291,24 +212,12 @@ function DoctorSection({ doctor, clinic }) {
             <h2>Dr. {doctor.name}</h2>
             <p className="cs-doctor-degree">{doctor.degree}</p>
             {doctor.reg_number && (
-              <div className="cs-reg-badge">
-                <Icons.shield />
-                <span>
-                  Reg No: {doctor.reg_number}
-                  {doctor.council_name ? ` — ${doctor.council_name}` : ""}
-                </span>
-              </div>
+              <div className="cs-reg-badge"><Icons.shield /><span>Reg No: {doctor.reg_number}{doctor.council_name ? ` — ${doctor.council_name}` : ""}</span></div>
             )}
             {doctor.bio && <p className="cs-doctor-bio">{doctor.bio}</p>}
             <div className="cs-doctor-details">
               {details.map(([icon, title, sub], i) => (
-                <div key={i} className="cs-detail-item">
-                  <span className="cs-detail-icon" aria-hidden="true">{icon}</span>
-                  <div>
-                    <strong>{title}</strong>
-                    <span>{sub}</span>
-                  </div>
-                </div>
+                <div key={i} className="cs-detail-item"><span className="cs-detail-icon" aria-hidden="true">{icon}</span><div><strong>{title}</strong><span>{sub}</span></div></div>
               ))}
             </div>
           </div>
@@ -318,15 +227,13 @@ function DoctorSection({ doctor, clinic }) {
   );
 }
 
-/* ── Facility Section ── */
-function FacilitySection({ clinic }) {
+function FacilitySection() {
   const features = [
     "Sterilised equipment as per NABH protocols",
     "Digital X-ray & OPG imaging",
     "Wheelchair accessible premises",
     "Emergency first-aid capability",
   ];
-
   return (
     <section className="cs-section cs-facility" id="facility" aria-label="Facility">
       <div className="cs-container">
@@ -335,31 +242,23 @@ function FacilitySection({ clinic }) {
           <h2>Modern Clinical Infrastructure</h2>
         </div>
         <div className="cs-facility-grid">
-          {features.map((f, i) => (
-            <div key={i} className="cs-facility-item">
-              <Icons.check />
-              <span>{f}</span>
-            </div>
-          ))}
+          {features.map((f, i) => <div key={i} className="cs-facility-item"><Icons.check /><span>{f}</span></div>)}
         </div>
       </div>
     </section>
   );
 }
 
-/* ── FAQ Section ── */
 function FAQSection() {
   const [openIndex, setOpenIndex] = useState(null);
-
   const faqs = [
     { q: "What are the clinic timings?", a: "Monday–Friday: 9 AM – 8 PM, Saturday: 9 AM – 6 PM. Sunday: Closed." },
     { q: "Do I need to book in advance?", a: "Walk-ins are welcome, but booking ensures minimal waiting time." },
     { q: "What payment methods are accepted?", a: "Cash, UPI, and all major debit/credit cards are accepted." },
     { q: "Is the clinic wheelchair accessible?", a: "Yes, our premises are fully wheelchair accessible." },
   ];
-
   return (
-    <section className="cs-section cs-faq" id="faq" aria-label="Frequently Asked Questions">
+    <section className="cs-section cs-faq" id="faq" aria-label="FAQ">
       <div className="cs-container">
         <div className="cs-section-header">
           <span className="cs-section-tag">FAQ</span>
@@ -368,24 +267,10 @@ function FAQSection() {
         <div className="cs-faq-list">
           {faqs.map((faq, i) => (
             <div key={i} className={`cs-faq-item ${openIndex === i ? "cs-open" : ""}`}>
-              <button
-                className="cs-faq-question"
-                onClick={() => setOpenIndex(openIndex === i ? null : i)}
-                aria-expanded={openIndex === i}
-                aria-controls={`faq-answer-${i}`}
-              >
-                {faq.q}
-                <span className="cs-faq-icon" aria-hidden="true">{openIndex === i ? "−" : "+"}</span>
+              <button className="cs-faq-question" onClick={() => setOpenIndex(openIndex === i ? null : i)} aria-expanded={openIndex === i} aria-controls={`faq-ans-${i}`}>
+                {faq.q}<span className="cs-faq-icon" aria-hidden="true">{openIndex === i ? "−" : "+"}</span>
               </button>
-              <div
-                id={`faq-answer-${i}`}
-                className="cs-faq-answer"
-                role="region"
-                aria-hidden={openIndex !== i}
-                style={{ display: openIndex === i ? "block" : "none" }}
-              >
-                {faq.a}
-              </div>
+              <div id={`faq-ans-${i}`} className="cs-faq-answer" role="region" aria-hidden={openIndex !== i} style={{ display: openIndex === i ? "block" : "none" }}>{faq.a}</div>
             </div>
           ))}
         </div>
@@ -394,7 +279,6 @@ function FAQSection() {
   );
 }
 
-/* ── Contact Section ── */
 function ContactSection({ clinic }) {
   const contacts = [
     ["Address", clinic.address || `${clinic.city}, Tamil Nadu`, <Icons.mapPin key="m" />],
@@ -402,13 +286,11 @@ function ContactSection({ clinic }) {
     ["WhatsApp", clinic.whatsapp || clinic.phone, <Icons.whatsapp key="w" />],
     ["Email", clinic.email, <Icons.mail key="e" />],
   ].filter(([, v]) => v);
-
   const hours = [
     ["Monday – Friday", "9:00 AM – 8:00 PM", true],
     ["Saturday", "9:00 AM – 6:00 PM", true],
     ["Sunday", "Closed", false],
   ];
-
   return (
     <section className="cs-section cs-contact" id="contact" aria-label="Contact">
       <div className="cs-container">
@@ -418,24 +300,13 @@ function ContactSection({ clinic }) {
             <h2>Visit {clinic.name}</h2>
             <div className="cs-contact-list">
               {contacts.map(([label, value, icon], i) => (
-                <div key={i} className="cs-contact-item">
-                  <span className="cs-contact-icon">{icon}</span>
-                  <div>
-                    <span className="cs-contact-label">{label}</span>
-                    <span className="cs-contact-value">{value}</span>
-                  </div>
-                </div>
+                <div key={i} className="cs-contact-item"><span className="cs-contact-icon">{icon}</span><div><span className="cs-contact-label">{label}</span><span className="cs-contact-value">{value}</span></div></div>
               ))}
             </div>
           </div>
           <div className="cs-hours">
             <h3><Icons.clock /> Working Hours</h3>
-            {hours.map(([day, time, open], i) => (
-              <div key={i} className={`cs-hour-row ${!open ? "cs-closed" : ""}`}>
-                <span>{day}</span>
-                <span>{time}</span>
-              </div>
-            ))}
+            {hours.map(([day, time, open], i) => <div key={i} className={`cs-hour-row ${!open ? "cs-closed" : ""}`}><span>{day}</span><span>{time}</span></div>)}
           </div>
         </div>
       </div>
@@ -443,49 +314,28 @@ function ContactSection({ clinic }) {
   );
 }
 
-/* ── Booking Modal ── */
 function BookingModal({ clinic, activeServices, onClose }) {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [formData, setFormData] = useState({ name: "", phone: "", service: "", date: "", time: "" });
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const { error } = await supabase.from("appointments").insert([
-        {
-          clinic_id: clinic.id,
-          patient_name: formData.name,
-          phone: formData.phone,
-          service: formData.service,
-          appt_date: formData.date,
-          appt_time: formData.time,
-          status: "pending",
-          created_at: new Date().toISOString(),
-        },
-      ]);
+      const { error } = await supabase.from("appointments").insert([{
+        clinic_id: clinic.id, patient_name: formData.name, phone: formData.phone,
+        service: formData.service, appt_date: formData.date, appt_time: formData.time,
+        status: "pending", created_at: new Date().toISOString(),
+      }]);
       if (error) throw error;
       setSubmitted(true);
-    } catch (err) {
-      alert("Booking failed: " + err.message);
-    } finally {
-      setSubmitting(false);
-    }
+    } catch (err) { alert("Booking failed: " + err.message); }
+    finally { setSubmitting(false); }
   };
-
   return (
-    <div
-      className="cs-modal-overlay"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-      role="dialog"
-      aria-modal="true"
-      aria-label="Book Appointment"
-    >
+    <div className="cs-modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()} role="dialog" aria-modal="true" aria-label="Book Appointment">
       <div className="cs-modal">
-        <button className="cs-modal-close" onClick={onClose} aria-label="Close">
-          <Icons.close />
-        </button>
+        <button className="cs-modal-close" onClick={onClose} aria-label="Close"><Icons.close /></button>
         {submitted ? (
           <div className="cs-modal-success">
             <h2>✅ Appointment Requested</h2>
@@ -494,69 +344,26 @@ function BookingModal({ clinic, activeServices, onClose }) {
           </div>
         ) : (
           <>
-            <h2>Book Appointment</h2>
-            <p>At {clinic.name}</p>
+            <h2>Book Appointment</h2><p>At {clinic.name}</p>
             <form onSubmit={handleSubmit} className="cs-booking-form">
-              <label className="cs-field">
-                <span>Full Name *</span>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                />
-              </label>
-              <label className="cs-field">
-                <span>Phone *</span>
-                <input
-                  type="tel"
-                  required
-                  pattern="[0-9]{10,}"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                />
-              </label>
+              <label className="cs-field"><span>Full Name *</span><input type="text" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} /></label>
+              <label className="cs-field"><span>Phone *</span><input type="tel" required pattern="[0-9]{10,}" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} /></label>
               {activeServices.length > 0 && (
                 <label className="cs-field">
                   <span>Service *</span>
-                  <select
-                    required
-                    value={formData.service}
-                    onChange={(e) => setFormData({ ...formData, service: e.target.value })}
-                  >
+                  <select required value={formData.service} onChange={(e) => setFormData({ ...formData, service: e.target.value })}>
                     <option value="">Select service</option>
-                    {activeServices.map((s) => (
-                      <option key={s.id || s.name} value={s.name}>{s.name}</option>
-                    ))}
+                    {activeServices.map((s) => <option key={s.id || s.name} value={s.name}>{s.name}</option>)}
                   </select>
                 </label>
               )}
               <div className="cs-field-row">
-                <label className="cs-field">
-                  <span>Preferred Date</span>
-                  <input
-                    type="date"
-                    value={formData.date}
-                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    min={new Date().toISOString().split("T")[0]}
-                  />
-                </label>
-                <label className="cs-field">
-                  <span>Preferred Time</span>
-                  <input
-                    type="time"
-                    value={formData.time}
-                    onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                  />
-                </label>
+                <label className="cs-field"><span>Preferred Date</span><input type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} min={new Date().toISOString().split("T")[0]} /></label>
+                <label className="cs-field"><span>Preferred Time</span><input type="time" value={formData.time} onChange={(e) => setFormData({ ...formData, time: e.target.value })} /></label>
               </div>
-              <button type="submit" className="cs-btn cs-btn-primary cs-btn-full" disabled={submitting}>
-                {submitting ? "Booking..." : "Confirm Booking"}
-              </button>
+              <button type="submit" className="cs-btn cs-btn-primary cs-btn-full" disabled={submitting}>{submitting ? "Booking..." : "Confirm Booking"}</button>
             </form>
-            <p className="cs-compliance-note">
-              <Icons.shield /> Your data is protected under DPDP Act, 2023
-            </p>
+            <p className="cs-compliance-note"><Icons.shield /> Your data is protected under DPDP Act, 2023</p>
           </>
         )}
       </div>
@@ -565,10 +372,13 @@ function BookingModal({ clinic, activeServices, onClose }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   MAIN COMPONENT
+   MAIN COMPONENT — FIXED: Accepts slug as PROP from Router.jsx
    ═══════════════════════════════════════════════════════════════ */
 
-export default function ClinicSite({ clinicSlug }) {
+export default function ClinicSite({ slug }) {
+  // Router.jsx passes slug as a PROP: <ClinicSite slug={route.slug} />
+  // NOT from react-router useParams()
+
   const [clinic, setClinic] = useState(null);
   const [doctor, setDoctor] = useState(null);
   const [services, setServices] = useState([]);
@@ -576,38 +386,54 @@ export default function ClinicSite({ clinicSlug }) {
   const [error, setError] = useState("");
   const [showBookModal, setShowBookModal] = useState(false);
 
-  /* ── Data Fetching ── */
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      setError("");
       try {
-        // Fetch clinic by slug
+        // Get slug from prop or fallback to URL path
+        const clinicSlug = slug || window.location.pathname.replace(/^\//, "").split("/")[0] || "demo";
+        console.log("[ClinicSite] Fetching clinic with slug:", clinicSlug);
+
+        // FIX: Use .maybeSingle() instead of .single()
         const { data: clinicData, error: clinicErr } = await supabase
           .from("clinics")
           .select("*")
-          .eq("slug", clinicSlug || "demo")
-          .single();
+          .eq("slug", clinicSlug)
+          .eq("is_published", true)
+          .maybeSingle();
 
-        if (clinicErr) throw clinicErr;
-        if (!clinicData) throw new Error("Clinic not found");
+        if (clinicErr) {
+          console.error("[ClinicSite] Clinic query error:", clinicErr);
+          throw new Error("Database error: " + clinicErr.message);
+        }
+
+        if (!clinicData) {
+          console.error("[ClinicSite] No clinic found for slug:", clinicSlug);
+          throw new Error(`Clinic "${clinicSlug}" not found. It may not be published yet.`);
+        }
+
+        console.log("[ClinicSite] Found clinic:", clinicData.name, "theme:", clinicData.theme_id);
         setClinic(clinicData);
 
-        // Fetch doctor
+        // FIX: Use .maybeSingle() for doctor
         const { data: doctorData } = await supabase
           .from("doctors")
           .select("*")
           .eq("clinic_id", clinicData.id)
-          .single();
+          .eq("is_active", true)
+          .maybeSingle();
         setDoctor(doctorData || null);
 
-        // Fetch active services
         const { data: svcData } = await supabase
           .from("services")
           .select("*")
           .eq("clinic_id", clinicData.id)
           .eq("is_active", true);
         setServices(svcData || []);
+
       } catch (err) {
+        console.error("[ClinicSite] Error:", err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -615,18 +441,16 @@ export default function ClinicSite({ clinicSlug }) {
     };
 
     fetchData();
-  }, [clinicSlug]);
+  }, [slug]);
 
-  /* ── Scroll to section from hash ── */
   useEffect(() => {
     const hash = window.location.hash;
     if (hash) {
       const el = document.querySelector(hash);
-      if (el) el.scrollIntoView({ behavior: "smooth" });
+      if (el) setTimeout(() => el.scrollIntoView({ behavior: "smooth" }), 100);
     }
   }, [clinic]);
 
-  /* ── Loading State ── */
   if (loading) {
     return (
       <div className="cs-loading" role="status" aria-live="polite">
@@ -636,12 +460,17 @@ export default function ClinicSite({ clinicSlug }) {
     );
   }
 
-  /* ── Error State ── */
   if (error || !clinic) {
     return (
       <div className="cs-error" role="alert">
         <h2>Clinic Not Found</h2>
         <p>{error || "The requested clinic could not be loaded."}</p>
+        <p style={{ fontSize: "0.85rem", color: "var(--color-muted)", marginTop: 12 }}>
+          URL slug: <code>{slug || window.location.pathname}</code>
+        </p>
+        <p style={{ fontSize: "0.8rem", color: "var(--color-muted)", marginTop: 8 }}>
+          Check the browser console (F12 → Console) for detailed error logs.
+        </p>
       </div>
     );
   }
@@ -650,17 +479,11 @@ export default function ClinicSite({ clinicSlug }) {
 
   return (
     <>
-      {/* Theme injection */}
       <ThemeProvider theme={clinic.theme_id || "default"} />
-
       <div className="cs-root">
-        {/* ── Top Bar ── */}
         <header className="cs-topbar">
           <div className="cs-container cs-topbar-inner">
-            <div className="cs-logo">
-              <Icons.tooth />
-              <span>{clinic.name}</span>
-            </div>
+            <div className="cs-logo"><Icons.tooth /><span>{clinic.name}</span></div>
             <nav className="cs-nav" aria-label="Main navigation">
               <a href="#services">Services</a>
               <a href="#doctor">Doctor</a>
@@ -670,67 +493,29 @@ export default function ClinicSite({ clinicSlug }) {
             </nav>
             <div className="cs-topbar-actions">
               <NotificationBell clinicId={clinic.id} />
-              <button className="cs-btn cs-btn-primary cs-btn-sm" onClick={() => setShowBookModal(true)}>
-                Book Now
-              </button>
+              <button className="cs-btn cs-btn-primary cs-btn-sm" onClick={() => setShowBookModal(true)}>Book Now</button>
             </div>
           </div>
         </header>
 
-        {/* ── Main Content ── */}
         <main>
-          <HeroSection
-            clinic={clinic}
-            doctor={doctor}
-            activeServices={activeServices}
-            onBookClick={() => setShowBookModal(true)}
-          />
+          <HeroSection clinic={clinic} doctor={doctor} activeServices={activeServices} onBookClick={() => setShowBookModal(true)} />
           <ServicesSection services={activeServices} />
           <DoctorSection doctor={doctor} clinic={clinic} />
-          <FacilitySection clinic={clinic} />
+          <FacilitySection />
           <FAQSection />
           <ContactSection clinic={clinic} />
         </main>
 
-        {/* ── Footer ── */}
-        <ClinicFooter
-          clinic={clinic}
-          doctor={doctor}
-          regNo={doctor?.reg_number}
-          council={doctor?.council_name}
-        />
-
-        {/* ── DPDP Consent ── */}
+        <ClinicFooter clinic={clinic} doctor={doctor} regNo={doctor?.reg_number} council={doctor?.council_name} />
         <DPDPConsentBlock clinicId={clinic.id} />
 
-        {/* ── Floating Action Buttons ── */}
         <div className="cs-fab-group">
-          {clinic.whatsapp && (
-            <a
-              href={`https://wa.me/91${clinic.whatsapp.replace(/\D/g, "")}`}
-              className="cs-fab cs-fab-whatsapp"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Chat on WhatsApp"
-            >
-              <Icons.whatsapp />
-            </a>
-          )}
-          {clinic.phone && (
-            <a href={`tel:${clinic.phone}`} className="cs-fab cs-fab-phone" aria-label="Call clinic">
-              <Icons.phone />
-            </a>
-          )}
+          {clinic.whatsapp && <a href={`https://wa.me/91${clinic.whatsapp.replace(/\D/g, "")}`} className="cs-fab cs-fab-whatsapp" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"><Icons.whatsapp /></a>}
+          {clinic.phone && <a href={`tel:${clinic.phone}`} className="cs-fab cs-fab-phone" aria-label="Call"><Icons.phone /></a>}
         </div>
 
-        {/* ── Booking Modal ── */}
-        {showBookModal && (
-          <BookingModal
-            clinic={clinic}
-            activeServices={activeServices}
-            onClose={() => setShowBookModal(false)}
-          />
-        )}
+        {showBookModal && <BookingModal clinic={clinic} activeServices={activeServices} onClose={() => setShowBookModal(false)} />}
       </div>
     </>
   );
