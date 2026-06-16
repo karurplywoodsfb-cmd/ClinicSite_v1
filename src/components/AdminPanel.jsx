@@ -446,7 +446,7 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
               <div style={{ marginBottom:24 }}>
                 <NotificationSettings clinic={clinic} supabase={supabase}/>
               </div>
-            <div>
+              <div>
               <div style={{ display:"flex", gap:8, marginBottom:20, flexWrap:"wrap" }}>
                 {["all","pending","confirmed","completed"].map(f => (
                   <button key={f} onClick={() => setApptFilter(f)} style={{
