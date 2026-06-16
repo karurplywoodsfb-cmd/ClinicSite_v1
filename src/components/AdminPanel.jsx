@@ -564,13 +564,32 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                             updateService(svc.id, { is_active:v }).catch(console.error);
                         }}/>
                     </div>
-                    <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                      <span style={{ fontSize:12, color:"#475569" }}>Consultation fee:</span>
+                    <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap", marginTop:4 }}>
+                      <span style={{ fontSize:12, color:"#475569" }}>Fee:</span>
                       <input value={svc.price || ""}
                         onChange={e => setServices(p => p.map(s => s.id === svc.id ? {...s, price:e.target.value} : s))}
+                        disabled={svc.hide_price}
                         style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)",
-                          color:"#22c55e", borderRadius:6, padding:"4px 10px", fontSize:13,
-                          fontFamily:"monospace", width:110, outline:"none", fontWeight:600 }}/>
+                          color: svc.hide_price ? "#334155" : "#22c55e", borderRadius:6, padding:"4px 10px",
+                          fontSize:13, fontFamily:"monospace", width:100, outline:"none", fontWeight:600,
+                          opacity: svc.hide_price ? 0.4 : 1 }}/>
+                      <div style={{ display:"flex", alignItems:"center", gap:6, marginLeft:4,
+                        padding:"3px 10px", borderRadius:6,
+                        background: svc.hide_price ? "rgba(239,68,68,0.08)" : "rgba(34,197,94,0.08)",
+                        border: `1px solid ${svc.hide_price ? "rgba(239,68,68,0.2)" : "rgba(34,197,94,0.2)"}`,
+                        cursor:"pointer" }}
+                        onClick={() => {
+                          const newVal = !svc.hide_price;
+                          setServices(p => p.map(s => s.id === svc.id ? {...s, hide_price:newVal} : s));
+                          if (typeof svc.id === "string" && svc.id.length > 8)
+                            updateService(svc.id, { hide_price: newVal }).catch(console.error);
+                        }}>
+                        <div style={{ width:8, height:8, borderRadius:"50%",
+                          background: svc.hide_price ? "#ef4444" : "#22c55e" }}/>
+                        <span style={{ fontSize:11, color: svc.hide_price ? "#f87171" : "#22c55e", fontWeight:600 }}>
+                          {svc.hide_price ? "Price Hidden" : "Show Price"}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 )) : (
@@ -584,7 +603,7 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                   // Save all active services
                   Promise.all(
                     services.map(s => typeof s.id === "string" && s.id.length > 8
-                      ? updateService(s.id, { name:s.name, price:s.price, is_active:s.is_active })
+                      ? updateService(s.id, { name:s.name, price:s.price, is_active:s.is_active, hide_price:s.hide_price||false })
                       : Promise.resolve()
                     )
                   ).then(() => { setSaved(true); setTimeout(()=>setSaved(false),2000); })
@@ -627,6 +646,60 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
           {/* ═══ DOCTOR PROFILE ═══ */}
           {page === "doctor" && (
             <div style={{ maxWidth:680 }}>
+
+              {/* ── Doctor selector tabs ── */}
+              <div style={{ display:"flex", gap:8, marginBottom:20, flexWrap:"wrap", alignItems:"center" }}>
+                {doctors.map((d, i) => (
+                  <button key={d.id || i} onClick={() => setDoctorEdit(d)}
+                    style={{
+                      padding:"7px 16px", borderRadius:8, border:"none", cursor:"pointer",
+                      fontFamily:"inherit", fontSize:13, fontWeight:600, transition:"all .2s",
+                      background: doctorEdit?.id === d.id ? "rgba(21,101,192,0.2)" : "rgba(255,255,255,0.04)",
+                      color: doctorEdit?.id === d.id ? "#7dd3fc" : "#64748b",
+                      borderLeft: doctorEdit?.id === d.id ? "3px solid #1e88e5" : "3px solid transparent",
+                    }}>
+                    {d.name || `Doctor ${i+1}`}
+                  </button>
+                ))}
+                <button onClick={async () => {
+                  try {
+                    const { data, error } = await supabase.from("doctors").insert({
+                      clinic_id: clinic.id,
+                      name: "New Doctor",
+                      is_active: true,
+                    }).select().single();
+                    if (error) throw error;
+                    setDoctors(p => [...p, data]);
+                    setDoctorEdit(data);
+                  } catch(e) { alert("Failed to add doctor: " + e.message); }
+                }} style={{
+                  padding:"7px 16px", borderRadius:8,
+                  border:"1px dashed rgba(255,255,255,0.15)",
+                  background:"transparent", color:"#475569",
+                  cursor:"pointer", fontFamily:"inherit", fontSize:13,
+                }}>
+                  + Add Doctor
+                </button>
+                {doctors.length > 1 && doctorEdit?.id && (
+                  <button onClick={async () => {
+                    if (!confirm(`Remove ${doctorEdit.name}?`)) return;
+                    try {
+                      await supabase.from("doctors").delete().eq("id", doctorEdit.id);
+                      const remaining = doctors.filter(d => d.id !== doctorEdit.id);
+                      setDoctors(remaining);
+                      setDoctorEdit(remaining[0] || {});
+                    } catch(e) { alert("Failed: " + e.message); }
+                  }} style={{
+                    padding:"7px 16px", borderRadius:8,
+                    border:"1px solid rgba(239,68,68,0.2)",
+                    background:"rgba(239,68,68,0.08)", color:"#f87171",
+                    cursor:"pointer", fontFamily:"inherit", fontSize:13,
+                  }}>
+                    Remove
+                  </button>
+                )}
+              </div>
+
               {/* Photo upload */}
               <div style={{ background:"rgba(255,255,255,0.02)",
                 border:"1px solid rgba(255,255,255,0.07)", borderRadius:12,
@@ -737,10 +810,13 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
           {/* ═══ DESIGN & THEME ═══ */}
           {page === "design" && (
             <div>
-              <div style={{ fontSize:13, color:"#64748b", marginBottom:20 }}>
+              {/* ── Template selector ── */}
+              <div style={{ fontSize:11, fontWeight:700, color:"#64748b", letterSpacing:1.5,
+                textTransform:"uppercase", marginBottom:10 }}>Layout Template</div>
+              <div style={{ fontSize:13, color:"#64748b", marginBottom:16 }}>
                 Select a template. Your content stays the same — only the visual style changes.
               </div>
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16 }}>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16, marginBottom:32 }}>
                 {Object.values(TEMPLATES).map(tmpl => {
                   const active = (clinic?.template || "corporate") === tmpl.id;
                   return (
@@ -775,6 +851,63 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                     </div>
                   );
                 })}
+              </div>
+
+              {/* ── Color Theme selector ── */}
+              <div style={{ borderTop:"1px solid rgba(255,255,255,0.07)", paddingTop:28, marginTop:8 }}>
+                <div style={{ fontSize:11, fontWeight:700, color:"#64748b", letterSpacing:1.5,
+                  textTransform:"uppercase", marginBottom:10 }}>Color Theme</div>
+                <div style={{ fontSize:13, color:"#64748b", marginBottom:16 }}>
+                  Choose a color palette for your clinic site. Works across all templates.
+                </div>
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:10 }}>
+                  {[
+                    { id:"default",   label:"Ocean Blue",   color:"#1565c0" },
+                    { id:"forest",    label:"Forest Green", color:"#2e7d32" },
+                    { id:"sunset",    label:"Warm Coral",   color:"#e64a19" },
+                    { id:"lavender",  label:"Lavender",     color:"#7b1fa2" },
+                    { id:"gold",      label:"Royal Gold",   color:"#f57f17" },
+                    { id:"midnight",  label:"Midnight",     color:"#1a237e" },
+                    { id:"rose",      label:"Rose",         color:"#c2185b" },
+                    { id:"teal",      label:"Teal",         color:"#00695c" },
+                    { id:"charcoal",  label:"Charcoal",     color:"#37474f" },
+                    { id:"sage",      label:"Sage Green",   color:"#558b2f" },
+                  ].map(theme => {
+                    const activeTheme = clinic?.color_theme || "default";
+                    const isActive = activeTheme === theme.id;
+                    return (
+                      <div key={theme.id}
+                        onClick={async () => {
+                          try {
+                            const updated = await updateClinic(clinic.id, { color_theme: theme.id });
+                            setClinic(updated); setClinicEdit(updated);
+                            onClinicUpdate?.(updated);
+                          } catch(e) { alert("Save failed: " + e.message); }
+                        }}
+                        style={{
+                          borderRadius:10, padding:"12px 8px", cursor:"pointer",
+                          textAlign:"center", transition:"all .2s",
+                          background: isActive ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.02)",
+                          border: `2px solid ${isActive ? theme.color : "rgba(255,255,255,0.07)"}`,
+                        }}>
+                        <div style={{ width:36, height:36, borderRadius:"50%",
+                          background: theme.color, margin:"0 auto 8px",
+                          boxShadow: isActive ? `0 0 0 3px rgba(255,255,255,0.15)` : "none" }}/>
+                        <div style={{ fontSize:10, color: isActive ? "#e2e8f0" : "#64748b",
+                          fontWeight: isActive ? 700 : 400, lineHeight:1.3 }}>
+                          {theme.label}
+                        </div>
+                        {isActive && (
+                          <div style={{ fontSize:10, color:"#22c55e", marginTop:4 }}>✓ Active</div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={{ fontSize:11, color:"#334155", marginTop:12 }}>
+                  💡 After adding your Kimi CSS theme files to <code style={{ fontFamily:"monospace" }}>src/themes/</code>, 
+                  update the theme list above with your theme IDs.
+                </div>
               </div>
             </div>
           )}

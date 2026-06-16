@@ -177,8 +177,7 @@ function Navbar({ clinic, onBookClick }) {
       </a>
 
       <div style={{ display:"flex", gap:20 }}>
-        {[["Services","#services"],["Doctor","#doctor"],["Facility","#facility"],
-          ["FAQ","#faq"],["Contact","#contact"]].map(([l, href]) => (
+        {[["Services","#services"],["Doctor","#doctor"],["Facility","#facility"],["Contact","#contact"]].map(([l, href]) => (
           <a key={l} href={href}
             style={{ textDecoration:"none", color:"#5a7a96", fontSize:13, fontWeight:500,
               transition:"color .15s" }}
@@ -187,10 +186,11 @@ function Navbar({ clinic, onBookClick }) {
             {l}
           </a>
         ))}
-        <a href={`/${clinic.slug}/blog`}
-          style={{ textDecoration:"none", color:"#5a7a96", fontSize:13, fontWeight:500 }}>
-          Articles
-        </a>
+        <button onClick={() => document.getElementById("faq")?.scrollIntoView({behavior:"smooth"})}
+          style={{ textDecoration:"none", color:"#5a7a96", fontSize:13, fontWeight:500,
+            background:"none", border:"none", cursor:"pointer", fontFamily:"inherit" }}>
+          FAQ
+        </button>
       </div>
 
       <button onClick={onBookClick} style={{
@@ -358,6 +358,17 @@ export default function ClinicSite({ slug }) {
 
       // Inject SEO (graceful whether seoData is null or populated)
       injectSEO(c, resolvedSvcs, resolvedDocs[0], resolvedSeo);
+
+      // Apply color theme CSS variable
+      if (c.color_theme && c.color_theme !== "default") {
+        const themeColors = {
+          forest:   "#2e7d32", sunset:  "#e64a19", lavender: "#7b1fa2",
+          gold:     "#f57f17", midnight:"#1a237e", rose:     "#c2185b",
+          teal:     "#00695c", charcoal:"#37474f", sage:     "#558b2f",
+        };
+        const primary = themeColors[c.color_theme] || "#1565c0";
+        document.documentElement.style.setProperty("--color-primary", primary);
+      }
 
     } catch (e) {
       console.error("ClinicSite loadAll:", e.message);

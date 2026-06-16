@@ -60,7 +60,7 @@ export default function BookingEngine({ clinic, services = [], hidePrice = false
 
       // Send push notification to clinic admin
       try {
-        await supabase.functions.invoke("send-push", {
+        const { data: pushData, error: pushError } = await supabase.functions.invoke("send-push", {
           body: {
             clinic_id:   clinic.id,
             appointment: {
@@ -72,9 +72,14 @@ export default function BookingEngine({ clinic, services = [], hidePrice = false
             },
           },
         });
+        if (pushError) {
+          console.warn("Push notification error:", pushError);
+        } else {
+          console.log("Push notification sent:", pushData);
+        }
       } catch (pushErr) {
         // Non-blocking — booking already confirmed, just log
-        console.warn("Push notification failed:", pushErr.message);
+        console.warn("Push notification exception:", pushErr.message);
       }
     } catch (e) {
       setError(e.message || "Booking failed. Please try again.");
