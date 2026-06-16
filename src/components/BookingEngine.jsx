@@ -3,7 +3,7 @@
 // Removes star ratings and guarantee language (Fixes A2, A4)
 
 import { useState } from "react";
-import { bookAppointment } from "../lib/supabase";
+import { bookAppointment, supabase } from "../lib/supabase";
 import DPDPConsentBlock   from "./DPDPConsentBlock";
 
 const TIME_SLOTS = [
@@ -24,7 +24,7 @@ function getDates(count = 7) {
 const DAY_LABELS   = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const MONTH_LABELS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-export default function BookingEngine({ clinic, services = [] }) {
+export default function BookingEngine({ clinic, services = [], hidePrice = false }) {
   const [step,  setStep]  = useState(1);
   const [form,  setForm]  = useState({ service:"", date:null, slot:"", name:"", phone:"", notes:"" });
   const [consentGiven, setConsentGiven] = useState(false);
@@ -57,6 +57,25 @@ export default function BookingEngine({ clinic, services = [] }) {
         consent_timestamp:      new Date().toISOString(),
       });
       setBooked(appt); setStep(4);
+
+      // Send push notification to clinic admin
+      try {
+        await supabase.functions.invoke("send-push", {
+          body: {
+            clinic_id:   clinic.id,
+            appointment: {
+              id:             appt?.id,
+              patient_name:   form.name,
+              service_name:   form.service,
+              preferred_date: form.date?.toISOString().split("T")[0],
+              preferred_time: form.slot,
+            },
+          },
+        });
+      } catch (pushErr) {
+        // Non-blocking — booking already confirmed, just log
+        console.warn("Push notification failed:", pushErr.message);
+      }
     } catch (e) {
       setError(e.message || "Booking failed. Please try again.");
     } finally {
@@ -117,10 +136,11 @@ export default function BookingEngine({ clinic, services = [] }) {
                   }}>
                   <span style={{ fontSize:22 }}>{svc.icon}</span>
                   <span style={{ flex:1, fontSize:14, fontWeight:500, color:"#0b2545" }}>{svc.name}</span>
-                  <span style={{ fontSize:13, color:"#1565c0", fontWeight:600 }}>
-                    {/* COMPLIANT: flat fee display, no "Starting" language */}
-                    Fee: {svc.price}
-                  </span>
+                  {!hidePrice && !svc.hide_price && svc.price && (
+                    <span style={{ fontSize:13, color:"#1565c0", fontWeight:600 }}>
+                      Fee: {svc.price}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>

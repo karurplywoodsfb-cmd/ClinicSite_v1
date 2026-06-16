@@ -1,0 +1,20 @@
+/* ============================================
+THEME: SLATE
+File: theme-016-slate.css
+Preview: #455a64
+Use: Medical Clinic Website
+============================================ */
+:root {
+  --color-primary:       #455a64;
+  --color-primary-light: #78909c;
+  --color-accent:        #546e7a;
+  --color-bg:            #f2f4f5;
+  --color-surface:       #ffffff;
+  --color-text:          #263238;
+  --color-muted:         #6b7a82;
+  --color-border:        #d5dbde;
+  --font-heading:        'DM Serif Display', serif;
+  --font-body:           'DM Sans', sans-serif;
+  --border-radius-card:  14px;
+  --shadow-card:         0 8px 24px rgba(38,50,56,0.1);
+}

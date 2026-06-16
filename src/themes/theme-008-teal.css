@@ -1,0 +1,20 @@
+/* ============================================
+THEME: TEAL
+File: theme-008-teal.css
+Preview: #00695c
+Use: Medical Clinic Website
+============================================ */
+:root {
+  --color-primary:       #00695c;
+  --color-primary-light: #26a69a;
+  --color-accent:        #00796b;
+  --color-bg:            #f0f8f7;
+  --color-surface:       #ffffff;
+  --color-text:          #004d40;
+  --color-muted:         #5a8c86;
+  --color-border:        #d0ebe6;
+  --font-heading:        'DM Serif Display', serif;
+  --font-body:           'DM Sans', sans-serif;
+  --border-radius-card:  14px;
+  --shadow-card:         0 8px 24px rgba(0,77,64,0.1);
+}

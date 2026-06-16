@@ -1,0 +1,20 @@
+/* ============================================
+THEME: MINT
+File: theme-019-mint.css
+Preview: #00796b
+Use: Medical Clinic Website
+============================================ */
+:root {
+  --color-primary:       #00796b;
+  --color-primary-light: #4db6ac;
+  --color-accent:        #00897b;
+  --color-bg:            #f0f8f7;
+  --color-surface:       #ffffff;
+  --color-text:          #004d40;
+  --color-muted:         #5a8c86;
+  --color-border:        #d0ebe6;
+  --font-heading:        'DM Serif Display', serif;
+  --font-body:           'DM Sans', sans-serif;
+  --border-radius-card:  14px;
+  --shadow-card:         0 8px 24px rgba(0,77,64,0.1);
+}

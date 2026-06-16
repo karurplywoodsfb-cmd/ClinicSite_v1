@@ -1,0 +1,20 @@
+/* ============================================
+THEME: OLIVE
+File: theme-015-olive.css
+Preview: #827717
+Use: Medical Clinic Website
+============================================ */
+:root {
+  --color-primary:       #827717;
+  --color-primary-light: #afb42b;
+  --color-accent:        #9e9d24;
+  --color-bg:            #f8f8f0;
+  --color-surface:       #ffffff;
+  --color-text:          #4a4a0e;
+  --color-muted:         #8c8c5e;
+  --color-border:        #e8e8c8;
+  --font-heading:        'DM Serif Display', serif;
+  --font-body:           'DM Sans', sans-serif;
+  --border-radius-card:  14px;
+  --shadow-card:         0 8px 24px rgba(74,74,14,0.1);
+}

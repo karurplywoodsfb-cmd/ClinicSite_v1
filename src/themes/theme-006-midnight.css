@@ -1,0 +1,20 @@
+/* ============================================
+THEME: MIDNIGHT
+File: theme-006-midnight.css
+Preview: #1a237e
+Use: Medical Clinic Website
+============================================ */
+:root {
+  --color-primary:       #1a237e;
+  --color-primary-light: #3949ab;
+  --color-accent:        #283593;
+  --color-bg:            #f2f3f8;
+  --color-surface:       #ffffff;
+  --color-text:          #0d1245;
+  --color-muted:         #5a5e96;
+  --color-border:        #d6d8f0;
+  --font-heading:        'DM Serif Display', serif;
+  --font-body:           'DM Sans', sans-serif;
+  --border-radius-card:  14px;
+  --shadow-card:         0 8px 24px rgba(13,18,69,0.1);
+}

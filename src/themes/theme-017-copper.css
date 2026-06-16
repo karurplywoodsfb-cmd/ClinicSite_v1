@@ -1,0 +1,20 @@
+/* ============================================
+THEME: COPPER
+File: theme-017-copper.css
+Preview: #bf360c
+Use: Medical Clinic Website
+============================================ */
+:root {
+  --color-primary:       #bf360c;
+  --color-primary-light: #ff7043;
+  --color-accent:        #d84315;
+  --color-bg:            #fdf3f0;
+  --color-surface:       #ffffff;
+  --color-text:          #6d1f07;
+  --color-muted:         #9e6b5e;
+  --color-border:        #f5d6cc;
+  --font-heading:        'DM Serif Display', serif;
+  --font-body:           'DM Sans', sans-serif;
+  --border-radius-card:  14px;
+  --shadow-card:         0 8px 24px rgba(109,31,7,0.1);
+}

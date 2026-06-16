@@ -100,7 +100,7 @@ const NAV_ITEMS = [
   { id:"seo",          label:"SEO",            icon:"🔍" },
   { id:"compliance",   label:"Compliance",     icon:"⚖️"  },
   { id:"preview",      label:"Preview Site",   icon:"👁️"  },
-  { id: "domain", label: "🌐 Domain" },
+  { id:"domain", label:"Domain", icon:"🌐" },
 ];
 
 // ── Main component ────────────────────────────────────────────────
@@ -443,6 +443,10 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
           {/* ═══ APPOINTMENTS ═══ */}
           {page === "appointments" && (
             <div>
+              <div style={{ marginBottom:24 }}>
+                <NotificationSettings clinic={clinic} supabase={supabase}/>
+              </div>
+            <div>
               <div style={{ display:"flex", gap:8, marginBottom:20, flexWrap:"wrap" }}>
                 {["all","pending","confirmed","completed"].map(f => (
                   <button key={f} onClick={() => setApptFilter(f)} style={{
@@ -559,27 +563,13 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                             updateService(svc.id, { is_active:v }).catch(console.error);
                         }}/>
                     </div>
-                    <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
-                      <span style={{ fontSize:12, color:"#475569" }}>Fee:</span>
+                    <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                      <span style={{ fontSize:12, color:"#475569" }}>Consultation fee:</span>
                       <input value={svc.price || ""}
                         onChange={e => setServices(p => p.map(s => s.id === svc.id ? {...s, price:e.target.value} : s))}
-                        disabled={svc.hide_price}
                         style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)",
-                          color: svc.hide_price ? "#334155" : "#22c55e", borderRadius:6, padding:"4px 10px", fontSize:13,
-                          fontFamily:"monospace", width:100, outline:"none", fontWeight:600,
-                          opacity: svc.hide_price ? 0.4 : 1 }}/>
-                      {/* Hide price toggle */}
-                      <div style={{ display:"flex", alignItems:"center", gap:5, marginLeft:4 }}>
-                        <Toggle value={!svc.hide_price}
-                          onChange={v => {
-                            setServices(p => p.map(s => s.id === svc.id ? {...s, hide_price:!v} : s));
-                            if (typeof svc.id === "string" && svc.id.length > 8)
-                              updateService(svc.id, { hide_price:!v }).catch(console.error);
-                          }}/>
-                        <span style={{ fontSize:11, color:"#475569" }}>
-                          {svc.hide_price ? "Price hidden" : "Show price"}
-                        </span>
-                      </div>
+                          color:"#22c55e", borderRadius:6, padding:"4px 10px", fontSize:13,
+                          fontFamily:"monospace", width:110, outline:"none", fontWeight:600 }}/>
                     </div>
                   </div>
                 )) : (
@@ -635,66 +625,7 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
 
           {/* ═══ DOCTOR PROFILE ═══ */}
           {page === "doctor" && (
-            <div style={{ maxWidth:760 }}>
-              {/* Doctor selector */}
-              {doctors.length > 1 && (
-                <div style={{ display:"flex", gap:8, marginBottom:20, flexWrap:"wrap" }}>
-                  {doctors.map((d, i) => (
-                    <button key={d.id || i} onClick={() => setDoctorEdit(d)}
-                      style={{
-                        padding:"7px 16px", borderRadius:8, border:"none", cursor:"pointer",
-                        fontFamily:"inherit", fontSize:13, fontWeight:600, transition:"all .2s",
-                        background: doctorEdit?.id === d.id ? "rgba(21,101,192,0.2)" : "rgba(255,255,255,0.04)",
-                        color: doctorEdit?.id === d.id ? "#7dd3fc" : "#64748b",
-                        borderLeft: doctorEdit?.id === d.id ? "2px solid #1e88e5" : "2px solid transparent",
-                      }}>
-                      {d.name || `Doctor ${i+1}`}
-                    </button>
-                  ))}
-                  <button onClick={async () => {
-                    try {
-                      const { data, error } = await supabase.from("doctors").insert({
-                        clinic_id: clinic.id,
-                        name: "New Doctor",
-                        is_active: true,
-                      }).select().single();
-                      if (error) throw error;
-                      setDoctors(p => [...p, data]);
-                      setDoctorEdit(data);
-                    } catch(e) { alert("Failed to add doctor: " + e.message); }
-                  }} style={{
-                    padding:"7px 16px", borderRadius:8,
-                    border:"1px dashed rgba(255,255,255,0.15)",
-                    background:"transparent", color:"#475569",
-                    cursor:"pointer", fontFamily:"inherit", fontSize:13,
-                  }}>
-                    + Add Doctor
-                  </button>
-                </div>
-              )}
-              {doctors.length <= 1 && (
-                <div style={{ display:"flex", justifyContent:"flex-end", marginBottom:16 }}>
-                  <button onClick={async () => {
-                    try {
-                      const { data, error } = await supabase.from("doctors").insert({
-                        clinic_id: clinic.id,
-                        name: "New Doctor",
-                        is_active: true,
-                      }).select().single();
-                      if (error) throw error;
-                      setDoctors(p => [...p, data]);
-                      setDoctorEdit(data);
-                    } catch(e) { alert("Failed to add doctor: " + e.message); }
-                  }} style={{
-                    padding:"7px 16px", borderRadius:8,
-                    border:"1px dashed rgba(255,255,255,0.15)",
-                    background:"transparent", color:"#475569",
-                    cursor:"pointer", fontFamily:"inherit", fontSize:13,
-                  }}>
-                    + Add Another Doctor
-                  </button>
-                </div>
-              )}
+            <div style={{ maxWidth:680 }}>
               {/* Photo upload */}
               <div style={{ background:"rgba(255,255,255,0.02)",
                 border:"1px solid rgba(255,255,255,0.07)", borderRadius:12,
@@ -945,6 +876,11 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
               clinic={clinic}
               doctor={doctor}
               onNavigate={setPage}/>
+          )}
+
+          {/* ═══ DOMAIN ═══ */}
+          {page === "domain" && (
+            <DomainManager clinic={clinic}/>
           )}
 
           {/* ═══ PREVIEW ═══ */}

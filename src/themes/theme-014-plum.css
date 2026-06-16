@@ -1,0 +1,20 @@
+/* ============================================
+THEME: PLUM
+File: theme-014-plum.css
+Preview: #6a1b9a
+Use: Medical Clinic Website
+============================================ */
+:root {
+  --color-primary:       #6a1b9a;
+  --color-primary-light: #ba68c8;
+  --color-accent:        #7b1fa2;
+  --color-bg:            #f8f2fc;
+  --color-surface:       #ffffff;
+  --color-text:          #4a148c;
+  --color-muted:         #8a6b96;
+  --color-border:        #e8d6f5;
+  --font-heading:        'DM Serif Display', serif;
+  --font-body:           'DM Sans', sans-serif;
+  --border-radius-card:  14px;
+  --shadow-card:         0 8px 24px rgba(74,20,140,0.1);
+}

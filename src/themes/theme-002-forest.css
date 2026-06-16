@@ -1,0 +1,20 @@
+/* ============================================
+THEME: FOREST GREEN
+File: theme-002-forest.css
+Preview: #2e7d32
+Use: Medical Clinic Website
+============================================ */
+:root {
+  --color-primary:       #2e7d32;
+  --color-primary-light: #66bb6a;
+  --color-accent:        #388e3c;
+  --color-bg:            #f4fdf4;
+  --color-surface:       #ffffff;
+  --color-text:          #1b5e20;
+  --color-muted:         #5a8c5e;
+  --color-border:        #d4edd6;
+  --font-heading:        'DM Serif Display', serif;
+  --font-body:           'DM Sans', sans-serif;
+  --border-radius-card:  14px;
+  --shadow-card:         0 8px 24px rgba(27,94,32,0.1);
+}

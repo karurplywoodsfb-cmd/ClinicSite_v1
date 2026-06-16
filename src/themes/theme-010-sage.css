@@ -1,0 +1,20 @@
+/* ============================================
+THEME: SAGE
+File: theme-010-sage.css
+Preview: #558b2f
+Use: Medical Clinic Website
+============================================ */
+:root {
+  --color-primary:       #558b2f;
+  --color-primary-light: #9ccc65;
+  --color-accent:        #689f38;
+  --color-bg:            #f5f9f0;
+  --color-surface:       #ffffff;
+  --color-text:          #33691e;
+  --color-muted:         #6e8c5a;
+  --color-border:        #dcedc8;
+  --font-heading:        'DM Serif Display', serif;
+  --font-body:           'DM Sans', sans-serif;
+  --border-radius-card:  14px;
+  --shadow-card:         0 8px 24px rgba(51,105,30,0.1);
+}

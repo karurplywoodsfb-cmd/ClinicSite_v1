@@ -1,0 +1,20 @@
+/* ============================================
+THEME: SUNSET CORAL
+File: theme-003-sunset.css
+Preview: #e64a19
+Use: Medical Clinic Website
+============================================ */
+:root {
+  --color-primary:       #e64a19;
+  --color-primary-light: #ff7043;
+  --color-accent:        #d84315;
+  --color-bg:            #fff5f2;
+  --color-surface:       #ffffff;
+  --color-text:          #7f2a0e;
+  --color-muted:         #9e6b5e;
+  --color-border:        #f5d6cc;
+  --font-heading:        'DM Serif Display', serif;
+  --font-body:           'DM Sans', sans-serif;
+  --border-radius-card:  14px;
+  --shadow-card:         0 8px 24px rgba(127,42,14,0.1);
+}
