@@ -27,7 +27,7 @@ export function PlanUpgradeModal({ isOpen, onClose, requiredPlan, featureName }:
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-gray-900">Upgrade Required</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
-            <X className="w-5 h-5" />
+            ✕
           </button>
         </div>
 
@@ -40,7 +40,7 @@ export function PlanUpgradeModal({ isOpen, onClose, requiredPlan, featureName }:
         <div className="space-y-3 mb-6">
           {premiumFeatures.map(f => (
             <div key={f.name} className="flex items-center gap-2 text-sm text-gray-600">
-              <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+              <span style={{ color: "#22c55e", fontSize: 16, marginRight: 8 }}>✓</span>
               <span>{f.description}: <strong className="text-gray-800">
                 {typeof f[requiredPlan] === 'boolean' 
                   ? (f[requiredPlan] ? 'Yes' : 'No')
@@ -56,7 +56,7 @@ export function PlanUpgradeModal({ isOpen, onClose, requiredPlan, featureName }:
             onClick={() => window.location.href = '/pricing'}
             className="flex-1 bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 flex items-center justify-center gap-2 transition-colors"
           >
-            <ArrowUp className="w-4 h-4" />
+            ↑
             Upgrade to {pricing.label}
           </button>
           <button
