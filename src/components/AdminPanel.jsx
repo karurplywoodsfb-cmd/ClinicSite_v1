@@ -3,6 +3,9 @@
 //        DPDP consent column display, publish gate
 
 import { useState, useEffect } from "react";
+import { usePlanContext } from "./PlanEnforcementProvider";
+import { UsageBar } from "./UsageBar";
+import { PlanBadge } from "./PlanBadge";
 import {
   supabase,
   updateClinic,

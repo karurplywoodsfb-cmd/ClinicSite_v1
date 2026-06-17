@@ -3,6 +3,8 @@
 // Removes star ratings and guarantee language (Fixes A2, A4)
 
 import { useState } from "react";
+import { usePlanEnforcement } from "../hooks/usePlanEnforcement";
+import { PlanUpgradeModal } from "./PlanUpgradeModal";
 import { bookAppointment, supabase } from "../lib/supabase";
 import DPDPConsentBlock   from "./DPDPConsentBlock";
 

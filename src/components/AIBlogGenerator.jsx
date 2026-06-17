@@ -3,6 +3,8 @@
 // Props: clinic, supabaseClient
 
 import { useState, useEffect } from "react";
+import { usePlanEnforcement } from "../hooks/usePlanEnforcement";
+import { PlanUpgradeModal } from "./PlanUpgradeModal";
 
 const BLOG_TOPICS = {
   Dental: [
@@ -78,9 +80,15 @@ export default function AIBlogGenerator({ clinic, supabaseClient }) {
   const [error,      setError]      = useState("");
   const [activePost, setActivePost] = useState(null);
   const [view,       setView]       = useState("list"); // list | generate | read
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const [upgradeFeature, setUpgradeFeature] = useState("");
+  const { checkLimit, incrementUsage, limits, getRemaining } = usePlanEnforcement();
 
   const specialty   = clinic?.specialty || "General";
   const topicList   = BLOG_TOPICS[specialty] || BLOG_TOPICS.default;
+
+  const maxPosts = limits?.features.custom_pages || 1;
+  const remainingPosts = getRemaining("custom_pages");
 
   useEffect(() => { loadPosts(); }, [clinic?.id]);
 
@@ -97,6 +105,13 @@ export default function AIBlogGenerator({ clinic, supabaseClient }) {
   };
 
   const generate = async () => {
+    // PLAN ENFORCEMENT: Check if user can create more blog posts
+    const canCreate = await checkLimit("custom_pages", 1);
+    if (!canCreate) {
+      setUpgradeFeature("custom_pages");
+      setShowUpgrade(true);
+      return;
+    }
     const finalTopic = customTopic.trim() || topic;
     if (!finalTopic) { setError("Please select or enter a topic."); return; }
 
@@ -158,6 +173,13 @@ Respond ONLY in this JSON format (no other text):
   };
 
   const savePost = async () => {
+    // PLAN ENFORCEMENT: Double-check limit before saving
+    const canSave = await checkLimit("custom_pages", 1);
+    if (!canSave) {
+      setUpgradeFeature("custom_pages");
+      setShowUpgrade(true);
+      return;
+    }
     if (!generated || !clinic?.id) return;
     setSaving(true); setSaved(false);
     try {
@@ -178,6 +200,8 @@ Respond ONLY in this JSON format (no other text):
       });
 
       if (dbErr) throw new Error(dbErr.message);
+      // PLAN ENFORCEMENT: Increment usage after successful save
+      await incrementUsage("custom_pages", 1);
       setSaved(true);
       await loadPosts();
       setTimeout(() => { setSaved(false); setView("list"); setGenerated(null); }, 1500);
@@ -210,18 +234,23 @@ Respond ONLY in this JSON format (no other text):
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:24 }}>
         <div>
           <h2 style={{ fontSize:20, fontWeight:700, color:"#e2e8f0", margin:0 }}>Blog & Content</h2>
-          <div style={{ fontSize:13, color:"#64748b", marginTop:4 }}>{posts.length} article{posts.length !== 1 ? "s" : ""} published</div>
+          <div style={{ fontSize:13, color:"#64748b", marginTop:4 }}>{posts.length} article{posts.length !== 1 ? "s" : ""} published <span style={{ marginLeft:8, color: remainingPosts <= 0 ? "#f87171" : "#64748b" }}>({remainingPosts} of {maxPosts > 100000 ? "Unlimited" : maxPosts} remaining)</span></div>
         </div>
-        <button onClick={() => setView("generate")} style={{ ...S.btn, background:"#1565c0", color:"white" }}>
-          ✨ Generate New Article
+        <button onClick={() => { if (remainingPosts <= 0) { setUpgradeFeature("custom_pages"); setShowUpgrade(true); } else { setView("generate"); } }} disabled={remainingPosts <= 0} style={{ ...S.btn, background: remainingPosts <= 0 ? "#475569" : "#1565c0", color:"white", opacity: remainingPosts <= 0 ? 0.5 : 1 }}>
+          {remainingPosts <= 0 ? "⚠ Limit Reached" : "✨ Generate New Article"}
         </button>
       </div>
 
+      {remainingPosts <= 2 && remainingPosts > 0 && (
+        <div style={{ padding:"10px 14px", background:"rgba(234,179,8,0.1)", border:"1px solid rgba(234,179,8,0.2)", borderRadius:8, fontSize:13, color:"#fbbf24", marginBottom:16 }}>
+          You have {remainingPosts} article{remainingPosts !== 1 ? "s" : ""} remaining on your plan. <a href="/pricing" style={{ color:"#fbbf24", textDecoration:"underline" }}>Upgrade</a> for unlimited articles.
+        </div>
+      )}
       {posts.length === 0 ? (
         <div style={{ ...S.card, textAlign:"center", padding:60 }}>
           <div style={{ fontSize:40, marginBottom:12 }}>✍️</div>
           <div style={{ color:"#64748b", fontSize:15, marginBottom:20 }}>No articles yet. Generate your first one with AI.</div>
-          <button onClick={() => setView("generate")} style={{ ...S.btn, background:"#1565c0", color:"white" }}>
+          <button onClick={() => { if (remainingPosts <= 0) { setUpgradeFeature("custom_pages"); setShowUpgrade(true); } else { setView("generate"); } }} disabled={remainingPosts <= 0} style={{ ...S.btn, background: remainingPosts <= 0 ? "#475569" : "#1565c0", color:"white", opacity: remainingPosts <= 0 ? 0.5 : 1 }}>
             ✨ Generate First Article
           </button>
         </div>
@@ -266,6 +295,12 @@ Respond ONLY in this JSON format (no other text):
           ))}
         </div>
       )}
+    <PlanUpgradeModal
+        isOpen={showUpgrade}
+        onClose={() => setShowUpgrade(false)}
+        requiredPlan="premium"
+        featureName={upgradeFeature}
+      />
     </div>
   );
 

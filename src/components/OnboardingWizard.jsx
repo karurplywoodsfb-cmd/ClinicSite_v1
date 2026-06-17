@@ -4,6 +4,8 @@
 // Saves everything to Supabase automatically
 
 import { useState } from "react";
+import { usePlanEnforcement } from "../hooks/usePlanEnforcement";
+import { PlanUpgradeModal } from "./PlanUpgradeModal";
 import { supabase } from "../lib/supabase";
 
 // ── Specialty → keyword map ───────────────────────────────────────
@@ -69,6 +71,12 @@ function StepWrap({ children }) {
     <div style={{ animation: "fadeUp .35s ease both" }}>
       <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}`}</style>
       {children}
+    <PlanUpgradeModal
+        isOpen={showUpgrade}
+        onClose={() => setShowUpgrade(false)}
+        requiredPlan="premium"
+        featureName={upgradeFeature}
+      />
     </div>
   );
 }
@@ -97,6 +105,9 @@ export default function OnboardingWizard({ user, onComplete }) {
   const [error, setError]   = useState("");
   const [done, setDone]     = useState(false);
   const [liveUrl, setLiveUrl] = useState("");
+  const { limits } = usePlanEnforcement();
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const [upgradeFeature, setUpgradeFeature] = useState("");
 
   const [data, setData] = useState({
     // Step 1
@@ -407,8 +418,9 @@ export default function OnboardingWizard({ user, onComplete }) {
                 <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
                   {(DEFAULT_SERVICES[data.specialty] || DEFAULT_SERVICES["General Practice"]).map(svc => {
                     const selected = data.services.includes(svc);
+                    const atLimit = data.services.length >= maxServices && !selected;
                     return (
-                      <button key={svc} onClick={() => set("services", selected ? data.services.filter(s=>s!==svc) : [...data.services, svc])}
+                      <button key={svc} onClick={() => { if (atLimit) { setUpgradeFeature("services"); setShowUpgrade(true); return; } set("services", selected ? data.services.filter(s=>s!==svc) : [...data.services, svc]); }}
                         style={{ display:"flex", alignItems:"center", gap:12, padding:"12px 16px", borderRadius:10, cursor:"pointer", fontFamily:"inherit", textAlign:"left",
                           background: selected ? "rgba(21,101,192,0.12)" : "rgba(255,255,255,0.03)",
                           border: `1.5px solid ${selected ? "rgba(21,101,192,0.4)" : "rgba(255,255,255,0.08)"}`,
@@ -422,7 +434,7 @@ export default function OnboardingWizard({ user, onComplete }) {
                     );
                   })}
                 </div>
-                <div style={{ marginTop:12, fontSize:12, color:"#334155" }}>{data.services.length} selected</div>
+                <div style={{ marginTop:12, fontSize:12, color: data.services.length >= maxServices ? "#f87171" : "#334155" }}>{data.services.length} of {maxServices > 100000 ? "Unlimited" : maxServices} selected</div>
               </StepWrap>
             )}
 
@@ -518,6 +530,12 @@ export default function OnboardingWizard({ user, onComplete }) {
           </div>
         </div>
       </div>
+    <PlanUpgradeModal
+        isOpen={showUpgrade}
+        onClose={() => setShowUpgrade(false)}
+        requiredPlan="premium"
+        featureName={upgradeFeature}
+      />
     </div>
   );
 }

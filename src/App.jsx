@@ -6,6 +6,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useCustomDomain } from "./hooks/useCustomDomain";
 import ClinicSite from "./pages/ClinicSite";
+import { PlanEnforcementProvider } from './components/PlanEnforcementProvider';
 
 // ── Lazy imports (keep initial bundle small) ───────────────────
 import { lazy, Suspense } from "react";
@@ -64,6 +65,10 @@ export default function App() {
 
   // Normal platform routing
   return (
+    <PlanEnforcementProvider>
+      <YourAppContent />
+    </PlanEnforcementProvider>
+
     <BrowserRouter>
       <Suspense fallback={<PageLoader/>}>
         <Routes>

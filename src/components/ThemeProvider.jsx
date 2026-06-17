@@ -2,6 +2,8 @@
 // Injects theme CSS variables directly into :root — works in production
 
 import { useEffect, useState } from "react";
+import { PlanGate } from "./PlanGate";
+import { usePlanContext } from "./PlanEnforcementProvider";
 
 // Theme definitions mapped by the IDs used in AdminPanel
 // Admin saves: default, forest, sunset, lavender, gold, midnight, rose, teal, charcoal, sage

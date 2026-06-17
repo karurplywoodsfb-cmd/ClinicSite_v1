@@ -3,6 +3,7 @@
 // Uses Supabase Magic Link / Email OTP — completely FREE, no Twilio
 
 import { useState } from "react";
+import { usePlanEnforcement } from "../hooks/usePlanEnforcement";
 import { supabase } from "../lib/supabase";
 
 export default function Login({ onLogin }) {
