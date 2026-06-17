@@ -1153,4 +1153,4 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
       )}
     </div>
   );
-}s
+}

@@ -3,7 +3,7 @@
 // Custom domain: drsmithclinic.in → loads ClinicSite directly (no slug in URL)
 // Platform:      clinicsite.in/drsmith → normal slug-based routing
 
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useCustomDomain } from "./hooks/useCustomDomain";
 import ClinicSite from "./pages/ClinicSite";
 import { PlanEnforcementProvider } from './components/PlanEnforcementProvider';
@@ -13,7 +13,7 @@ import { lazy, Suspense } from "react";
 const LandingPage       = lazy(() => import("./pages/LandingPage"));
 const LoginPage         = lazy(() => import("./pages/LoginPage"));
 const OnboardingWizard  = lazy(() => import("./pages/OnboardingWizard"));
-const AdminPanel        = lazy(() => import("./components/AdminPanel"));  // ← FIXED PATH
+const AdminPanel        = lazy(() => import("./components/AdminPanel"));
 const SuperadminPanel   = lazy(() => import("./pages/SuperadminPanel"));
 const PrivacyPolicy     = lazy(() => import("./pages/PrivacyPolicy"));
 const NotFound          = lazy(() => import("./pages/NotFound"));
