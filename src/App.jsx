@@ -32,8 +32,6 @@ function PageLoader() {
 }
 
 // ── Custom domain wrapper ─────────────────────────────────────
-// When running on a custom clinic domain (e.g. drsmithclinic.in),
-// render ClinicSite directly without any routing.
 function CustomDomainApp({ clinicSlug }) {
   if (!clinicSlug) {
     return (
@@ -58,38 +56,38 @@ export default function App() {
   // While detecting domain type, show nothing (avoid flash)
   if (loading) return <PageLoader/>;
 
-  // Custom domain — bypass all routing, render clinic directly
-  if (isCustomDomain) {
-    return <CustomDomainApp clinicSlug={clinicSlug}/>;
-  }
-
-  // Normal platform routing — wrap EVERYTHING in PlanEnforcementProvider
+  // OPTION 1: Top-level wrapper encapsulation.
+  // This guarantees the context lifecycle builds first, covering both routing paths.
   return (
     <PlanEnforcementProvider>
-      <BrowserRouter>
-        <Suspense fallback={<PageLoader/>}>
-          <Routes>
-            {/* Public */}
-            <Route path="/"          element={<LandingPage/>}/>
-            <Route path="/login"     element={<LoginPage/>}/>
-            <Route path="/onboarding" element={<OnboardingWizard/>}/>
+      {isCustomDomain ? (
+        <CustomDomainApp clinicSlug={clinicSlug}/>
+      ) : (
+        <BrowserRouter>
+          <Suspense fallback={<PageLoader/>}>
+            <Routes>
+              {/* Public */}
+              <Route path="/"           element={<LandingPage/>}/>
+              <Route path="/login"      element={<LoginPage/>}/>
+              <Route path="/onboarding" element={<OnboardingWizard/>}/>
 
-            {/* Clinic patient-facing site */}
-            <Route path="/:slug"               element={<ClinicSite/>}/>
-            <Route path="/:slug/privacy-policy" element={<PrivacyPolicy/>}/>
+              {/* Clinic patient-facing site */}
+              <Route path="/:slug"                element={<ClinicSite/>}/>
+              <Route path="/:slug/privacy-policy" element={<PrivacyPolicy/>}/>
 
-            {/* Admin */}
-            <Route path="/admin"               element={<AdminPanel/>}/>
-            <Route path="/admin/:tab"          element={<AdminPanel/>}/>
+              {/* Admin */}
+              <Route path="/admin"                element={<AdminPanel/>}/>
+              <Route path="/admin/:tab"          element={<AdminPanel/>}/>
 
-            {/* Superadmin */}
-            <Route path="/superadmin"          element={<SuperadminPanel/>}/>
+              {/* Superadmin */}
+              <Route path="/superadmin"          element={<SuperadminPanel/>}/>
 
-            {/* Fallback */}
-            <Route path="*" element={<NotFound/>}/>
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
+              {/* Fallback */}
+              <Route path="*" element={<NotFound/>}/>
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      )}
     </PlanEnforcementProvider>
   );
 }
