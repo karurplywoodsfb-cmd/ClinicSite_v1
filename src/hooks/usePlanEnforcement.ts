@@ -1,7 +1,6 @@
 // src/hooks/usePlanEnforcement.ts
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import { useAuth } from './useAuth';
 import type { PlanTier } from '../config/planConfig';
 
 export interface PlanLimits {
@@ -33,11 +32,29 @@ export interface UsageData {
 }
 
 export function usePlanEnforcement() {
-  const { user } = useAuth();
+  const [user, setUser] = useState<any>(null);
   const [limits, setLimits] = useState<PlanLimits | null>(null);
   const [usage, setUsage] = useState<UsageData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Get current user from Supabase auth
+  useEffect(() => {
+    const getUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setUser(data?.user || null);
+    };
+    getUser();
+
+    // Listen for auth changes
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+    });
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, []);
 
   // Fetch current plan limits
   const fetchLimits = useCallback(async () => {
