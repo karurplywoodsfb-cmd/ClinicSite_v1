@@ -1,20 +1,32 @@
-/* ============================================
-THEME: FOREST GREEN
-File: theme-002-forest.css
-Preview: #2e7d32
-Use: Medical Clinic Website
-============================================ */
+/* theme-002-forest.css — Complete theme palette for ClinicSite.jsx */
+/* Auto-generated — do not edit manually */
+
 :root {
-  --color-primary:       #2e7d32;
-  --color-primary-light: #66bb6a;
-  --color-accent:        #388e3c;
-  --color-bg:            #f4fdf4;
-  --color-surface:       #ffffff;
-  --color-text:          #1b5e20;
-  --color-muted:         #5a8c5e;
-  --color-border:        #d4edd6;
-  --font-heading:        'DM Serif Display', serif;
-  --font-body:           'DM Sans', sans-serif;
-  --border-radius-card:  14px;
-  --shadow-card:         0 8px 24px rgba(27,94,32,0.1);
+  /* Core Colors */
+  --color-primary: #2e7d32;
+  --color-primary-light: #43a047;
+  --color-accent: #388e3c;
+  --color-bg: #f0f7f0;
+  --color-surface: #ffffff;
+  --color-text: #1b3d1b;
+  --color-muted: #5a7a5a;
+  --color-border: #d0e8d0;
+
+  /* Status Colors */
+  --color-success: #22c55e;
+  --color-danger: #ef4444;
+  --color-whatsapp: #25d366;
+
+  /* Derived Colors */
+  --color-text-muted: #94a3b8;
+  --color-primary-bg: rgba(46, 125, 50, 0.08);
+  --color-primary-bg-light: rgba(46, 125, 50, 0.04);
+
+  /* Typography */
+  --font-heading: 'DM Serif Display', Georgia, serif;
+  --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Layout */
+  --max-width: 1100px;
+  --section-padding: 80px;
 }

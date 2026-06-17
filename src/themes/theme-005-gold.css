@@ -1,20 +1,32 @@
-/* ============================================
-THEME: ROYAL GOLD
-File: theme-005-gold.css
-Preview: #f57f17
-Use: Medical Clinic Website
-============================================ */
+/* theme-005-gold.css — Complete theme palette for ClinicSite.jsx */
+/* Auto-generated — do not edit manually */
+
 :root {
-  --color-primary:       #f57f17;
-  --color-primary-light: #ffb74d;
-  --color-accent:        #ef6c00;
-  --color-bg:            #fffaf2;
-  --color-surface:       #ffffff;
-  --color-text:          #6d3f0e;
-  --color-muted:         #9e7e5e;
-  --color-border:        #f5e0c4;
-  --font-heading:        'DM Serif Display', serif;
-  --font-body:           'DM Sans', sans-serif;
-  --border-radius-card:  14px;
-  --shadow-card:         0 8px 24px rgba(109,63,14,0.1);
+  /* Core Colors */
+  --color-primary: #f57f17;
+  --color-primary-light: #fb8c00;
+  --color-accent: #ffa726;
+  --color-bg: #fdf8f0;
+  --color-surface: #ffffff;
+  --color-text: #4a2d0a;
+  --color-muted: #967a5a;
+  --color-border: #f0e0d0;
+
+  /* Status Colors */
+  --color-success: #22c55e;
+  --color-danger: #ef4444;
+  --color-whatsapp: #25d366;
+
+  /* Derived Colors */
+  --color-text-muted: #94a3b8;
+  --color-primary-bg: rgba(245, 127, 23, 0.08);
+  --color-primary-bg-light: rgba(245, 127, 23, 0.04);
+
+  /* Typography */
+  --font-heading: 'DM Serif Display', Georgia, serif;
+  --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Layout */
+  --max-width: 1100px;
+  --section-padding: 80px;
 }

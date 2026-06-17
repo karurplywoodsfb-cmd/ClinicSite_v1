@@ -1,20 +1,32 @@
-/* ============================================
-THEME: SLATE
-File: theme-016-slate.css
-Preview: #455a64
-Use: Medical Clinic Website
-============================================ */
+/* theme-016-slate.css — Complete theme palette for ClinicSite.jsx */
+/* Auto-generated — do not edit manually */
+
 :root {
-  --color-primary:       #455a64;
-  --color-primary-light: #78909c;
-  --color-accent:        #546e7a;
-  --color-bg:            #f2f4f5;
-  --color-surface:       #ffffff;
-  --color-text:          #263238;
-  --color-muted:         #6b7a82;
-  --color-border:        #d5dbde;
-  --font-heading:        'DM Serif Display', serif;
-  --font-body:           'DM Sans', sans-serif;
-  --border-radius-card:  14px;
-  --shadow-card:         0 8px 24px rgba(38,50,56,0.1);
+  /* Core Colors */
+  --color-primary: #455a64;
+  --color-primary-light: #546e7a;
+  --color-accent: #607d8b;
+  --color-bg: #f0f2f3;
+  --color-surface: #ffffff;
+  --color-text: #1a2328;
+  --color-muted: #5a6a75;
+  --color-border: #d0d5d8;
+
+  /* Status Colors */
+  --color-success: #22c55e;
+  --color-danger: #ef4444;
+  --color-whatsapp: #25d366;
+
+  /* Derived Colors */
+  --color-text-muted: #94a3b8;
+  --color-primary-bg: rgba(69, 90, 100, 0.08);
+  --color-primary-bg-light: rgba(69, 90, 100, 0.04);
+
+  /* Typography */
+  --font-heading: 'DM Serif Display', Georgia, serif;
+  --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Layout */
+  --max-width: 1100px;
+  --section-padding: 80px;
 }

@@ -1,20 +1,32 @@
-/* ============================================
-THEME: SAGE
-File: theme-010-sage.css
-Preview: #558b2f
-Use: Medical Clinic Website
-============================================ */
+/* theme-010-sage.css — Complete theme palette for ClinicSite.jsx */
+/* Auto-generated — do not edit manually */
+
 :root {
-  --color-primary:       #558b2f;
-  --color-primary-light: #9ccc65;
-  --color-accent:        #689f38;
-  --color-bg:            #f5f9f0;
-  --color-surface:       #ffffff;
-  --color-text:          #33691e;
-  --color-muted:         #6e8c5a;
-  --color-border:        #dcedc8;
-  --font-heading:        'DM Serif Display', serif;
-  --font-body:           'DM Sans', sans-serif;
-  --border-radius-card:  14px;
-  --shadow-card:         0 8px 24px rgba(51,105,30,0.1);
+  /* Core Colors */
+  --color-primary: #558b2f;
+  --color-primary-light: #689f38;
+  --color-accent: #7cb342;
+  --color-bg: #f4f7f0;
+  --color-surface: #ffffff;
+  --color-text: #1f3d0a;
+  --color-muted: #6a7a5a;
+  --color-border: #d8e0d0;
+
+  /* Status Colors */
+  --color-success: #22c55e;
+  --color-danger: #ef4444;
+  --color-whatsapp: #25d366;
+
+  /* Derived Colors */
+  --color-text-muted: #94a3b8;
+  --color-primary-bg: rgba(85, 139, 47, 0.08);
+  --color-primary-bg-light: rgba(85, 139, 47, 0.04);
+
+  /* Typography */
+  --font-heading: 'DM Serif Display', Georgia, serif;
+  --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Layout */
+  --max-width: 1100px;
+  --section-padding: 80px;
 }

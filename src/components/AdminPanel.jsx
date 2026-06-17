@@ -863,24 +863,24 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                 </div>
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:10 }}>
                   {[
-                    { id:"default",   label:"Ocean Blue",   color:"#1565c0" },
-                    { id:"forest",    label:"Forest Green", color:"#2e7d32" },
-                    { id:"sunset",    label:"Warm Coral",   color:"#e64a19" },
-                    { id:"lavender",  label:"Lavender",     color:"#7b1fa2" },
-                    { id:"gold",      label:"Royal Gold",   color:"#f57f17" },
-                    { id:"midnight",  label:"Midnight",     color:"#1a237e" },
-                    { id:"rose",      label:"Rose",         color:"#c2185b" },
-                    { id:"teal",      label:"Teal",         color:"#00695c" },
-                    { id:"charcoal",  label:"Charcoal",     color:"#37474f" },
-                    { id:"sage",      label:"Sage Green",   color:"#558b2f" },
+                    { id:"theme-001-ocean",   label:"Ocean Blue",   color:"#1565c0" },
+                    { id:"theme-002-forest",  label:"Forest Green", color:"#2e7d32" },
+                    { id:"theme-003-sunset",  label:"Warm Coral",   color:"#e64a19" },
+                    { id:"theme-004-lavender",label:"Lavender",     color:"#7b1fa2" },
+                    { id:"theme-005-gold",    label:"Royal Gold",   color:"#f57f17" },
+                    { id:"theme-006-midnight",label:"Midnight",     color:"#1a237e" },
+                    { id:"theme-007-rose",    label:"Rose",         color:"#c2185b" },
+                    { id:"theme-008-teal",    label:"Teal",         color:"#00695c" },
+                    { id:"theme-009-charcoal",label:"Charcoal",     color:"#37474f" },
+                    { id:"theme-010-sage",    label:"Sage Green",   color:"#558b2f" },
                   ].map(theme => {
-                    const activeTheme = clinic?.color_theme || "default";
+                    const activeTheme = clinic?.theme_id || "theme-001-ocean";
                     const isActive = activeTheme === theme.id;
                     return (
                       <div key={theme.id}
                         onClick={async () => {
                           try {
-                            const updated = await updateClinic(clinic.id, { color_theme: theme.id });
+                            const updated = await updateClinic(clinic.id, { theme_id: theme.id });
                             setClinic(updated); setClinicEdit(updated);
                             onClinicUpdate?.(updated);
                           } catch(e) { alert("Save failed: " + e.message); }
