@@ -13,7 +13,7 @@ import { lazy, Suspense } from "react";
 const LandingPage       = lazy(() => import("./pages/LandingPage"));
 const LoginPage         = lazy(() => import("./pages/LoginPage"));
 const OnboardingWizard  = lazy(() => import("./pages/OnboardingWizard"));
-const AdminPanel        = lazy(() => import("./pages/AdminPanel"));
+const AdminPanel        = lazy(() => import("./components/AdminPanel"));  // ← FIXED PATH
 const SuperadminPanel   = lazy(() => import("./pages/SuperadminPanel"));
 const PrivacyPolicy     = lazy(() => import("./pages/PrivacyPolicy"));
 const NotFound          = lazy(() => import("./pages/NotFound"));
