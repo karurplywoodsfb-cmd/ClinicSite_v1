@@ -330,8 +330,6 @@ function FAQSection({ clinic }) {
             </div>
           ))}
         </div>
-          ))}
-        </div>
       </div>
     </section>
   );
