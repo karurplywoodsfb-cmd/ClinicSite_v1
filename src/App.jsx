@@ -8,7 +8,7 @@ import { useCustomDomain } from "./hooks/useCustomDomain";
 import ClinicSite from "./pages/ClinicSite";
 import { PlanEnforcementProvider } from './components/PlanEnforcementProvider';
 
-// ── Lazy imports (keep initial bundle small) ───────────────────
+// ── Lazy imports (keep initial bundle small) ───────────────────────────────────────────
 import { lazy, Suspense } from "react";
 const LandingPage       = lazy(() => import("./pages/LandingPage"));
 const LoginPage         = lazy(() => import("./pages/LoginPage"));
@@ -31,7 +31,7 @@ function PageLoader() {
   );
 }
 
-// ── Custom domain wrapper ──────────────────────────────────────
+// ── Custom domain wrapper ─────────────────────────────────────
 // When running on a custom clinic domain (e.g. drsmithclinic.in),
 // render ClinicSite directly without any routing.
 function CustomDomainApp({ clinicSlug }) {
@@ -51,7 +51,7 @@ function CustomDomainApp({ clinicSlug }) {
   return <ClinicSite slug={clinicSlug}/>;
 }
 
-// ── Main App ──────────────────────────────────────────────────
+// ── Main App ─────────────────────────────────────────────────────
 export default function App() {
   const { isCustomDomain, clinicSlug, loading } = useCustomDomain();
 
@@ -63,35 +63,33 @@ export default function App() {
     return <CustomDomainApp clinicSlug={clinicSlug}/>;
   }
 
-  // Normal platform routing
+  // Normal platform routing — wrap EVERYTHING in PlanEnforcementProvider
   return (
     <PlanEnforcementProvider>
-      <YourAppContent />
+      <BrowserRouter>
+        <Suspense fallback={<PageLoader/>}>
+          <Routes>
+            {/* Public */}
+            <Route path="/"          element={<LandingPage/>}/>
+            <Route path="/login"     element={<LoginPage/>}/>
+            <Route path="/onboarding" element={<OnboardingWizard/>}/>
+
+            {/* Clinic patient-facing site */}
+            <Route path="/:slug"               element={<ClinicSite/>}/>
+            <Route path="/:slug/privacy-policy" element={<PrivacyPolicy/>}/>
+
+            {/* Admin */}
+            <Route path="/admin"               element={<AdminPanel/>}/>
+            <Route path="/admin/:tab"          element={<AdminPanel/>}/>
+
+            {/* Superadmin */}
+            <Route path="/superadmin"          element={<SuperadminPanel/>}/>
+
+            {/* Fallback */}
+            <Route path="*" element={<NotFound/>}/>
+          </Routes>
+        </Suspense>
+      </BrowserRouter>
     </PlanEnforcementProvider>
-
-    <BrowserRouter>
-      <Suspense fallback={<PageLoader/>}>
-        <Routes>
-          {/* Public */}
-          <Route path="/"          element={<LandingPage/>}/>
-          <Route path="/login"     element={<LoginPage/>}/>
-          <Route path="/onboarding" element={<OnboardingWizard/>}/>
-
-          {/* Clinic patient-facing site */}
-          <Route path="/:slug"               element={<ClinicSite/>}/>
-          <Route path="/:slug/privacy-policy" element={<PrivacyPolicy/>}/>
-
-          {/* Admin */}
-          <Route path="/admin"               element={<AdminPanel/>}/>
-          <Route path="/admin/:tab"          element={<AdminPanel/>}/>
-
-          {/* Superadmin */}
-          <Route path="/superadmin"          element={<SuperadminPanel/>}/>
-
-          {/* Fallback */}
-          <Route path="*" element={<NotFound/>}/>
-        </Routes>
-      </Suspense>
-    </BrowserRouter>
   );
 }

@@ -109,6 +109,7 @@ const NAV_ITEMS = [
 
 // ── Main component ────────────────────────────────────────────────
 export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, onLogout }) {
+  const planContext = usePlanContext();
   const [page,        setPage]        = useState("dashboard");
   const [clinic,      setClinic]      = useState(initClinic);
   const [services,    setServices]    = useState([]);
@@ -282,25 +283,15 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
         {/* Plan badge */}
         {sideOpen && (
           <div style={{ padding:"12px" }}>
-            <div style={{ background:"rgba(21,101,192,0.1)", border:"1px solid rgba(21,101,192,0.25)",
-              borderRadius:8, padding:"10px 12px" }}>
-              <div style={{ fontSize:10, color:"#3b82f6", fontFamily:"monospace", marginBottom:4 }}>
-                {(clinic?.plan || "free").toUpperCase()} PLAN
-              </div>
-              <div style={{ fontSize:11, color:"#64748b", marginBottom:8 }}>
-                {clinic?.plan === "free"
-                  ? "Upgrade for appointments + custom domain"
-                  : "Active subscription"}
-              </div>
-              {clinic?.plan === "free" && (
-                <button onClick={() => setShowUpgrade(true)} style={{
-                  width:"100%", background:"#1565c0", border:"none", color:"white",
-                  borderRadius:6, padding:"6px", fontSize:11, cursor:"pointer",
-                  fontFamily:"inherit", fontWeight:600 }}>
-                  Upgrade ₹499/mo →
-                </button>
-              )}
-            </div>
+            <PlanBadge />
+            {clinic?.plan === "free" && (
+              <button onClick={() => setShowUpgrade(true)} style={{
+                width:"100%", marginTop:8, background:"#1565c0", border:"none", color:"white",
+                borderRadius:6, padding:"6px", fontSize:11, cursor:"pointer",
+                fontFamily:"inherit", fontWeight:600 }}>
+                Upgrade ₹499/mo →
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -416,6 +407,15 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                   </div>
                 ))}
               </div>
+
+              {/* Usage Bars */}
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:14, marginBottom:24 }}>
+                <UsageBar feature="appointments_monthly" label="Appointments" />
+                <UsageBar feature="custom_pages" label="Pages" />
+                <UsageBar feature="seo_keywords" label="SEO Keywords" />
+                <UsageBar feature="storage_mb" label="Storage (MB)" />
+              </div>
+
 
               {/* Today's appointments */}
               <div style={{ background:"rgba(255,255,255,0.02)",
@@ -1153,4 +1153,4 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
       )}
     </div>
   );
-}
+}s
