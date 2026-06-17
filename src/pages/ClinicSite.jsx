@@ -26,7 +26,16 @@ import ClinicMediaSection from "../components/ClinicMediaSection";
 import { TEMPLATES, suggestTemplate } from "../templates";
 
 // ── Theme variable applier (production-safe, no dynamic imports) ────
+// ── Theme variable applier (production-safe, no dynamic imports) ────
 function applyThemeVars(themeId) {
+  // Handle both formats: "theme-006-midnight" → "midnight", "ocean" → "ocean"
+  const normalizeThemeId = (id) => {
+    if (!id) return "default";
+    // Strip "theme-XXX-" prefix if present
+    const match = id.match(/^theme-\d+-(.*)$/);
+    return match ? match[1] : id;
+  };
+
   const themes = {
     "default":   { "--color-primary": "#1565c0", "--color-primary-light": "#1e88e5", "--color-accent": "#0288d1", "--color-bg": "#f4f8fd", "--color-surface": "#ffffff", "--color-text": "#0b2545", "--color-muted": "#5a7a96", "--color-border": "#dce8f5" },
     "ocean":     { "--color-primary": "#1565c0", "--color-primary-light": "#1e88e5", "--color-accent": "#0288d1", "--color-bg": "#f4f8fd", "--color-surface": "#ffffff", "--color-text": "#0b2545", "--color-muted": "#5a7a96", "--color-border": "#dce8f5" },
@@ -48,14 +57,15 @@ function applyThemeVars(themeId) {
     "--color-warning": "#f57f17", "--color-danger": "#c62828",
   };
 
-  const vars = themes[themeId] || themes["default"];
+  const normalizedId = normalizeThemeId(themeId);
+  const vars = themes[normalizedId] || themes["default"];
   const merged = { ...defaults, ...vars };
 
   Object.entries(merged).forEach(([key, val]) => {
     document.documentElement.style.setProperty(key, val);
   });
 
-  console.log(`[ClinicSite] Applied theme: ${themeId}`);
+  console.log(`[ClinicSite] Applied theme: ${themeId} → ${normalizedId}`);
 }
 
 // ── SEO injector ──────────────────────────────────────────────────
