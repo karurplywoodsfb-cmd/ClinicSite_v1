@@ -1,10 +1,124 @@
-// src/components/ThemeProvider.jsx — BULLETPROOF VERSION
-// Injects selected theme CSS variables into :root with full error handling
+// src/components/ThemeProvider.jsx — FIXED v3
+// Injects theme CSS variables directly into :root — works in production
 
 import { useEffect, useState } from "react";
 
-// Complete default theme with ALL variables that ClinicSite.css expects
-const DEFAULT_THEME = {
+// Theme definitions mapped by the IDs used in AdminPanel
+// Admin saves: default, forest, sunset, lavender, gold, midnight, rose, teal, charcoal, sage
+const THEMES = {
+  "default": {
+    "--color-primary": "#1565c0",
+    "--color-primary-light": "#1e88e5",
+    "--color-accent": "#0288d1",
+    "--color-bg": "#f4f8fd",
+    "--color-surface": "#ffffff",
+    "--color-text": "#0b2545",
+    "--color-muted": "#5a7a96",
+    "--color-border": "#dce8f5",
+  },
+  "ocean": {
+    "--color-primary": "#1565c0",
+    "--color-primary-light": "#1e88e5",
+    "--color-accent": "#0288d1",
+    "--color-bg": "#f4f8fd",
+    "--color-surface": "#ffffff",
+    "--color-text": "#0b2545",
+    "--color-muted": "#5a7a96",
+    "--color-border": "#dce8f5",
+  },
+  "forest": {
+    "--color-primary": "#2e7d32",
+    "--color-primary-light": "#43a047",
+    "--color-accent": "#66bb6a",
+    "--color-bg": "#f1f8e9",
+    "--color-surface": "#ffffff",
+    "--color-text": "#1b5e20",
+    "--color-muted": "#558b2f",
+    "--color-border": "#c8e6c9",
+  },
+  "sunset": {
+    "--color-primary": "#e64a19",
+    "--color-primary-light": "#f57c00",
+    "--color-accent": "#ff9800",
+    "--color-bg": "#fff3e0",
+    "--color-surface": "#ffffff",
+    "--color-text": "#bf360c",
+    "--color-muted": "#e65100",
+    "--color-border": "#ffe0b2",
+  },
+  "lavender": {
+    "--color-primary": "#7b1fa2",
+    "--color-primary-light": "#9c27b0",
+    "--color-accent": "#ab47bc",
+    "--color-bg": "#f3e5f5",
+    "--color-surface": "#ffffff",
+    "--color-text": "#4a148c",
+    "--color-muted": "#7b1fa2",
+    "--color-border": "#e1bee7",
+  },
+  "gold": {
+    "--color-primary": "#f57f17",
+    "--color-primary-light": "#fb8c00",
+    "--color-accent": "#ffa000",
+    "--color-bg": "#fff8e1",
+    "--color-surface": "#ffffff",
+    "--color-text": "#e65100",
+    "--color-muted": "#f57f17",
+    "--color-border": "#ffecb3",
+  },
+  "midnight": {
+    "--color-primary": "#5c6bc0",
+    "--color-primary-light": "#7986cb",
+    "--color-accent": "#9fa8da",
+    "--color-bg": "#0d1117",
+    "--color-surface": "#161b22",
+    "--color-text": "#e6edf3",
+    "--color-muted": "#8b949e",
+    "--color-border": "#30363d",
+  },
+  "rose": {
+    "--color-primary": "#c2185b",
+    "--color-primary-light": "#d81b60",
+    "--color-accent": "#e91e63",
+    "--color-bg": "#fce4ec",
+    "--color-surface": "#ffffff",
+    "--color-text": "#880e4f",
+    "--color-muted": "#c2185b",
+    "--color-border": "#f8bbd0",
+  },
+  "teal": {
+    "--color-primary": "#00695c",
+    "--color-primary-light": "#00796b",
+    "--color-accent": "#009688",
+    "--color-bg": "#e0f2f1",
+    "--color-surface": "#ffffff",
+    "--color-text": "#004d40",
+    "--color-muted": "#00695c",
+    "--color-border": "#b2dfdb",
+  },
+  "charcoal": {
+    "--color-primary": "#455a64",
+    "--color-primary-light": "#607d8b",
+    "--color-accent": "#78909c",
+    "--color-bg": "#eceff1",
+    "--color-surface": "#ffffff",
+    "--color-text": "#263238",
+    "--color-muted": "#455a64",
+    "--color-border": "#cfd8dc",
+  },
+  "sage": {
+    "--color-primary": "#558b2f",
+    "--color-primary-light": "#689f38",
+    "--color-accent": "#7cb342",
+    "--color-bg": "#f1f8e9",
+    "--color-surface": "#ffffff",
+    "--color-text": "#33691e",
+    "--color-muted": "#558b2f",
+    "--color-border": "#c8e6c9",
+  },
+};
+
+const DEFAULT_VARS = {
   "--color-primary": "#1565c0",
   "--color-primary-light": "#1e88e5",
   "--color-accent": "#0288d1",
@@ -30,108 +144,38 @@ const DEFAULT_THEME = {
   "--section-py": "80px",
 };
 
-// List of valid theme IDs (must match filenames in src/themes/)
-const VALID_THEMES = [
-  "theme-001-ocean", "theme-002-forest", "theme-003-sunset",
-  "theme-004-lavender", "theme-005-gold", "theme-006-midnight",
-  "theme-007-rose", "theme-008-teal", "theme-009-charcoal",
-  "theme-010-sage", "theme-011-crimson", "theme-012-arctic",
-  "theme-013-amber", "theme-014-plum", "theme-015-olive",
-  "theme-016-slate", "theme-017-copper", "theme-018-indigo",
-  "theme-019-mint", "theme-020-graphite",
-];
-
 export default function ThemeProvider({ theme }) {
   const [loaded, setLoaded] = useState(false);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
-    setError(null);
     setLoaded(false);
 
-    // Validate theme ID
-    const themeId = theme?.trim();
-    const isValidTheme = themeId && VALID_THEMES.includes(themeId);
+    const themeId = theme?.trim() || "default";
+    const themeVars = THEMES[themeId] || THEMES["default"];
 
-    if (!isValidTheme || themeId === "default") {
-      console.log(`[ThemeProvider] Using default theme (themeId: ${themeId || "none"})`);
-      applyVars(DEFAULT_THEME);
-      setLoaded(true);
-      return;
-    }
+    // Merge with defaults (so missing vars fall back)
+    const merged = { ...DEFAULT_VARS, ...themeVars };
 
-    console.log(`[ThemeProvider] Loading theme: ${themeId}`);
+    // Apply all CSS variables to :root
+    Object.entries(merged).forEach(([key, val]) => {
+      document.documentElement.style.setProperty(key, val);
+    });
 
-    // Method 1: Try dynamic import (Vite handles this)
-    const cssPath = `/src/themes/${themeId}.css`;
+    console.log(`[ThemeProvider] Applied theme: ${themeId}`);
+    setLoaded(true);
 
-    // Check if CSS file already loaded
-    const existingLink = document.querySelector(`link[data-theme="${themeId}"]`);
-    if (existingLink) {
-      console.log(`[ThemeProvider] Theme ${themeId} already loaded`);
-      setLoaded(true);
-      return;
-    }
-
-    // Create link element to load CSS
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = cssPath;
-    link.setAttribute("data-theme", themeId);
-
-    link.onload = () => {
-      console.log(`[ThemeProvider] ✓ Theme ${themeId} loaded successfully`);
-      setLoaded(true);
-      setError(null);
-    };
-
-    link.onerror = (e) => {
-      console.error(`[ThemeProvider] ✗ Failed to load theme ${themeId}:`, e);
-      console.error(`[ThemeProvider] Tried path: ${cssPath}`);
-      console.error(`[ThemeProvider] Make sure src/themes/${themeId}.css exists`);
-      setError(`Theme file not found: ${themeId}.css`);
-      applyVars(DEFAULT_THEME);
-      setLoaded(true);
-    };
-
-    document.head.appendChild(link);
-
-    // Cleanup: remove previous theme links
+    // Cleanup: reset to default on unmount
     return () => {
-      const oldLinks = document.querySelectorAll('link[data-theme]');
-      oldLinks.forEach((old) => {
-        if (old.getAttribute("data-theme") !== themeId) {
-          old.remove();
-        }
+      Object.keys(DEFAULT_VARS).forEach((key) => {
+        document.documentElement.style.removeProperty(key);
       });
     };
   }, [theme]);
 
-  // Apply CSS variables directly as fallback
-  function applyVars(vars) {
-    Object.entries(vars).forEach(([key, val]) => {
-      document.documentElement.style.setProperty(key, val);
-    });
-  }
-
-  // Debug output (only in development)
-  if (import.meta.env.DEV && error) {
-    return (
-      <div style={{
-        position: "fixed", bottom: 8, right: 8, zIndex: 9999,
-        background: "#c62828", color: "#fff", padding: "8px 16px",
-        borderRadius: "8px", fontSize: "0.8rem", maxWidth: "400px",
-      }}>
-        <strong>Theme Error:</strong> {error}
-      </div>
-    );
-  }
-
   return null;
 }
 
-// Debug helper: call this in browser console to check current theme
-// window.checkTheme()
+// Debug helper: call window.checkTheme() in browser console
 if (typeof window !== "undefined") {
   window.checkTheme = () => {
     const root = getComputedStyle(document.documentElement);
@@ -139,13 +183,9 @@ if (typeof window !== "undefined") {
     const bg = root.getPropertyValue("--color-bg").trim();
     const text = root.getPropertyValue("--color-text").trim();
     console.log("Current theme variables:");
-    console.log("  --color-primary:", primary || "NOT SET");
-    console.log("  --color-bg:", bg || "NOT SET");
-    console.log("  --color-text:", text || "NOT SET");
-
-    const themeLink = document.querySelector('link[data-theme]');
-    console.log("Loaded theme file:", themeLink?.getAttribute("data-theme") || "none");
-
-    return { primary, bg, text, themeFile: themeLink?.getAttribute("data-theme") };
+    console.log(" --color-primary:", primary || "NOT SET");
+    console.log(" --color-bg:", bg || "NOT SET");
+    console.log(" --color-text:", text || "NOT SET");
+    return { primary, bg, text };
   };
 }

@@ -880,7 +880,7 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                       <div key={theme.id}
                         onClick={async () => {
                           try {
-                            const updated = await updateClinic(clinic.id, { theme_id: theme.id });
+                            const updated = await updateClinic(clinic.id, {color_theme: theme.id,  theme_id: theme.id});
                             setClinic(updated); setClinicEdit(updated);
                             onClinicUpdate?.(updated);
                           } catch(e) { alert("Save failed: " + e.message); }

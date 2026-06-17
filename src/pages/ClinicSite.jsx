@@ -1,5 +1,7 @@
-// src/pages/ClinicSite.jsx — FINAL v2
+// src/pages/ClinicSite.jsx — FINAL v3
 // Fixes:
+//   - Theme: color_theme from DB applied via inline CSS variables (production-safe)
+//   - Services: hide_price respected
 //   - getSeoData 406: uses maybeSingle via supabase.js (graceful null)
 //   - getClinicBySlug 406: maybeSingle, returns null cleanly
 //   - getClinicMedia replaces getReviews (compliance B1/B3)
@@ -22,6 +24,39 @@ import BookingEngine      from "../components/BookingEngine";
 import ClinicFooter       from "../components/ClinicFooter";
 import ClinicMediaSection from "../components/ClinicMediaSection";
 import { TEMPLATES, suggestTemplate } from "../templates";
+
+// ── Theme variable applier (production-safe, no dynamic imports) ────
+function applyThemeVars(themeId) {
+  const themes = {
+    "default":   { "--color-primary": "#1565c0", "--color-primary-light": "#1e88e5", "--color-accent": "#0288d1", "--color-bg": "#f4f8fd", "--color-surface": "#ffffff", "--color-text": "#0b2545", "--color-muted": "#5a7a96", "--color-border": "#dce8f5" },
+    "ocean":     { "--color-primary": "#1565c0", "--color-primary-light": "#1e88e5", "--color-accent": "#0288d1", "--color-bg": "#f4f8fd", "--color-surface": "#ffffff", "--color-text": "#0b2545", "--color-muted": "#5a7a96", "--color-border": "#dce8f5" },
+    "forest":    { "--color-primary": "#2e7d32", "--color-primary-light": "#43a047", "--color-accent": "#66bb6a", "--color-bg": "#f1f8e9", "--color-surface": "#ffffff", "--color-text": "#1b5e20", "--color-muted": "#558b2f", "--color-border": "#c8e6c9" },
+    "sunset":    { "--color-primary": "#e64a19", "--color-primary-light": "#f57c00", "--color-accent": "#ff9800", "--color-bg": "#fff3e0", "--color-surface": "#ffffff", "--color-text": "#bf360c", "--color-muted": "#e65100", "--color-border": "#ffe0b2" },
+    "lavender":  { "--color-primary": "#7b1fa2", "--color-primary-light": "#9c27b0", "--color-accent": "#ab47bc", "--color-bg": "#f3e5f5", "--color-surface": "#ffffff", "--color-text": "#4a148c", "--color-muted": "#7b1fa2", "--color-border": "#e1bee7" },
+    "gold":      { "--color-primary": "#f57f17", "--color-primary-light": "#fb8c00", "--color-accent": "#ffa000", "--color-bg": "#fff8e1", "--color-surface": "#ffffff", "--color-text": "#e65100", "--color-muted": "#f57f17", "--color-border": "#ffecb3" },
+    "midnight":  { "--color-primary": "#5c6bc0", "--color-primary-light": "#7986cb", "--color-accent": "#9fa8da", "--color-bg": "#0d1117", "--color-surface": "#161b22", "--color-text": "#e6edf3", "--color-muted": "#8b949e", "--color-border": "#30363d" },
+    "rose":      { "--color-primary": "#c2185b", "--color-primary-light": "#d81b60", "--color-accent": "#e91e63", "--color-bg": "#fce4ec", "--color-surface": "#ffffff", "--color-text": "#880e4f", "--color-muted": "#c2185b", "--color-border": "#f8bbd0" },
+    "teal":      { "--color-primary": "#00695c", "--color-primary-light": "#00796b", "--color-accent": "#009688", "--color-bg": "#e0f2f1", "--color-surface": "#ffffff", "--color-text": "#004d40", "--color-muted": "#00695c", "--color-border": "#b2dfdb" },
+    "charcoal":  { "--color-primary": "#455a64", "--color-primary-light": "#607d8b", "--color-accent": "#78909c", "--color-bg": "#eceff1", "--color-surface": "#ffffff", "--color-text": "#263238", "--color-muted": "#455a64", "--color-border": "#cfd8dc" },
+    "sage":      { "--color-primary": "#558b2f", "--color-primary-light": "#689f38", "--color-accent": "#7cb342", "--color-bg": "#f1f8e9", "--color-surface": "#ffffff", "--color-text": "#33691e", "--color-muted": "#558b2f", "--color-border": "#c8e6c9" },
+  };
+
+  const defaults = {
+    "--color-primary": "#1565c0", "--color-primary-light": "#1e88e5", "--color-accent": "#0288d1",
+    "--color-bg": "#f4f8fd", "--color-surface": "#ffffff", "--color-text": "#0b2545",
+    "--color-muted": "#5a7a96", "--color-border": "#dce8f5", "--color-success": "#2e7d32",
+    "--color-warning": "#f57f17", "--color-danger": "#c62828",
+  };
+
+  const vars = themes[themeId] || themes["default"];
+  const merged = { ...defaults, ...vars };
+
+  Object.entries(merged).forEach(([key, val]) => {
+    document.documentElement.style.setProperty(key, val);
+  });
+
+  console.log(`[ClinicSite] Applied theme: ${themeId}`);
+}
 
 // ── SEO injector ──────────────────────────────────────────────────
 function injectSEO(clinic, services, doctor, seoData) {
@@ -295,6 +330,8 @@ function FAQSection({ clinic }) {
             </div>
           ))}
         </div>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -359,17 +396,8 @@ export default function ClinicSite({ slug }) {
       // Inject SEO (graceful whether seoData is null or populated)
       injectSEO(c, resolvedSvcs, resolvedDocs[0], resolvedSeo);
 
-      // Apply color theme CSS variable
-      if (c.theme_id && c.theme_id !== "default") {
-        // Remove old theme
-        document.querySelectorAll('link[data-theme]').forEach(el => el.remove());
-        // Load theme CSS file with all color variables
-        const link = document.createElement("link");
-        link.rel = "stylesheet";
-        link.href = `/src/themes/${c.theme_id}.css`;
-        link.setAttribute("data-theme", c.theme_id);
-        document.head.appendChild(link);
-      }
+      // ✅ FIXED: Apply theme via inline CSS variables (production-safe)
+      applyThemeVars(c.color_theme || c.theme_id || "default");
 
     } catch (e) {
       console.error("ClinicSite loadAll:", e.message);
@@ -590,8 +618,8 @@ export default function ClinicSite({ slug }) {
                         {svc.description}
                       </div>
                     )}
-                    {/* Compliant pricing — flat fee, no "Starting from" */}
-                    {svc.price && (
+                    {/* ✅ FIXED: Only show price if NOT hidden */}
+                    {svc.price && svc.hide_price !== true && (
                       <div style={{ fontSize:13, fontWeight:600, color:"var(--color-primary)" }}>
                         Consultation fee: {svc.price}
                       </div>
@@ -619,7 +647,7 @@ export default function ClinicSite({ slug }) {
                 {doctor.photo_url
                   ? <img src={doctor.photo_url}
                       alt={`${doctor.name}${doctor.degree ? `, ${doctor.degree}` : ""}`}
-                      style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
+                      style={{ width:"100%", height:"100%", objectFit:"cover"}}/>
                   : <span style={{ fontSize:100 }}>👨‍⚕️</span>}
                 <div style={{ position:"absolute", bottom:20, left:"50%",
                   transform:"translateX(-50%)", background:"var(--color-surface)", borderRadius:12,
