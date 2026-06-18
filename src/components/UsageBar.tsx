@@ -1,6 +1,6 @@
 // src/components/UsageBar.tsx
 import React from 'react';
-import { usePlanEnforcement } from '../hooks/usePlanEnforcement';
+import { usePlanContext } from './PlanEnforcementProvider'; // Fixed import path to use context
 
 interface UsageBarProps {
   feature: string;
@@ -8,7 +8,8 @@ interface UsageBarProps {
 }
 
 export function UsageBar({ feature, label }: UsageBarProps) {
-  const { getRemaining, getUsagePercent, limits } = usePlanEnforcement();
+  // Switched from usePlanEnforcement() to usePlanContext()
+  const { getRemaining, getUsagePercent, limits } = usePlanContext();
 
   const percent = getUsagePercent(feature);
   const remaining = getRemaining(feature);
@@ -28,12 +29,9 @@ export function UsageBar({ feature, label }: UsageBarProps) {
       <div className="w-full bg-gray-200 rounded-full h-2.5">
         <div 
           className={`h-2.5 rounded-full transition-all duration-500 ${isUnlimited ? 'bg-purple-500' : color}`}
-          style={{ width: `${isUnlimited ? 100 : Math.min(percent, 100)}%` }}
+          style={{ width: `${isUnlimited ? 100 : percent}%` }}
         />
       </div>
-      <p className="text-xs text-gray-500 mt-1">
-        {isUnlimited ? 'Enterprise plan' : `${percent}% used`}
-      </p>
     </div>
   );
 }
