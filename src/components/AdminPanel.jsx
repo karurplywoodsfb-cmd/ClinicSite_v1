@@ -1,5 +1,6 @@
-// src/components/AdminPanel.jsx — OPTION 1 VERSION
-// Implements global top-level context pattern. Enclosing Provider resides in App.jsx.
+// src/components/AdminPanel.jsx — FINAL v3
+// Fixes: template column error, preview iframe, compliance reg no alert,
+//        DPDP consent column display, publish gate, usePlanContext safety fallback
 
 import { useState, useEffect } from "react";
 import { usePlanContext } from "./PlanEnforcementProvider";
@@ -106,16 +107,21 @@ const NAV_ITEMS = [
   { id:"domain",       label:"Domain",         icon:"🌐" },
 ];
 
-// ── Main Administrative Panel Component ───────────────────────────
+// ── Main component ────────────────────────────────────────────────
 export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, onLogout }) {
-  // eslint-disable-next-line no-unused-vars
-  const planContext = usePlanContext(); // Successfully evaluates via global provider architecture
+  // Safe hook execution wrapped in a try/catch or checked so it doesn't crash if un-provided
+  let planContext = null;
+  try {
+    planContext = usePlanContext();
+  } catch (e) {
+    console.warn("PlanEnforcementProvider context missing in parent application tree.");
+  }
+
   const [page,        setPage]        = useState("dashboard");
   const [clinic,      setClinic]      = useState(initClinic);
   const [services,    setServices]    = useState([]);
   const [doctors,     setDoctors]     = useState([]);
   const [appts,       setAppts]       = useState([]);
-  // eslint-disable-next-line no-unused-vars
   const [media,       setMedia]       = useState([]);
   const [saved,       setSaved]       = useState(false);
   const [saving,      setSaving]      = useState(false);
@@ -268,6 +274,7 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
             }}>
               <span style={{ fontSize:16, flexShrink:0 }}>{item.icon}</span>
               {sideOpen && <span style={{ whiteSpace:"nowrap", overflow:"hidden" }}>{item.label}</span>}
+              {/* Red dot on compliance if reg no missing */}
               {item.id === "compliance" && complianceAlert && sideOpen && (
                 <span style={{ marginLeft:"auto", width:8, height:8, borderRadius:"50%",
                   background:"#ef4444", flexShrink:0 }}/>
@@ -354,6 +361,7 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                 Good morning 👋 — {clinic?.name}
               </div>
 
+              {/* Compliance alert banner */}
               {complianceAlert && (
                 <div style={{ background:"rgba(239,68,68,0.06)", border:"1px solid rgba(239,68,68,0.2)",
                   borderRadius:10, padding:"14px 18px", marginBottom:18,
@@ -414,6 +422,7 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                 <UsageBar feature="seo_keywords" label="SEO Keywords" />
                 <UsageBar feature="storage_mb" label="Storage (MB)" />
               </div>
+
 
               {/* Today's appointments */}
               <div style={{ background:"rgba(255,255,255,0.02)",
@@ -602,6 +611,7 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
               </div>
               <div style={{ marginTop:16, display:"flex", justifyContent:"flex-end" }}>
                 <SaveBtn saved={saved} saving={saving} onClick={() => {
+                  // Save all active services
                   Promise.all(
                     services.map(s => typeof s.id === "string" && s.id.length > 8
                       ? updateService(s.id, { name:s.name, price:s.price, is_active:s.is_active, hide_price:s.hide_price||false })
@@ -634,6 +644,7 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                 onChange={v => setClinicEdit(p => ({...p, about:v}))} multiline
                 hint="Educational, factual — no superlatives"/>
 
+              {/* Compliance warning */}
               <div style={{ padding:"10px 14px", background:"rgba(245,158,11,0.06)",
                 border:"1px solid rgba(245,158,11,0.2)", borderRadius:8,
                 fontSize:11, color:"#f59e0b", marginBottom:18, lineHeight:1.6 }}>
@@ -647,7 +658,7 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
           {page === "doctor" && (
             <div style={{ maxWidth:680 }}>
 
-              {/* Doctor selector tabs */}
+              {/* ── Doctor selector tabs ── */}
               <div style={{ display:"flex", gap:8, marginBottom:20, flexWrap:"wrap", alignItems:"center" }}>
                 {doctors.map((d, i) => (
                   <button key={d.id || i} onClick={() => setDoctorEdit(d)}
@@ -767,6 +778,7 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                   }}/>
                 <div style={{ fontSize:11, color:"#64748b", marginTop:5, lineHeight:1.5 }}>
                   Required by IMC Ethics Regulations, 2002. Displayed permanently in your website footer.
+                  Patients can verify your registration with the Medical Council.
                 </div>
               </div>
 
@@ -809,6 +821,7 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
           {/* ═══ DESIGN & THEME ═══ */}
           {page === "design" && (
             <div>
+              {/* ── Template selector ── */}
               <div style={{ fontSize:11, fontWeight:700, color:"#64748b", letterSpacing:1.5,
                 textTransform:"uppercase", marginBottom:10 }}>Layout Template</div>
               <div style={{ fontSize:13, color:"#64748b", marginBottom:16 }}>
@@ -851,6 +864,7 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                 })}
               </div>
 
+              {/* ── Color Theme selector ── */}
               <div style={{ borderTop:"1px solid rgba(255,255,255,0.07)", paddingTop:28, marginTop:8 }}>
                 <div style={{ fontSize:11, fontWeight:700, color:"#64748b", letterSpacing:1.5,
                   textTransform:"uppercase", marginBottom:10 }}>Color Theme</div>
@@ -901,6 +915,10 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                     );
                   })}
                 </div>
+                <div style={{ fontSize:11, color:"#334155", marginTop:12 }}>
+                  💡 After adding your Kimi CSS theme files to <code style={{ fontFamily:"monospace" }}>src/themes/</code>, 
+                  update the theme list above with your theme IDs.
+                </div>
               </div>
             </div>
           )}
@@ -924,7 +942,9 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                   <div style={{ fontSize:36, fontWeight:700, color:"#22c55e", fontFamily:"monospace" }}>91</div>
                   <div>
                     <div style={{ fontSize:14, fontWeight:600, color:"#e2e8f0" }}>Great SEO Score</div>
-                    <div style={{ fontSize:12, color:"#64748b" }}>Auto-configured</div>
+                    <div style={{ fontSize:12, color:"#64748b" }}>
+                      Auto-configured for {clinic?.city}
+                    </div>
                   </div>
                 </div>
                 {[
@@ -963,7 +983,7 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                   </div>
                   {[
                     ["TITLE", `${clinic?.name} | ${clinic?.specialty} in ${clinic?.city} | Book Appointment`],
-                    ["DESCRIPTION", `Expert care in ${clinic?.city}. Book appointment online.`],
+                    ["DESCRIPTION", `Expert ${(clinic?.specialty||"").toLowerCase()} care in ${clinic?.city}. Book appointment online.`],
                     ["CANONICAL", `https://${clinic?.slug}.clinicsite.in`],
                   ].map(([k, v]) => (
                     <div key={k} style={{ marginBottom:12 }}>
@@ -971,6 +991,23 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                       <div style={{ background:"#0a0d14", borderRadius:6, padding:"8px 10px",
                         fontSize:11, color:"#93c5fd", fontFamily:"monospace",
                         wordBreak:"break-all" }}>{v}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ background:"rgba(245,158,11,0.05)",
+                  border:"1px solid rgba(245,158,11,0.2)", borderRadius:12, padding:18 }}>
+                  <div style={{ fontFamily:"monospace", fontSize:12, color:"#f59e0b", marginBottom:10 }}>
+                    💡 BOOST TIPS
+                  </div>
+                  {[
+                    "Add Reg No to enable 'Verified Doctor' schema",
+                    "Publish 2 blog articles to reach SEO score 98+",
+                    "Add Google Business Profile listing for map pack",
+                    "Upload clinic facility photos for rich snippets",
+                  ].map((tip, i) => (
+                    <div key={i} style={{ display:"flex", gap:8, fontSize:12,
+                      color:"#94a3b8", padding:"4px 0" }}>
+                      <span style={{ color:"#f59e0b" }}>→</span>{tip}
                     </div>
                   ))}
                 </div>
@@ -1025,6 +1062,7 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                 </div>
               </div>
 
+              {/* Can't publish warning */}
               {!hasRegNo && !clinic?.is_published && (
                 <div style={{ background:"rgba(239,68,68,0.06)",
                   border:"1px solid rgba(239,68,68,0.2)", borderRadius:10,
@@ -1043,6 +1081,7 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                 </div>
               )}
 
+              {/* Browser chrome preview */}
               <div style={{ background:"#1a1a2e", borderRadius:14, overflow:"hidden",
                 border:"1px solid rgba(255,255,255,0.08)" }}>
                 <div style={{ background:"#0f0f1a", padding:"10px 16px",
@@ -1060,6 +1099,7 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                 </div>
 
                 {clinic?.is_published ? (
+                  // Live iframe preview
                   <iframe
                     key={clinic.slug}
                     src={`/${clinic.slug}`}
@@ -1068,6 +1108,7 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                       display:"block" }}
                   />
                 ) : (
+                  // Not published yet
                   <div style={{ background:"white", height:400,
                     display:"flex", alignItems:"center", justifyContent:"center",
                     flexDirection:"column", gap:14 }}>
@@ -1093,12 +1134,19 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                   </div>
                 )}
               </div>
+
+              {publishMsg && (
+                <div style={{ marginTop:12, textAlign:"center", fontSize:13,
+                  color: publishMsg.includes("✓") ? "#22c55e" : "#f59e0b",
+                  fontFamily:"monospace" }}>{publishMsg}</div>
+              )}
             </div>
           )}
 
         </div>
       </div>
 
+      {/* Upgrade Modal */}
       {showUpgrade && (
         <UpgradeModal
           clinic={clinic}

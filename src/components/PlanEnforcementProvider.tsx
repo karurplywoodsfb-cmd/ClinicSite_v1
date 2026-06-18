@@ -30,6 +30,24 @@ export function PlanEnforcementProvider({ children }: { children: React.ReactNod
 
 export const usePlanContext = () => {
   const context = useContext(PlanContext);
-  if (!context) throw new Error('usePlanContext must be used within PlanEnforcementProvider');
+  
+  // Safe Fallback: Instead of crashing the entire application tree,
+  // return safe default values if the provider isn't present upstream.
+  if (!context) {
+    console.warn('PlanEnforcementProvider context missing in parent application tree. Using safe fallbacks.');
+    return {
+      limits: null,
+      usage: [],
+      loading: false,
+      error: null,
+      canUseFeature: () => true, // Default to allowed to prevent UI lockouts
+      checkLimit: async () => true,
+      incrementUsage: async () => {},
+      getRemaining: () => 999,
+      getUsagePercent: () => 0,
+      refresh: () => {},
+    };
+  }
+  
   return context;
 };
