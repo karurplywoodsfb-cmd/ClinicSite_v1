@@ -1,11 +1,14 @@
 // src/components/PlanGate.tsx
 import React from 'react';
-import { usePlanContext } from './PlanEnforcementProvider'; // Fixed import path to use context
+import { usePlanContext } from './PlanEnforcementProvider';
 import type { PlanTier } from '../config/planConfig';
 
-// Inline SVG icons
+// Standardized safe JSX SVG markup
 const LockIcon = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d=\"M7 11V7a5 5 0 0 1 10 0v4\"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+  </svg>
 );
 
 interface PlanGateProps {
@@ -16,7 +19,6 @@ interface PlanGateProps {
 }
 
 export function PlanGate({ feature, requiredPlan = 'premium', children, fallback }: PlanGateProps) {
-  // Switched from usePlanEnforcement() to usePlanContext()
   const { canUseFeature, limits } = usePlanContext();
 
   if (canUseFeature(feature, requiredPlan)) {
@@ -28,7 +30,7 @@ export function PlanGate({ feature, requiredPlan = 'premium', children, fallback
   return (
     <div className="relative group">
       <div className="absolute inset-0 bg-gray-100/80 backdrop-blur-sm rounded-lg flex flex-col items-center justify-center z-10 p-6">
-        <LockIcon className=\"w-8 h-8 text-gray-400 mb-2\" />
+        <LockIcon className="w-8 h-8 text-gray-400 mb-2" />
         <p className="text-sm font-medium text-gray-600 text-center">
           {requiredPlan === 'premium' ? 'Premium' : 'Enterprise'} Feature
         </p>

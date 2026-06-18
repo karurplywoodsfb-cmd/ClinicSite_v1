@@ -1,6 +1,6 @@
 // src/components/UsageBar.tsx
 import React from 'react';
-import { usePlanContext } from './PlanEnforcementProvider'; // Fixed import path to use context
+import { usePlanContext } from './PlanEnforcementProvider';
 
 interface UsageBarProps {
   feature: string;
@@ -8,7 +8,6 @@ interface UsageBarProps {
 }
 
 export function UsageBar({ feature, label }: UsageBarProps) {
-  // Switched from usePlanEnforcement() to usePlanContext()
   const { getRemaining, getUsagePercent, limits } = usePlanContext();
 
   const percent = getUsagePercent(feature);
