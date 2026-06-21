@@ -1,83 +1,83 @@
 // src/lib/razorpay.js
-// Razorpay subscription + one-time payment integration
-// Plans: Free | Premium ₹499/mo | Enterprise ₹1,999/mo
+// Razorpay subscription + payment integration.
+// Plan FEATURES are generated from planConfig.ts — single source of truth.
+// UpgradeModal.jsx reads PLANS from here, so everything stays in sync.
+
+import { PLAN_FEATURES, PLAN_PRICING, PLAN_DISPLAY_EMOJI } from "../config/planConfig";
 
 const RAZORPAY_KEY = import.meta.env.VITE_RAZORPAY_KEY_ID;
 
-// ═══════════════════════════════════════════════════
-// PLAN CONFIG
-// ═══════════════════════════════════════════════════
+// ── Generate human-readable feature strings from planConfig ──────
+// These are what UpgradeModal.jsx displays — always derived from planConfig.ts
+
+function formatLimit(value) {
+  if (typeof value === "boolean") return value;
+  if (value >= 999999) return "Unlimited";
+  return value.toLocaleString("en-IN");
+}
+
+function buildFeatureLines(plan) {
+  const lines   = [];
+  const crossed = [];
+
+  for (const f of PLAN_FEATURES) {
+    const val  = f[plan];
+    const free = f["free"];
+
+    if (f.type === "boolean") {
+      if (val === true)  lines.push(`${f.description}`);
+      if (val === false) crossed.push(`${f.description}`);
+    } else {
+      const display = formatLimit(val);
+      if (val === 0) {
+        crossed.push(f.description);
+      } else {
+        lines.push(`${f.description}: ${display}`);
+      }
+    }
+  }
+  return { features: lines, limits: crossed };
+}
+
+// ── PLANS object (consumed by UpgradeModal.jsx) ──────────────────
+// Pricing and Razorpay IDs from env vars + planConfig.
+// Feature text auto-generated from planConfig — never hardcode here.
 
 export const PLANS = {
   free: {
     id:       "free",
-    name:     "Free",
-    price:    0,
+    name:     PLAN_PRICING.free.label,
+    emoji:    PLAN_DISPLAY_EMOJI.free,
+    price:    PLAN_PRICING.free.monthly,
     interval: null,
     color:    "#64748b",
-    features: [
-      "3 specialty templates",
-      "3 pages (Home, Services, Contact)",
-      "1 doctor profile",
-      "WhatsApp button",
-      "yourname.clinicsite.in subdomain",
-      "Basic SEO auto-configured",
-      "Mobile optimized",
-    ],
-    limits: [
-      "No appointment booking",
-      "No custom domain",
-      "ClinicSite branding",
-    ],
+    razorpay_plan_id: null,
+    ...buildFeatureLines("free"),
   },
   premium: {
     id:              "premium",
-    name:            "Premium",
-    price:           499,
-    razorpay_plan_id: import.meta.env.VITE_RAZORPAY_PLAN_PREMIUM, // set in .env
+    name:            PLAN_PRICING.premium.label,
+    emoji:           PLAN_DISPLAY_EMOJI.premium,
+    price:           PLAN_PRICING.premium.monthly,
     interval:        "monthly",
     color:           "#3b82f6",
     highlight:       true,
-    features: [
-      "20+ specialty templates",
-      "Unlimited pages",
-      "Up to 10 doctor profiles",
-      "Appointment booking (50/mo)",
-      "Custom domain connection",
-      "Patient testimonials",
-      "Health blog (5 posts)",
-      "Full SEO dashboard",
-      "Analytics",
-      "Email support",
-    ],
-    limits: ["Single branch only"],
+    razorpay_plan_id: import.meta.env.VITE_RAZORPAY_PLAN_PREMIUM,
+    ...buildFeatureLines("premium"),
   },
   enterprise: {
     id:              "enterprise",
-    name:            "Enterprise",
-    price:           1999,
-    razorpay_plan_id: import.meta.env.VITE_RAZORPAY_PLAN_ENTERPRISE,
+    name:            PLAN_PRICING.enterprise.label,
+    emoji:           PLAN_DISPLAY_EMOJI.enterprise,
+    price:           PLAN_PRICING.enterprise.monthly,
     interval:        "monthly",
     color:           "#a855f7",
-    features: [
-      "Everything in Premium",
-      "Multi-branch management",
-      "Unlimited appointments",
-      "Lab reports portal",
-      "WhatsApp API integration",
-      "Multi-language (4 languages)",
-      "Staff portal",
-      "Dedicated account manager",
-      "Custom branding removal",
-    ],
-    limits: [],
+    razorpay_plan_id: import.meta.env.VITE_RAZORPAY_PLAN_ENTERPRISE,
+    ...buildFeatureLines("enterprise"),
   },
 };
 
-// ═══════════════════════════════════════════════════
-// LOAD RAZORPAY SCRIPT
-// ═══════════════════════════════════════════════════
-
+// ── Load Razorpay script ─────────────────────────────────────────
 function loadRazorpay() {
   return new Promise((resolve) => {
     if (window.Razorpay) { resolve(true); return; }
@@ -89,13 +89,8 @@ function loadRazorpay() {
   });
 }
 
-// ═══════════════════════════════════════════════════
-// CREATE SUBSCRIPTION (via your Supabase Edge Function)
-// ═══════════════════════════════════════════════════
-
+// ── Create subscription via Supabase Edge Function ───────────────
 async function createSubscription(planId, clinicId) {
-  // Your Supabase edge function calls Razorpay server-side
-  // to create a subscription and returns the subscription_id
   const res = await fetch(
     `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-subscription`,
     {
@@ -112,10 +107,7 @@ async function createSubscription(planId, clinicId) {
   return data.subscription_id;
 }
 
-// ═══════════════════════════════════════════════════
-// OPEN RAZORPAY CHECKOUT
-// ═══════════════════════════════════════════════════
-
+// ── Open Razorpay checkout ───────────────────────────────────────
 export async function openCheckout({ plan, clinic, user, onSuccess, onError }) {
   const loaded = await loadRazorpay();
   if (!loaded) { onError?.("Failed to load payment gateway"); return; }
@@ -127,15 +119,15 @@ export async function openCheckout({ plan, clinic, user, onSuccess, onError }) {
     );
 
     const options = {
-      key:         RAZORPAY_KEY,
+      key:             RAZORPAY_KEY,
       subscription_id: subscriptionId,
-      name:        "ClinicSite",
-      description: `${PLANS[plan].name} Plan — ₹${PLANS[plan].price}/month`,
-      image:       "https://clinicsite.in/logo.png",
+      name:            "ClinicSite",
+      description:     `${PLANS[plan].name} Plan — ₹${PLANS[plan].price}/month`,
+      image:           `${import.meta.env.VITE_APP_URL || "https://clinicsite.in"}/logo.png`,
 
       prefill: {
-        name:  clinic.name,
-        email: user.email,
+        name:    clinic.name,
+        email:   user.email,
         contact: clinic.phone || "",
       },
 
@@ -144,13 +136,10 @@ export async function openCheckout({ plan, clinic, user, onSuccess, onError }) {
       notes: {
         clinic_id:   clinic.id,
         clinic_name: clinic.name,
-        plan:        plan,
+        plan,
       },
 
       handler: async (response) => {
-        // response.razorpay_payment_id
-        // response.razorpay_subscription_id
-        // response.razorpay_signature
         try {
           await verifyAndActivate(response, clinic.id, plan);
           onSuccess?.(response);
@@ -175,10 +164,7 @@ export async function openCheckout({ plan, clinic, user, onSuccess, onError }) {
   }
 }
 
-// ═══════════════════════════════════════════════════
-// VERIFY PAYMENT + ACTIVATE PLAN (Edge Function)
-// ═══════════════════════════════════════════════════
-
+// ── Verify payment + activate plan (Edge Function) ───────────────
 async function verifyAndActivate(paymentResponse, clinicId, plan) {
   const res = await fetch(
     `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-payment`,
@@ -188,11 +174,7 @@ async function verifyAndActivate(paymentResponse, clinicId, plan) {
         "Content-Type":  "application/json",
         "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
       },
-      body: JSON.stringify({
-        ...paymentResponse,
-        clinic_id: clinicId,
-        plan,
-      }),
+      body: JSON.stringify({ ...paymentResponse, clinic_id: clinicId, plan }),
     }
   );
   const data = await res.json();
@@ -200,10 +182,7 @@ async function verifyAndActivate(paymentResponse, clinicId, plan) {
   return data;
 }
 
-// ═══════════════════════════════════════════════════
-// CANCEL SUBSCRIPTION
-// ═══════════════════════════════════════════════════
-
+// ── Cancel subscription ──────────────────────────────────────────
 export async function cancelSubscription(clinicId) {
   const res = await fetch(
     `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cancel-subscription`,
