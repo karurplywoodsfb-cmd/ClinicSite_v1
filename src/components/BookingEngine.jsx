@@ -110,6 +110,10 @@ export default function BookingEngine({ clinic, services = [], hidePrice = false
       setBooked(appt);
       setStep(4);
 
+      // Increment clinic's monthly appointment usage counter — non-blocking
+      supabase.rpc("increment_clinic_appointment_usage", { p_clinic_id: clinic.id })
+        .catch(e => console.warn("[BookingEngine] Usage increment failed:", e.message));
+
       // Push notification to clinic admin — non-blocking
       supabase.functions
         .invoke("send-push", {

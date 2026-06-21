@@ -448,6 +448,41 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
           {/* ═══ APPOINTMENTS ═══ */}
           {page === "appointments" && (
             <div>
+              {/* ── Monthly quota banner ── */}
+              {(() => {
+                const limit    = planContext.limits?.features?.appointments_monthly ?? 50;
+                const used     = limit - planContext.getRemaining("appointments_monthly");
+                const pct      = planContext.getUsagePercent("appointments_monthly");
+                const isUnlim  = limit >= 999999;
+                const atLimit  = !isUnlim && used >= limit;
+                return !isUnlim ? (
+                  <div style={{
+                    display:"flex", alignItems:"center", gap:14, marginBottom:16,
+                    background: atLimit ? "rgba(239,68,68,0.06)" : "rgba(255,255,255,0.02)",
+                    border: `1px solid ${atLimit ? "rgba(239,68,68,0.2)" : "rgba(255,255,255,0.07)"}`,
+                    borderRadius:10, padding:"12px 16px",
+                  }}>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontSize:12, color:"#64748b", marginBottom:6 }}>
+                        Monthly appointments: <strong style={{ color: atLimit ? "#ef4444" : "#e2e8f0" }}>{used} / {limit}</strong>
+                      </div>
+                      <div style={{ height:5, background:"rgba(255,255,255,0.06)", borderRadius:99 }}>
+                        <div style={{
+                          height:5, borderRadius:99, transition:"width .5s",
+                          background: pct > 90 ? "#ef4444" : pct > 70 ? "#f59e0b" : "#22c55e",
+                          width: `${Math.min(pct, 100)}%`,
+                        }}/>
+                      </div>
+                    </div>
+                    {atLimit && (
+                      <button onClick={() => setShowUpgrade(true)} style={{
+                        flexShrink:0, padding:"7px 14px", background:"#1565c0", color:"white",
+                        border:"none", borderRadius:8, fontSize:12, fontWeight:600, cursor:"pointer",
+                      }}>Upgrade</button>
+                    )}
+                  </div>
+                ) : null;
+              })()}
               <div style={{ marginBottom:24 }}>
                 <NotificationSettings clinic={clinic} supabase={supabase}/>
               </div>
@@ -545,9 +580,27 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
           {/* ═══ SERVICES ═══ */}
           {page === "services" && (
             <div>
-              <div style={{ display:"flex", justifyContent:"flex-end", marginBottom:16 }}>
-                <SaveBtn saved={saved} saving={saving} onClick={() => doSave({})}/>
-              </div>
+              {/* ── Plan usage for services ── */}
+              {(() => {
+                const limit    = planContext.limits?.features?.services ?? 5;
+                const count    = services.filter(s => s.is_active !== false).length;
+                const atLimit  = count >= limit;
+                const isUnlim  = limit >= 999999;
+                return (
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+                    <div style={{ fontSize:12, color: atLimit && !isUnlim ? "#ef4444" : "#64748b" }}>
+                      {isUnlim ? "Unlimited services" : `${count} / ${limit} services used`}
+                      {atLimit && !isUnlim && (
+                        <button onClick={() => setShowUpgrade(true)}
+                          style={{ marginLeft:10, fontSize:11, color:"#1e88e5", background:"none", border:"none", cursor:"pointer", textDecoration:"underline" }}>
+                          Upgrade for more
+                        </button>
+                      )}
+                    </div>
+                    <SaveBtn saved={saved} saving={saving} onClick={() => doSave({})}/>
+                  </div>
+                );
+              })()}
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
                 {services.length > 0 ? services.map(svc => (
                   <div key={svc.id} style={{
@@ -667,6 +720,14 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                   </button>
                 ))}
                 <button onClick={async () => {
+                  // ── Plan gate: staff_members limit ──────────────
+                  const canAdd = await planContext.checkLimit("staff_members", 1);
+                  if (!canAdd) {
+                    const limit = planContext.limits?.features?.staff_members ?? 3;
+                    alert(`⭐ Your plan allows up to ${limit} doctor${limit === 1 ? "" : "s"}. Upgrade to add more.`);
+                    setShowUpgrade(true);
+                    return;
+                  }
                   try {
                     const { data, error } = await supabase.from("doctors").insert({
                       clinic_id: clinic.id,
@@ -676,6 +737,7 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                     if (error) throw error;
                     setDoctors(p => [...p, data]);
                     setDoctorEdit(data);
+                    planContext.incrementUsage("staff_members", 1);
                   } catch(e) { alert("Failed to add doctor: " + e.message); }
                 }} style={{
                   padding:"7px 16px", borderRadius:8,
@@ -919,7 +981,31 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
 
           {/* ═══ BLOG ═══ */}
           {page === "blog" && (
-            <AIBlogGenerator clinic={clinic} supabaseClient={supabase}/>
+            (() => {
+              const limit = planContext.limits?.features?.custom_pages ?? 1;
+              const remaining = planContext.getRemaining("custom_pages");
+              return (
+                <div>
+                  {/* Pages remaining banner */}
+                  <div style={{
+                    display:"flex", alignItems:"center", justifyContent:"space-between",
+                    background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.07)",
+                    borderRadius:10, padding:"10px 16px", marginBottom:16,
+                  }}>
+                    <span style={{ fontSize:13, color: remaining === 0 ? "#ef4444" : "#64748b" }}>
+                      {limit >= 999999 ? "Unlimited blog posts" : `${remaining} of ${limit} pages remaining this month`}
+                    </span>
+                    {remaining === 0 && (
+                      <button onClick={() => setShowUpgrade(true)} style={{
+                        fontSize:12, color:"#1e88e5", background:"none", border:"none",
+                        cursor:"pointer", textDecoration:"underline",
+                      }}>Upgrade for more</button>
+                    )}
+                  </div>
+                  <AIBlogGenerator clinic={clinic} supabaseClient={supabase}/>
+                </div>
+              );
+            })()
           )}
 
           {/* ═══ SEO ═══ */}
@@ -1019,7 +1105,22 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
 
           {/* ═══ DOMAIN ═══ */}
           {page === "domain" && (
-            <DomainManager clinic={clinic}/>
+            planContext.canUseFeature("custom_domain")
+              ? <DomainManager clinic={clinic}/>
+              : <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"60px 20px", textAlign:"center" }}>
+                  <div style={{ fontSize:48, marginBottom:16 }}>🔒</div>
+                  <div style={{ fontSize:18, fontWeight:700, color:"#e2e8f0", marginBottom:8 }}>Custom Domain — Premium Feature</div>
+                  <div style={{ fontSize:14, color:"#64748b", maxWidth:380, lineHeight:1.7, marginBottom:24 }}>
+                    Connect your own domain (e.g. <em>www.drsharma.com</em>) on the Premium or Enterprise plan.
+                    Your clinic is currently live at <strong style={{ color:"#7dd3fc" }}>{clinic?.slug}.clinicsite.in</strong>
+                  </div>
+                  <button onClick={() => setShowUpgrade(true)} style={{
+                    background:"#1565c0", color:"white", border:"none", borderRadius:10,
+                    padding:"12px 28px", fontSize:14, fontWeight:600, cursor:"pointer",
+                  }}>
+                    ⭐ Upgrade to Premium — ₹499/mo
+                  </button>
+                </div>
           )}
 
           {/* ═══ PREVIEW ═══ */}
