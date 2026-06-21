@@ -209,6 +209,64 @@ export async function getAppointments(clinicId, status = null) {
   return data || [];
 }
 
+/**
+ * Return the list of already-booked time slots for a clinic on a given date.
+ * Used by BookingEngine to show real availability (no hardcoded data).
+ * @param {string} clinicId
+ * @param {string} dateStr  — YYYY-MM-DD
+ * @returns {string[]} e.g. ["9:00 AM", "11:30 AM"]
+ */
+export async function getTakenSlots(clinicId, dateStr) {
+  if (!clinicId || !dateStr) return [];
+  const { data, error } = await supabase
+    .from("appointments")
+    .select("appt_time")
+    .eq("clinic_id", clinicId)
+    .eq("appt_date", dateStr)
+    .not("status", "in", '("cancelled","no_show")');
+  if (error) { console.error("getTakenSlots:", error.message); return []; }
+  return (data || []).map(r => r.appt_time).filter(Boolean);
+}
+
+/**
+ * Check whether a clinic's plan still allows new appointments this calendar month.
+ * Called from the public-facing BookingEngine (no user session required).
+ * @param {string} clinicId
+ * @returns {{ canBook: boolean, currentCount: number, limit: number }}
+ */
+export async function checkClinicAppointmentLimit(clinicId) {
+  // 1. Get clinic's current plan
+  const { data: clinic, error: cErr } = await supabase
+    .from("clinics")
+    .select("plan")
+    .eq("id", clinicId)
+    .maybeSingle();
+  if (cErr || !clinic) return { canBook: true, currentCount: 0, limit: 999999 }; // fail open
+
+  // 2. Get this month's confirmed/pending appointment count
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
+  const { count, error: aErr } = await supabase
+    .from("appointments")
+    .select("id", { count: "exact", head: true })
+    .eq("clinic_id", clinicId)
+    .not("status", "in", '("cancelled","no_show")')
+    .gte("created_at", startOfMonth.toISOString());
+
+  if (aErr) return { canBook: true, currentCount: 0, limit: 999999 };
+
+  // 3. Compare against plan limit (import dynamically to avoid circular deps)
+  const { PLAN_FEATURES } = await import("../config/planConfig");
+  const feature = PLAN_FEATURES.find(f => f.name === "appointments_monthly");
+  const plan    = clinic.plan || "free";
+  const limit   = feature ? Number(feature[plan]) : 50;
+  const current = count ?? 0;
+
+  return { canBook: current < limit, currentCount: current, limit };
+}
+
 export async function bookAppointment(clinicId, appointment) {
   const { data, error } = await supabase
     .from('appointments')

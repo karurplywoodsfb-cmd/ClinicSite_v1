@@ -109,13 +109,7 @@ const NAV_ITEMS = [
 
 // ── Main component ────────────────────────────────────────────────
 export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, onLogout }) {
-  // Safe hook execution wrapped in a try/catch or checked so it doesn't crash if un-provided
-  let planContext = null;
-  try {
-    planContext = usePlanContext();
-  } catch (e) {
-    console.warn("PlanEnforcementProvider context missing in parent application tree.");
-  }
+  const planContext = usePlanContext(); // PlanEnforcementProvider is guaranteed by App.jsx's AdminRoute
 
   const [page,        setPage]        = useState("dashboard");
   const [clinic,      setClinic]      = useState(initClinic);

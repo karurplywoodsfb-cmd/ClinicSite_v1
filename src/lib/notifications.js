@@ -43,7 +43,7 @@ Service: ${appt.service}
 Date: ${appt.appt_date} at ${appt.appt_time || "TBD"}
 
 📋 Log in to view patient details:
-https://clinicsite.in/admin
+${APP_URL}/admin
 
 _Patient PII is not transmitted via WhatsApp per DPDP Act 2023._`,
   }),
@@ -168,10 +168,10 @@ export const EMAIL_COMPLIANCE_FOOTER = (clinicOwnerId) => `
 You are receiving this email as a registered ClinicSite.in platform user.
 
 To unsubscribe from platform communications:
-• Visit: https://clinicsite.in/admin/notifications
+• Visit: ${APP_URL}/admin/notifications
 • Or reply to this email with the word UNSUBSCRIBE
 
-ClinicSite.in · support@clinicsite.in
+${import.meta.env.VITE_SUPPORT_EMAIL || 'support@clinicsite.in'}
 Data processed under the Digital Personal Data Protection Act, 2023.
 `;
 

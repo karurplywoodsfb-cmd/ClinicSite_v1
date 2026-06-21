@@ -231,55 +231,35 @@ export default function BlogPage({ clinic, supabase: supabaseClient }) {
   const [activePost,  setActivePost]  = useState(null);
   const [loading,     setLoading]     = useState(true);
 
-  // Demo data if no supabase
+  // Demo posts shown only in development when no Supabase connection is present.
+  // References clinic dynamically — no hardcoded clinic name.
+
+  // Demo posts — rendered only when no Supabase clinic is connected (local dev only).
+  // All clinic references use props dynamically, no hardcoded clinic names.
+  const clinicName = clinic?.name || "Our Clinic";
   const DEMO_POSTS = [
-    { id:1, title:"Signs you need a root canal — and what to expect", slug:"root-canal-signs", excerpt:"Most patients who delay root canal treatment are surprised to learn the signs were there much earlier. Here's what to look for.", word_count:712, created_at:new Date(Date.now()-86400000*2).toISOString(), views:234, specialty:"Dental", body:`Most patients who delay root canal treatment are surprised to learn the signs were there much earlier.
-
-## Common Warning Signs
-
-The most telling signs that you may need a root canal include:
-
-- Sharp, throbbing pain that wakes you at night
-- Prolonged sensitivity to hot or cold (lasting more than 30 seconds after removing the stimulus)
-- Darkening or discolouration of the tooth
-- Swelling or tenderness in the gum near the tooth
-- A persistent pimple-like bump on the gum (called a sinus tract)
-
-## What Actually Happens During Treatment
-
-Modern root canal treatment at our clinic in Karur is nothing like the horror stories of decades past. With advanced rotary instruments and effective anaesthesia, most patients rate the procedure as no more uncomfortable than a routine filling.
-
-The process involves:
-- Removing the infected pulp tissue from inside the tooth
-- Thoroughly cleaning and shaping the canals
-- Sealing with biocompatible material (gutta-percha)
-- Placing a crown to restore full strength and function
-
-## When to Book a Consultation
-
-If you experience any combination of the symptoms above, do not wait. Early treatment means a simpler procedure, lower cost, and a much higher chance of saving your natural tooth.
-
-Book a same-day emergency consultation at Karur Dental Clinic — we keep slots available specifically for patients in pain.` },
-    { id:2, title:"Dental implants vs bridges: a complete comparison", slug:"implants-vs-bridges", excerpt:"Both options replace missing teeth, but they work very differently. Here's how to decide which is right for your situation and budget.", word_count:695, created_at:new Date(Date.now()-86400000*5).toISOString(), views:187, specialty:"Dental", body:`Both implants and bridges are excellent solutions for replacing missing teeth. The right choice depends on your bone health, budget, and long-term expectations.
-
-## How Each Option Works
-
-A dental bridge spans the gap left by a missing tooth by anchoring crowns onto the two neighbouring teeth. It's a tried-and-tested solution that has been used for decades.
-
-A dental implant, by contrast, replaces the entire tooth including the root. A titanium post is placed directly into the jawbone, and once healed, a custom crown is attached on top.
-
-## The Key Differences
-
-- Bone preservation: Implants stimulate the jawbone and prevent the bone loss that naturally occurs after tooth loss. Bridges do not.
-- Longevity: Implants typically last 20–30 years or more. Bridges typically last 10–15 years before needing replacement.
-- Adjacent teeth: Bridges require shaving down the neighbouring teeth. Implants are completely standalone.
-- Cost: Bridges are less expensive upfront (from ₹12,000). Implants cost more initially (from ₹25,000) but are more economical over a lifetime.
-
-## Which Should You Choose?
-
-For most patients in good general health with adequate bone density, a dental implant is the superior long-term investment. However, if bone loss has already occurred or if cost is the primary concern, a well-made bridge remains an excellent option.
-
-Book a free consultation at Karur Dental Clinic to discuss which option suits your specific case.` },
+    {
+      id: 1,
+      title: "Signs you need a root canal — and what to expect",
+      slug: "root-canal-signs",
+      excerpt: "Most patients who delay treatment are surprised to learn the signs were there much earlier. Here's what to look for.",
+      word_count: 712,
+      created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
+      views: 234,
+      specialty: clinic?.specialty || "Dental",
+      body: `Most patients who delay root canal treatment are surprised to learn the signs were there much earlier.\n\n## Common Warning Signs\n\n- **Persistent, throbbing toothache** — especially when biting or applying pressure\n- **Prolonged sensitivity** to hot or cold that lingers after the stimulus is removed\n- **Darkening of the tooth** — indicating nerve death or internal bleeding\n- **Swelling and tenderness** in the nearby gums\n- **A persistent pimple on the gums** — a dental abscess draining infection\n\n## What to Expect During Treatment\n\nModern treatment is nothing like the horror stories of decades past. With advanced instruments and effective anaesthesia, most patients rate the procedure as no more uncomfortable than a routine filling.\n\n## When to Book a Consultation\n\nIf you experience any of the symptoms above, do not wait. Book a same-day consultation at ${clinicName} — we keep slots available for patients in pain.`,
+    },
+    {
+      id: 2,
+      title: "Dental implants vs bridges: a complete comparison",
+      slug: "implants-vs-bridges",
+      excerpt: "Both options replace missing teeth, but they work very differently. Here's how to decide which is right for you.",
+      word_count: 695,
+      created_at: new Date(Date.now() - 86400000 * 5).toISOString(),
+      views: 187,
+      specialty: clinic?.specialty || "Dental",
+      body: `Both implants and bridges are excellent solutions for replacing missing teeth. The right choice depends on your bone health, budget, and long-term expectations.\n\n## Key Differences\n\n- **Bone preservation:** Implants stimulate the jawbone; bridges do not.\n- **Longevity:** Implants last 20–30+ years; bridges 10–15 years.\n- **Adjacent teeth:** Bridges require shaving neighbouring teeth; implants are standalone.\n- **Cost:** Bridges cost less upfront; implants are more economical long-term.\n\nBook a free consultation at ${clinicName} to discuss which option suits your case.`,
+    },
   ];
 
   useEffect(() => {
@@ -294,35 +274,35 @@ Book a free consultation at Karur Dental Clinic to discuss which option suits yo
     }
   }, [clinic?.id]);
 
-  const handleSelectPost = async (slug) => {
+  const handleSelectPost = async (postSlug) => {
     if (supabaseClient && clinic?.id) {
       setLoading(true);
-      const post = await fetchPost(clinic.id, slug, supabaseClient);
+      const post = await fetchPost(clinic.id, postSlug, supabaseClient);
       setActivePost(post);
       setLoading(false);
     } else {
-      setActivePost(DEMO_POSTS.find(p => p.slug === slug));
+      setActivePost(DEMO_POSTS.find(p => p.slug === postSlug));
     }
     window.scrollTo(0, 0);
   };
 
   if (loading) return (
-    <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"sans-serif", background:"white" }}>
-      <div style={{ color:"#94a3b8" }}>Loading...</div>
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "sans-serif", background: "white" }}>
+      <div style={{ color: "#94a3b8" }}>Loading...</div>
     </div>
   );
 
   if (activePost) return (
     <BlogArticle
       post={activePost}
-      clinic={clinic || { name:"Karur Dental Clinic", slug:"karur-dental-clinic", specialty:"Dental", city:"Karur", whatsapp:"919840000000" }}
+      clinic={clinic}
       onBack={() => setActivePost(null)}
     />
   );
 
   return (
     <BlogList
-      clinic={clinic || { name:"Karur Dental Clinic", slug:"karur-dental-clinic", specialty:"Dental", city:"Karur" }}
+      clinic={clinic}
       posts={posts}
       onSelect={handleSelectPost}
     />

@@ -4,8 +4,6 @@
 // Blocks site publish if critical items are missing
 
 import { useState } from "react";
-import { usePlanEnforcement } from "../hooks/usePlanEnforcement";
-import { PlanGate } from "./PlanGate";
 
 export default function ComplianceTab({ clinic, doctor, onNavigate }) {
   const [expandedId, setExpandedId] = useState(null);

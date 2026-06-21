@@ -4,7 +4,6 @@
 // Both checkboxes MUST be unchecked by default (pre-checked = invalid)
 
 import { useState } from "react";
-import { usePlanEnforcement } from "../hooks/usePlanEnforcement";
 
 export default function DPDPConsentBlock({ clinic, onChange }) {
   const [consentA, setConsentA] = useState(false); // appointment processing

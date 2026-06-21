@@ -121,43 +121,4 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
 });
-
-
-// ─────────────────────────────────────────────────────────────────
-// DAILY REMINDER CRON
-// supabase/functions/daily-reminders/index.ts
-// Schedule: every day at 6:00 PM IST (12:30 UTC)
-// supabase functions deploy daily-reminders
-// Add to supabase/config.toml:
-//   [functions.daily-reminders]
-//   schedule = "30 12 * * *"
-// ─────────────────────────────────────────────────────────────────
-
-export async function dailyReminders() {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const dateStr = tomorrow.toISOString().split("T")[0];
-
-  // Get all appointments for tomorrow that are confirmed
-  const { data: appointments } = await supabase
-    .from("appointments")
-    .select("*, clinics(name, phone, whatsapp, address)")
-    .eq("appt_date", dateStr)
-    .eq("status", "confirmed");
-
-  if (!appointments?.length) return;
-
-  for (const appt of appointments) {
-    const clinic = appt.clinics;
-    const msg =
-      `⏰ *Appointment Reminder*\n\n` +
-      `Hi ${appt.patient_name},\n\n` +
-      `Your appointment is *tomorrow*!\n\n` +
-      `📅 ${appt.appt_date} at ${appt.appt_time}\n` +
-      `🦷 ${appt.service}\n` +
-      `📍 ${clinic.name}\n${clinic.address}\n\n` +
-      `See you soon! 😊`;
-
-    await sendWhatsApp(appt.phone, msg);
-  }
-}
+// Daily reminders are handled by supabase/functions/daily-reminders/index.ts

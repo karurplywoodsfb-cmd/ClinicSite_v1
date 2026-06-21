@@ -4,7 +4,6 @@
 // Protected by is_superadmin flag in Supabase
 
 import { useState, useEffect } from "react";
-import { usePlanEnforcement } from "../hooks/usePlanEnforcement";
 import { supabase } from "../lib/supabase";
 
 const PLAN_COLORS = {

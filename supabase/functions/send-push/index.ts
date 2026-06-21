@@ -15,7 +15,7 @@ const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY")!;
 const VAPID_EMAIL       = Deno.env.get("VAPID_EMAIL") || "mailto:admin@clinicsite.in";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin":  "*",
+  "Access-Control-Allow-Origin":  "https://clinicsite.in",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 

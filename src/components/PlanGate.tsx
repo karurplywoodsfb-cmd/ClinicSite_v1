@@ -1,24 +1,19 @@
 // src/components/PlanGate.tsx
-import React from 'react';
-import { usePlanContext } from './PlanEnforcementProvider';
-import type { PlanTier } from '../config/planConfig';
+// FIX: Removed all Tailwind class names → inline styles only.
 
-// Standardized safe JSX SVG markup
-const LockIcon = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
-    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-  </svg>
-);
+import React from "react";
+import { usePlanContext } from "./PlanEnforcementProvider";
+import type { PlanTier } from "../config/planConfig";
+import { PLAN_DISPLAY_EMOJI } from "../config/planConfig";
 
 interface PlanGateProps {
-  feature: string;
+  feature:      string;
   requiredPlan?: PlanTier;
-  children: React.ReactNode;
-  fallback?: React.ReactNode;
+  children:     React.ReactNode;
+  fallback?:    React.ReactNode;
 }
 
-export function PlanGate({ feature, requiredPlan = 'premium', children, fallback }: PlanGateProps) {
+export function PlanGate({ feature, requiredPlan = "premium", children, fallback }: PlanGateProps) {
   const { canUseFeature, limits } = usePlanContext();
 
   if (canUseFeature(feature, requiredPlan)) {
@@ -27,24 +22,37 @@ export function PlanGate({ feature, requiredPlan = 'premium', children, fallback
 
   if (fallback) return <>{fallback}</>;
 
+  const emoji = PLAN_DISPLAY_EMOJI[requiredPlan];
+
   return (
-    <div className="relative group">
-      <div className="absolute inset-0 bg-gray-100/80 backdrop-blur-sm rounded-lg flex flex-col items-center justify-center z-10 p-6">
-        <LockIcon className="w-8 h-8 text-gray-400 mb-2" />
-        <p className="text-sm font-medium text-gray-600 text-center">
-          {requiredPlan === 'premium' ? 'Premium' : 'Enterprise'} Feature
+    <div style={{ position:"relative" }}>
+      {/* Overlay */}
+      <div style={{
+        position:"absolute", inset:0, background:"rgba(248,250,252,0.85)",
+        backdropFilter:"blur(4px)", borderRadius:12,
+        display:"flex", flexDirection:"column", alignItems:"center",
+        justifyContent:"center", zIndex:10, padding:24, textAlign:"center",
+      }}>
+        <div style={{ fontSize:28, marginBottom:8 }}>🔒</div>
+        <p style={{ fontSize:14, fontWeight:600, color:"#475569", margin:"0 0 4px" }}>
+          {emoji} {requiredPlan === "premium" ? "Premium" : "Enterprise"} Feature
         </p>
-        <p className="text-xs text-gray-500 mt-1 mb-3 text-center">
-          Your current plan: <strong>{limits?.plan || 'Free'}</strong>
+        <p style={{ fontSize:12, color:"#94a3b8", margin:"0 0 12px" }}>
+          Your plan: <strong>{limits?.plan ?? "Free"}</strong>
         </p>
-        <button 
-          onClick={() => window.location.href = '/pricing'}
-          className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
-        >
+        <button
+          onClick={() => { window.location.href = "/pricing"; }}
+          style={{
+            padding:"8px 18px", background:"#1565c0", color:"white",
+            border:"none", borderRadius:8, fontSize:13, fontWeight:600,
+            cursor:"pointer", fontFamily:"inherit",
+          }}>
           Upgrade Plan
         </button>
       </div>
-      <div className="opacity-40 pointer-events-none select-none">
+
+      {/* Blurred children */}
+      <div style={{ opacity:.35, pointerEvents:"none", userSelect:"none" }}>
         {children}
       </div>
     </div>
