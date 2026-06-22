@@ -23,7 +23,7 @@ import {
 import UpgradeModal    from "./UpgradeModal";
 import ComplianceTab   from "./ComplianceTab";
 import AIBlogGenerator from "./AIBlogGenerator";
-import { TEMPLATES }   from "../templates";
+import { TEMPLATES, TEMPLATE_PREVIEWS } from "../templates";
 import DomainManager          from "../components/admin/DomainManager";
 import NotificationSettings   from "../components/admin/NotificationSettings";
 
@@ -885,7 +885,8 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
               </div>
               <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16, marginBottom:32 }}>
                 {Object.values(TEMPLATES).map(tmpl => {
-                  const active = (clinic?.template || "corporate") === tmpl.id;
+                  const active  = (clinic?.template || "corporate") === tmpl.id;
+                  const preview = TEMPLATE_PREVIEWS[tmpl.id];
                   return (
                     <div key={tmpl.id}
                       onClick={async () => {
@@ -897,24 +898,50 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                         } catch(e) { alert("Save failed: " + e.message); }
                       }}
                       style={{
-                        background: active ? "rgba(21,101,192,0.1)" : "rgba(255,255,255,0.02)",
-                        border: `2px solid ${active ? "rgba(21,101,192,0.5)" : "rgba(255,255,255,0.07)"}`,
-                        borderRadius:14, padding:20, cursor:"pointer", transition:"all .2s",
+                        background: active ? "rgba(21,101,192,0.08)" : "rgba(255,255,255,0.02)",
+                        border: `2px solid ${active ? "#1e88e5" : "rgba(255,255,255,0.07)"}`,
+                        borderRadius:14, overflow:"hidden", cursor:"pointer",
+                        transition:"all .2s", position:"relative",
                       }}
-                      onMouseEnter={e => { if (!active) e.currentTarget.style.borderColor="rgba(255,255,255,0.15)"; }}
+                      onMouseEnter={e => { if (!active) e.currentTarget.style.borderColor="rgba(255,255,255,0.2)"; }}
                       onMouseLeave={e => { if (!active) e.currentTarget.style.borderColor="rgba(255,255,255,0.07)"; }}>
-                      <div style={{ fontSize:32, marginBottom:10 }}>{tmpl.icon}</div>
-                      <div style={{ fontSize:14, fontWeight:700, color:"#f1f5f9", marginBottom:4 }}>
-                        {tmpl.name}
-                      </div>
-                      <div style={{ fontSize:11, color:"#64748b", marginBottom:10 }}>
-                        Best for: {(tmpl.bestFor || []).slice(0, 2).join(", ")}
-                      </div>
-                      {active && (
-                        <div style={{ fontSize:11, color:"#22c55e", fontFamily:"monospace" }}>
-                          ✓ Active Template
+
+                      {/* SVG thumbnail preview */}
+                      <div style={{ width:"100%", background:"#060d18", padding:0, lineHeight:0 }}
+                        dangerouslySetInnerHTML={{ __html: preview || "" }}/>
+
+                      {/* Card footer */}
+                      <div style={{ padding:"10px 14px" }}>
+                        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                          <div>
+                            <div style={{ fontSize:13, fontWeight:700, color:"#f1f5f9" }}>
+                              {tmpl.icon} {tmpl.name}
+                            </div>
+                            <div style={{ fontSize:10, color:"#64748b", marginTop:2 }}>
+                              {(tmpl.bestFor || []).slice(0,2).join(" · ")}
+                            </div>
+                          </div>
+                          {active
+                            ? <span style={{ fontSize:10, color:"#22c55e", fontWeight:700 }}>✓ Active</span>
+                            : <span style={{ fontSize:10, color:"#475569" }}>Apply →</span>
+                          }
                         </div>
-                      )}
+                        {/* Preview in new tab */}
+                        {clinic?.slug && (
+                          <a
+                            href={`/${clinic.slug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={e => e.stopPropagation()}
+                            style={{
+                              display:"block", marginTop:8, fontSize:10,
+                              color:"#1e88e5", textDecoration:"none",
+                              textAlign:"center", opacity:.7,
+                            }}>
+                            👁 Preview live site
+                          </a>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
