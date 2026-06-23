@@ -152,7 +152,7 @@ export default function SurgicalHub({ clinic, services = [], doctors = [], media
           </div>
 
           {/* Booking panel — no border-radius, stark */}
-          <div style={{ background:C.dark, alignSelf:"stretch", display:"flex", alignItems:"center", padding:"48px 40px" }}>
+          <div style={{ background:C.dark, alignSelf:"stretch", display:"flex", alignItems:"center", padding:"48px 24px" }}>
             <div style={{ width:"100%" }}>
               <div style={{ width:32, height:3, background:C.accent, marginBottom:20 }}/>
               <div style={{ fontFamily:"'IBM Plex Serif',serif", fontSize:22, color:C.bg, fontWeight:600, marginBottom:4 }}>Request Appointment</div>

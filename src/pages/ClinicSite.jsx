@@ -163,14 +163,24 @@ function Navbar({ clinic, onBookClick }) {
       borderBottom:  scrolled ? "1px solid var(--color-border)" : "1px solid transparent",
       boxShadow:     scrolled ? "0 2px 20px rgba(11,37,69,0.07)" : "none",
       transition:    "all .3s",
-      padding:"0 40px", height:64,
+      padding:"0 24px", height:64,
       display:"flex", alignItems:"center", justifyContent:"space-between",
       fontFamily:"'DM Sans',sans-serif",
     }}>
       <a href={`/${clinic.slug}`} style={{ display:"flex", alignItems:"center", gap:10, textDecoration:"none" }}>
-        <div style={{ width:36, height:36, borderRadius:10,
-          background:"linear-gradient(135deg,var(--color-primary),var(--color-primary-light))",
-          display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>🦷</div>
+        <div style={{ width:36, height:36, borderRadius:8, overflow:"hidden", flexShrink:0,
+          display:"flex", alignItems:"center", justifyContent:"center" }}>
+          {clinic.logo_url
+            ? <img src={clinic.logo_url} alt={clinic.name}
+                style={{ width:"100%", height:"100%", objectFit:"contain" }}/>
+            : <div style={{ width:36, height:36, borderRadius:8,
+                background:"linear-gradient(135deg,var(--color-primary),var(--color-primary-light))",
+                display:"flex", alignItems:"center", justifyContent:"center",
+                color:"white", fontSize:15, fontWeight:700 }}>
+                {(clinic.name||"C").charAt(0).toUpperCase()}
+              </div>
+          }
+        </div>
         <div>
           <div style={{ fontSize:15, fontWeight:700, color:"var(--color-text)", lineHeight:1.1 }}>{clinic.name}</div>
           {clinic.tagline && (
@@ -262,12 +272,12 @@ function FAQSection({ clinic }) {
   };
 
   return (
-    <section id="faq" style={{ padding:"80px 40px", background:"var(--color-surface)", fontFamily:"'DM Sans',sans-serif" }}>
+    <section id="faq" style={{ padding:"80px 24px", background:"var(--color-surface)", fontFamily:"'DM Sans',sans-serif" }}>
       {/* Schema injected via dangerouslySetInnerHTML to avoid runtime script issues */}
       <div dangerouslySetInnerHTML={{ __html:
         `<script type="application/ld+json">${JSON.stringify(schema)}</script>` }}/>
 
-      <div style={{ maxWidth:1100, margin:"0 auto" }}>
+      <div style={{ width:"100%" }}>
         <Reveal>
           <div style={{ fontSize:12, fontWeight:600, letterSpacing:2,
             textTransform:"uppercase", color:"var(--color-primary)", marginBottom:10 }}>FAQ</div>
