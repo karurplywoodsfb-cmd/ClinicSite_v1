@@ -167,13 +167,17 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
   };
 
   const saveClinicInfo = () => doSave({
-    name:     clinicEdit.name,
-    tagline:  clinicEdit.tagline,
-    phone:    clinicEdit.phone,
-    whatsapp: clinicEdit.whatsapp,
-    email:    clinicEdit.email,
-    address:  clinicEdit.address,
-    about:    clinicEdit.about,
+    name:        clinicEdit.name,
+    tagline:     clinicEdit.tagline,
+    heroTagline: clinicEdit.heroTagline,
+    specialty:   clinicEdit.specialty,
+    city:        clinicEdit.city,
+    phone:       clinicEdit.phone,
+    whatsapp:    clinicEdit.whatsapp,
+    email:       clinicEdit.email,
+    address:     clinicEdit.address,
+    about:       clinicEdit.about,
+    logo_url:    clinicEdit.logo_url,
   });
 
   const saveDoctor = async () => {
@@ -674,11 +678,91 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
           {/* ═══ CLINIC INFO ═══ */}
           {page === "clinic" && (
             <div style={{ maxWidth:680 }}>
+
+              {/* ── Logo Upload ── */}
+              <div style={{
+                background:"rgba(255,255,255,0.02)",
+                border:"1px solid rgba(255,255,255,0.07)",
+                borderRadius:12, padding:20, marginBottom:20,
+              }}>
+                <div style={{ fontSize:11, fontFamily:"monospace", fontWeight:600,
+                  color:"#64748b", letterSpacing:.5, marginBottom:14 }}>CLINIC LOGO</div>
+                <div style={{ display:"flex", alignItems:"center", gap:20 }}>
+                  {/* Preview */}
+                  <div style={{
+                    width:80, height:80, borderRadius:12, overflow:"hidden",
+                    background:"rgba(255,255,255,0.04)",
+                    border:"1px solid rgba(255,255,255,0.1)",
+                    display:"flex", alignItems:"center", justifyContent:"center",
+                    flexShrink:0,
+                  }}>
+                    {clinicEdit.logo_url
+                      ? <img src={clinicEdit.logo_url} alt="Logo"
+                          style={{ width:"100%", height:"100%", objectFit:"contain" }}/>
+                      : <div style={{ fontSize:28, color:"#334155" }}>
+                          {(clinicEdit.name||"C").charAt(0).toUpperCase()}
+                        </div>
+                    }
+                  </div>
+                  <div>
+                    <input type="file" accept="image/*" id="logo-upload" style={{ display:"none" }}
+                      onChange={async e => {
+                        if (!e.target.files?.[0] || !clinic?.id) return;
+                        try {
+                          const file = e.target.files[0];
+                          const ext  = file.name.split(".").pop();
+                          const path = `${clinic.id}/logo.${ext}`;
+                          const { error: upErr } = await supabase.storage
+                            .from("clinic-media")
+                            .upload(path, file, { upsert: true });
+                          if (upErr) throw upErr;
+                          const { data: { publicUrl } } = supabase.storage
+                            .from("clinic-media")
+                            .getPublicUrl(path);
+                          const updated = await updateClinic(clinic.id, { logo_url: publicUrl });
+                          setClinic(updated);
+                          setClinicEdit(updated);
+                          onClinicUpdate?.(updated);
+                        } catch(e) { alert("Logo upload failed: " + e.message); }
+                      }}/>
+                    <label htmlFor="logo-upload" style={{
+                      background:"rgba(255,255,255,0.05)",
+                      border:"1px solid rgba(255,255,255,0.12)",
+                      color:"#94a3b8", borderRadius:8, padding:"8px 16px",
+                      fontSize:12, cursor:"pointer", display:"inline-block",
+                    }}>
+                      📷 Upload Logo
+                    </label>
+                    <div style={{ fontSize:11, color:"#334155", marginTop:6 }}>
+                      PNG or SVG recommended · Max 2MB · Will show in navbar
+                    </div>
+                    {clinicEdit.logo_url && (
+                      <button onClick={async () => {
+                        const updated = await updateClinic(clinic.id, { logo_url: null });
+                        setClinic(updated); setClinicEdit(updated); onClinicUpdate?.(updated);
+                      }} style={{
+                        marginTop:8, fontSize:11, color:"#f87171", background:"none",
+                        border:"none", cursor:"pointer", padding:0,
+                      }}>Remove logo</button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Brand Fields ── */}
               <Field label="CLINIC NAME"    value={clinicEdit.name}
                 onChange={v => setClinicEdit(p => ({...p, name:v}))}/>
               <Field label="TAGLINE"        value={clinicEdit.tagline}
                 onChange={v => setClinicEdit(p => ({...p, tagline:v}))}
                 hint="Factual descriptor only — no superlatives (IMC Ethics 2002)"/>
+              <Field label="HERO HEADLINE"  value={clinicEdit.heroTagline}
+                onChange={v => setClinicEdit(p => ({...p, heroTagline:v}))}
+                hint="Large text shown on the website hero section. Keep it short — 4 to 6 words."/>
+              <Field label="SPECIALTY"      value={clinicEdit.specialty}
+                onChange={v => setClinicEdit(p => ({...p, specialty:v}))}
+                hint="e.g. Dental, Dermatology, General Practice"/>
+              <Field label="CITY"           value={clinicEdit.city}
+                onChange={v => setClinicEdit(p => ({...p, city:v}))}/>
               <Field label="PHONE"          value={clinicEdit.phone}
                 onChange={v => setClinicEdit(p => ({...p, phone:v}))}/>
               <Field label="WHATSAPP"       value={clinicEdit.whatsapp}
@@ -947,62 +1031,6 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                 })}
               </div>
 
-              {/* ── Color Theme selector ── */}
-              <div style={{ borderTop:"1px solid rgba(255,255,255,0.07)", paddingTop:28, marginTop:8 }}>
-                <div style={{ fontSize:11, fontWeight:700, color:"#64748b", letterSpacing:1.5,
-                  textTransform:"uppercase", marginBottom:10 }}>Color Theme</div>
-                <div style={{ fontSize:13, color:"#64748b", marginBottom:16 }}>
-                  Choose a color palette for your clinic site. Works across all templates.
-                </div>
-                <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:10 }}>
-                  {[
-                    { id:"theme-001-ocean",   label:"Ocean Blue",   color:"#1565c0" },
-                    { id:"theme-002-forest",  label:"Forest Green", color:"#2e7d32" },
-                    { id:"theme-003-sunset",  label:"Warm Coral",   color:"#e64a19" },
-                    { id:"theme-004-lavender",label:"Lavender",     color:"#7b1fa2" },
-                    { id:"theme-005-gold",    label:"Royal Gold",   color:"#f57f17" },
-                    { id:"theme-006-midnight",label:"Midnight",     color:"#1a237e" },
-                    { id:"theme-007-rose",    label:"Rose",         color:"#c2185b" },
-                    { id:"theme-008-teal",    label:"Teal",         color:"#00695c" },
-                    { id:"theme-009-charcoal",label:"Charcoal",     color:"#37474f" },
-                    { id:"theme-010-sage",    label:"Sage Green",   color:"#558b2f" },
-                  ].map(theme => {
-                    const activeTheme = clinic?.theme_id || "theme-001-ocean";
-                    const isActive = activeTheme === theme.id;
-                    return (
-                      <div key={theme.id}
-                        onClick={async () => {
-                          try {
-                            const updated = await updateClinic(clinic.id, {color_theme: theme.id,  theme_id: theme.id});
-                            setClinic(updated); setClinicEdit(updated);
-                            onClinicUpdate?.(updated);
-                          } catch(e) { alert("Save failed: " + e.message); }
-                        }}
-                        style={{
-                          borderRadius:10, padding:"12px 8px", cursor:"pointer",
-                          textAlign:"center", transition:"all .2s",
-                          background: isActive ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.02)",
-                          border: `2px solid ${isActive ? theme.color : "rgba(255,255,255,0.07)"}`,
-                        }}>
-                        <div style={{ width:36, height:36, borderRadius:"50%",
-                          background: theme.color, margin:"0 auto 8px",
-                          boxShadow: isActive ? `0 0 0 3px rgba(255,255,255,0.15)` : "none" }}/>
-                        <div style={{ fontSize:10, color: isActive ? "#e2e8f0" : "#64748b",
-                          fontWeight: isActive ? 700 : 400, lineHeight:1.3 }}>
-                          {theme.label}
-                        </div>
-                        {isActive && (
-                          <div style={{ fontSize:10, color:"#22c55e", marginTop:4 }}>✓ Active</div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-                <div style={{ fontSize:11, color:"#334155", marginTop:12 }}>
-                  💡 After adding your Kimi CSS theme files to <code style={{ fontFamily:"monospace" }}>src/themes/</code>, 
-                  update the theme list above with your theme IDs.
-                </div>
-              </div>
             </div>
           )}
 

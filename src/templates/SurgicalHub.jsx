@@ -68,12 +68,23 @@ export default function SurgicalHub({ clinic, services = [], doctors = [], media
         background: scrolled ? "rgba(255,255,255,0.97)" : C.bg,
         borderBottom: `2px solid ${scrolled ? C.accent : C.border}`,
         backdropFilter: scrolled ? "blur(12px)" : "none",
-        transition:"all .3s", padding:"0 48px", height:64,
+        transition:"all .3s", padding:"0 24px", height:64,
         display:"flex", alignItems:"center", justifyContent:"space-between",
       }}>
         <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-          <div style={{ width:36, height:36, background:C.accent,
-            display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>🏥</div>
+          <div style={{ width:36, height:36, borderRadius:8, overflow:"hidden", flexShrink:0,
+            display:"flex", alignItems:"center", justifyContent:"center" }}>
+            {clinic.logo_url
+              ? <img src={clinic.logo_url} alt={clinic.name}
+                  style={{ width:"100%", height:"100%", objectFit:"contain" }}/>
+              : <div style={{ width:36, height:36, borderRadius:8,
+                  background:`linear-gradient(135deg,${C.accent||C.primary||"#1565c0"},${C.accentLight||C.primaryLight||"#1e88e5"})`,
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                  color:"white", fontSize:15, fontWeight:700 }}>
+                  {(clinic.name||"C").charAt(0).toUpperCase()}
+                </div>
+            }
+          </div>
           <div>
             <div style={{ fontSize:15, fontWeight:700, color:C.dark, letterSpacing:.3 }}>{clinic.name}</div>
             {clinic.specialty && <div style={{ fontSize:10, color:C.accent, letterSpacing:1.5, textTransform:"uppercase", fontWeight:600 }}>{clinic.specialty}</div>}
@@ -98,7 +109,7 @@ export default function SurgicalHub({ clinic, services = [], doctors = [], media
         minHeight:"100vh", paddingTop:64,
         display:"flex", alignItems:"stretch",
       }}>
-        <div style={{ maxWidth:1100, margin:"0 auto", display:"grid", gridTemplateColumns:"1.1fr 1fr", width:"100%", alignItems:"center", padding:"0 48px" }}>
+        <div style={{ width:"100%", display:"grid", gridTemplateColumns:"1.1fr 1fr", width:"100%", alignItems:"center", padding:"0 24px" }}>
           <div style={{ padding:"80px 0" }}>
             {/* Red accent bar */}
             <div style={{ width:48, height:4, background:C.accent, marginBottom:28 }}/>
@@ -167,8 +178,8 @@ export default function SurgicalHub({ clinic, services = [], doctors = [], media
 
       {/* Services */}
       {activeServices.length > 0 && (
-        <section id="services" style={{ padding:"80px 48px", background:C.surface }}>
-          <div style={{ maxWidth:1100, margin:"0 auto" }}>
+        <section id="services" style={{ padding:"80px 24px", background:C.surface }}>
+          <div style={{ width:"100%" }}>
             <Reveal>
               <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:10 }}>
                 <div style={{ width:32, height:3, background:C.accent }}/>
@@ -197,8 +208,8 @@ export default function SurgicalHub({ clinic, services = [], doctors = [], media
 
       {/* Doctor */}
       {doctor && (
-        <section id="doctor" style={{ padding:"80px 48px", background:C.bg }}>
-          <div style={{ maxWidth:1100, margin:"0 auto", display:"grid", gridTemplateColumns:"1fr 1.4fr", gap:60, alignItems:"center" }}>
+        <section id="doctor" style={{ padding:"80px 24px", background:C.bg }}>
+          <div style={{ width:"100%", display:"grid", gridTemplateColumns:"1fr 1.4fr", gap:60, alignItems:"center" }}>
             <Reveal>
               <div style={{ width:"100%", aspectRatio:"4/5",
                 background:C.surface, border:`2px solid ${C.border}`,
@@ -228,8 +239,8 @@ export default function SurgicalHub({ clinic, services = [], doctors = [], media
       <ClinicMediaSection clinic={clinic} mediaItems={media}/>
 
       {/* Contact */}
-      <section id="contact" style={{ padding:"80px 48px", background:C.dark }}>
-        <div style={{ maxWidth:1100, margin:"0 auto", display:"grid", gridTemplateColumns:"1fr 1fr", gap:60 }}>
+      <section id="contact" style={{ padding:"80px 24px", background:C.dark }}>
+        <div style={{ width:"100%", display:"grid", gridTemplateColumns:"1fr 1fr", gap:60 }}>
           <Reveal>
             <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:14 }}>
               <div style={{ width:32, height:3, background:C.accent }}/>

@@ -68,13 +68,23 @@ export default function EliteAesthetics({ clinic, services = [], doctors = [], m
         background: scrolled ? "rgba(253,248,245,0.97)" : "transparent",
         backdropFilter: scrolled ? "blur(12px)" : "none",
         borderBottom: scrolled ? `1px solid ${C.border}` : "1px solid transparent",
-        transition:"all .3s", padding:"0 48px", height:66,
+        transition:"all .3s", padding:"0 24px", height:66,
         display:"flex", alignItems:"center", justifyContent:"space-between",
       }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          <div style={{ width:34, height:34, borderRadius:"50%",
-            background:`linear-gradient(135deg,${C.accent},${C.accentLight})`,
-            display:"flex", alignItems:"center", justifyContent:"center", fontSize:16 }}>✨</div>
+          <div style={{ width:36, height:36, borderRadius:8, overflow:"hidden", flexShrink:0,
+            display:"flex", alignItems:"center", justifyContent:"center" }}>
+            {clinic.logo_url
+              ? <img src={clinic.logo_url} alt={clinic.name}
+                  style={{ width:"100%", height:"100%", objectFit:"contain" }}/>
+              : <div style={{ width:36, height:36, borderRadius:8,
+                  background:`linear-gradient(135deg,${C.accent||"#1565c0"},${C.accentLight||C.accent||"#1e88e5"})`,
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                  color:"white", fontSize:15, fontWeight:700 }}>
+                  {(clinic.name||"C").charAt(0).toUpperCase()}
+                </div>
+            }
+          </div>
           <div>
             <div style={{ fontSize:15, fontWeight:600, color:C.text, letterSpacing:.2 }}>{clinic.name}</div>
             {clinic.specialty && <div style={{ fontSize:10, color:C.accent, letterSpacing:1.5, textTransform:"uppercase" }}>{clinic.specialty}</div>}
@@ -99,9 +109,9 @@ export default function EliteAesthetics({ clinic, services = [], doctors = [], m
       <section style={{
         minHeight:"100vh", paddingTop:66,
         background:`radial-gradient(ellipse 60% 70% at 80% 50%, rgba(181,115,90,0.1), transparent), ${C.bg}`,
-        display:"flex", alignItems:"center", padding:"80px 48px",
+        display:"flex", alignItems:"center", padding:"80px 24px",
       }}>
-        <div style={{ maxWidth:1100, margin:"0 auto", display:"grid", gridTemplateColumns:"1.2fr 1fr", gap:80, alignItems:"center", width:"100%" }}>
+        <div style={{ width:"100%", display:"grid", gridTemplateColumns:"1.2fr 1fr", gap:80, alignItems:"center", width:"100%" }}>
           <div>
             <div style={{ display:"inline-flex", alignItems:"center", gap:8,
               background:`rgba(181,115,90,0.1)`, border:`1px solid ${C.border}`, borderRadius:4,
@@ -160,8 +170,8 @@ export default function EliteAesthetics({ clinic, services = [], doctors = [], m
 
       {/* Services */}
       {activeServices.length > 0 && (
-        <section id="services" style={{ padding:"80px 48px", background:C.surface }}>
-          <div style={{ maxWidth:1100, margin:"0 auto" }}>
+        <section id="services" style={{ padding:"80px 24px", background:C.surface }}>
+          <div style={{ width:"100%" }}>
             <Reveal>
               <div style={{ fontSize:11, fontWeight:600, letterSpacing:2.5, textTransform:"uppercase", color:C.accent, marginBottom:10 }}>Our Treatments</div>
               <h2 style={{ fontFamily:"'Libre Baskerville',serif", fontSize:"clamp(26px,3vw,40px)", fontWeight:400, color:C.text, marginBottom:48 }}>Clinical Services</h2>
@@ -187,8 +197,8 @@ export default function EliteAesthetics({ clinic, services = [], doctors = [], m
 
       {/* Doctor */}
       {doctor && (
-        <section id="doctor" style={{ padding:"80px 48px", background:C.bg }}>
-          <div style={{ maxWidth:1100, margin:"0 auto", display:"grid", gridTemplateColumns:"1fr 1.4fr", gap:60, alignItems:"center" }}>
+        <section id="doctor" style={{ padding:"80px 24px", background:C.bg }}>
+          <div style={{ width:"100%", display:"grid", gridTemplateColumns:"1fr 1.4fr", gap:60, alignItems:"center" }}>
             <Reveal>
               <div style={{ width:"100%", aspectRatio:"4/5", borderRadius:20, background:C.surface,
                 border:`1px solid ${C.border}`, display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden" }}>
@@ -214,8 +224,8 @@ export default function EliteAesthetics({ clinic, services = [], doctors = [], m
       <ClinicMediaSection clinic={clinic} mediaItems={media}/>
 
       {/* Contact */}
-      <section id="contact" style={{ padding:"80px 48px", background:C.surface }}>
-        <div style={{ maxWidth:1100, margin:"0 auto", display:"grid", gridTemplateColumns:"1fr 1fr", gap:60 }}>
+      <section id="contact" style={{ padding:"80px 24px", background:C.surface }}>
+        <div style={{ width:"100%", display:"grid", gridTemplateColumns:"1fr 1fr", gap:60 }}>
           <Reveal>
             <div style={{ fontSize:11, fontWeight:600, letterSpacing:2.5, textTransform:"uppercase", color:C.accent, marginBottom:10 }}>Find Us</div>
             <h2 style={{ fontFamily:"'Libre Baskerville',serif", fontSize:34, fontWeight:400, color:C.text, marginBottom:32 }}>Visit {clinic.name}</h2>

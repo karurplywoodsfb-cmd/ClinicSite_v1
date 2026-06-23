@@ -83,13 +83,23 @@ export default function CorporateGiant({ clinic, services = [], doctors = [], me
         background: scrolled ? "rgba(11,25,41,0.97)" : "transparent",
         backdropFilter: scrolled ? "blur(12px)" : "none",
         borderBottom: scrolled ? `1px solid ${C.border}` : "1px solid transparent",
-        transition:"all .3s", padding:"0 48px", height:68,
+        transition:"all .3s", padding:"0 24px", height:68,
         display:"flex", alignItems:"center", justifyContent:"space-between",
       }}>
         <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-          <div style={{ width:38, height:38, borderRadius:8,
-            background:`linear-gradient(135deg,${C.accent},${C.accentLight})`,
-            display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>🏥</div>
+          <div style={{ width:36, height:36, borderRadius:8, overflow:"hidden", flexShrink:0,
+            display:"flex", alignItems:"center", justifyContent:"center" }}>
+            {clinic.logo_url
+              ? <img src={clinic.logo_url} alt={clinic.name}
+                  style={{ width:"100%", height:"100%", objectFit:"contain" }}/>
+              : <div style={{ width:36, height:36, borderRadius:8,
+                  background:`linear-gradient(135deg,${C.accent||C.primary||"#1565c0"},${C.accentLight||C.primaryLight||"#1e88e5"})`,
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                  color:"white", fontSize:15, fontWeight:700 }}>
+                  {(clinic.name||"C").charAt(0).toUpperCase()}
+                </div>
+            }
+          </div>
           <div>
             <div style={{ fontSize:15, fontWeight:700, color:C.white, letterSpacing:.3 }}>{clinic.name}</div>
             {clinic.specialty && <div style={{ fontSize:10, color:C.accent, letterSpacing:1.5, textTransform:"uppercase" }}>{clinic.specialty}</div>}
@@ -114,9 +124,9 @@ export default function CorporateGiant({ clinic, services = [], doctors = [], me
       <section style={{
         minHeight:"100vh", paddingTop:68,
         background:`radial-gradient(ellipse 70% 60% at 80% 50%, rgba(201,168,76,0.08), transparent), ${C.bg}`,
-        display:"flex", alignItems:"center", padding:"80px 48px",
+        display:"flex", alignItems:"center", padding:"80px 24px",
       }}>
-        <div style={{ maxWidth:1100, margin:"0 auto", display:"grid", gridTemplateColumns:"1.2fr 1fr", gap:80, alignItems:"center", width:"100%" }}>
+        <div style={{ width:"100%", display:"grid", gridTemplateColumns:"1.2fr 1fr", gap:80, alignItems:"center", width:"100%" }}>
           <div>
             <div style={{ display:"inline-flex", alignItems:"center", gap:8,
               border:`1px solid ${C.border}`, borderRadius:4, padding:"5px 14px",
@@ -190,8 +200,8 @@ export default function CorporateGiant({ clinic, services = [], doctors = [], me
 
       {/* ── Services ── */}
       {activeServices.length > 0 && (
-        <section id="services" style={{ padding:"80px 48px", background:C.surface }}>
-          <div style={{ maxWidth:1100, margin:"0 auto" }}>
+        <section id="services" style={{ padding:"80px 24px", background:C.surface }}>
+          <div style={{ width:"100%" }}>
             <Reveal>
               <div style={{ fontSize:11, fontWeight:700, letterSpacing:2.5, textTransform:"uppercase", color:C.accent, marginBottom:10 }}>Our Services</div>
               <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(26px,3vw,38px)", color:C.white, marginBottom:48 }}>Clinical Services</h2>
@@ -217,8 +227,8 @@ export default function CorporateGiant({ clinic, services = [], doctors = [], me
 
       {/* ── Doctor ── */}
       {doctor && (
-        <section id="doctor" style={{ padding:"80px 48px", background:C.bg }}>
-          <div style={{ maxWidth:1100, margin:"0 auto", display:"grid", gridTemplateColumns:"1fr 1.4fr", gap:60, alignItems:"center" }}>
+        <section id="doctor" style={{ padding:"80px 24px", background:C.bg }}>
+          <div style={{ width:"100%", display:"grid", gridTemplateColumns:"1fr 1.4fr", gap:60, alignItems:"center" }}>
             <Reveal>
               <div style={{ width:"100%", aspectRatio:"4/5", borderRadius:16,
                 background:`linear-gradient(160deg,${C.surface},${C.bg})`,
@@ -254,8 +264,8 @@ export default function CorporateGiant({ clinic, services = [], doctors = [], me
       <ClinicMediaSection clinic={clinic} mediaItems={media}/>
 
       {/* ── Contact ── */}
-      <section id="contact" style={{ padding:"80px 48px", background:C.surface }}>
-        <div style={{ maxWidth:1100, margin:"0 auto", display:"grid", gridTemplateColumns:"1fr 1fr", gap:60 }}>
+      <section id="contact" style={{ padding:"80px 24px", background:C.surface }}>
+        <div style={{ width:"100%", display:"grid", gridTemplateColumns:"1fr 1fr", gap:60 }}>
           <Reveal>
             <div style={{ fontSize:11, fontWeight:700, letterSpacing:2.5, textTransform:"uppercase", color:C.accent, marginBottom:10 }}>Find Us</div>
             <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:34, color:C.white, marginBottom:32 }}>Visit {clinic.name}</h2>
