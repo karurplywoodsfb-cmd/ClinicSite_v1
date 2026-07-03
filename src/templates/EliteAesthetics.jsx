@@ -4,7 +4,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import BookingEngine      from "../components/BookingEngine";
-import ClinicFooter       from "../components/ClinicFooter";
+import ClinicFooter          from "../components/ClinicFooter";
+import WorkingHoursDisplay   from "../components/WorkingHoursDisplay";
 import ClinicMediaSection from "../components/ClinicMediaSection";
 
 function Reveal({ children, delay = 0 }) {
@@ -22,7 +23,7 @@ function Reveal({ children, delay = 0 }) {
   );
 }
 
-export default function EliteAesthetics({ clinic, services = [], doctors = [], media = [], onBookClick }) {
+export default function EliteAesthetics({ clinic, services = [], doctors = [], media = [], hours = [], onBookClick }) {
   const [showBook, setShowBook] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const doctor = doctors[0];
@@ -264,7 +265,7 @@ export default function EliteAesthetics({ clinic, services = [], doctors = [], m
         </div>
       </section>
 
-      <ClinicFooter clinic={clinic} doctor={doctor}/>
+      <ClinicFooter clinic={clinic} doctor={doctor} hours={hours}/>
 
       <div style={{ position:"fixed", bottom:24, right:24, zIndex:200, display:"flex", flexDirection:"column", gap:10 }}>
         <a href={`https://wa.me/${(clinic.whatsapp||clinic.phone||"").replace(/\D/g,"")}`} target="_blank" rel="noopener noreferrer"

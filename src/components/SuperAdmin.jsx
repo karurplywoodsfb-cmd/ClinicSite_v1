@@ -17,6 +17,7 @@ const NAV = [
   { id:"clinics",    label:"All Clinics",   icon:"🏥" },
   { id:"revenue",    label:"Revenue",       icon:"💰" },
   { id:"payments",   label:"Payments",      icon:"💳" },
+  { id:"webhooks",   label:"Webhooks",      icon:"🔔" },
   { id:"broadcast",  label:"Broadcast",     icon:"📢" },
   { id:"settings",   label:"Settings",      icon:"⚙️" },
 ];
@@ -45,13 +46,14 @@ function StatCard({ icon, label, value, sub, color="#3b82f6" }) {
 }
 
 export default function SuperAdmin({ user }) {
-  const [page,     setPage]     = useState("dashboard");
-  const [clinics,  setClinics]  = useState([]);
-  const [payments, setPayments] = useState([]);
-  const [loading,  setLoading]  = useState(true);
-  const [search,   setSearch]   = useState("");
-  const [planFilter, setPlanFilter] = useState("all");
-  const [broadcast, setBroadcast]   = useState({ subject:"", body:"", sending:false, sent:false });
+  const [page,         setPage]         = useState("dashboard");
+  const [clinics,      setClinics]      = useState([]);
+  const [payments,     setPayments]     = useState([]);
+  const [webhookLogs,  setWebhookLogs]  = useState([]);
+  const [loading,      setLoading]      = useState(true);
+  const [search,       setSearch]       = useState("");
+  const [planFilter,   setPlanFilter]   = useState("all");
+  const [broadcast,    setBroadcast]    = useState({ subject:"", body:"", sending:false, sent:false });
   const [actionClinic, setActionClinic] = useState(null);
 
   useEffect(() => { loadAll(); }, []);
@@ -59,13 +61,20 @@ export default function SuperAdmin({ user }) {
   const loadAll = async () => {
     setLoading(true);
     try {
-      // Use service role via edge function for full access
-      const [{ data: cls }, { data: pays }] = await Promise.all([
-        supabase.from("clinics").select("*, doctors(name,specialization), appointments(count)").order("created_at", { ascending:false }),
-        supabase.from("payments").select("*, clinics(name,city)").order("created_at", { ascending:false }).limit(50),
+      const [{ data: cls }, { data: pays }, { data: logs }] = await Promise.all([
+        supabase.from("clinics")
+          .select("id,name,slug,city,plan,plan_status,is_published,created_at,specialty,razorpay_subscription_id,plan_activated_at")
+          .order("created_at", { ascending:false }),
+        supabase.from("payments")
+          .select("id,clinic_id,plan,amount,status,paid_at,clinics(name,city)")
+          .order("paid_at", { ascending:false }).limit(50),
+        supabase.from("webhook_logs")
+          .select("id,event,clinic_id,created_at,payload")
+          .order("created_at", { ascending:false }).limit(30),
       ]);
       setClinics(cls || []);
       setPayments(pays || []);
+      setWebhookLogs(logs || []);
     } catch (e) {
       console.error(e);
     } finally {
@@ -398,6 +407,61 @@ export default function SuperAdmin({ user }) {
                   </tbody>
                 </table>
               </div>
+            </div>
+          )}
+
+          {/* ════ WEBHOOKS ════ */}
+          {page === "webhooks" && (
+            <div>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+                <div style={{ fontSize:13, color:"#64748b" }}>
+                  Last {webhookLogs.length} webhook events from Razorpay
+                </div>
+                <button onClick={loadAll} style={{
+                  background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)",
+                  color:"#94a3b8", borderRadius:6, padding:"6px 12px", fontSize:12, cursor:"pointer", fontFamily:"inherit",
+                }}>🔄 Refresh</button>
+              </div>
+
+              {webhookLogs.length === 0 ? (
+                <div style={{ textAlign:"center", padding:"40px 0", color:"#475569", fontSize:14 }}>
+                  No webhook events yet. Events appear here once Razorpay webhook is configured.
+                </div>
+              ) : (
+                <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                  {webhookLogs.map(log => {
+                    const isSuccess = log.event.includes("activated") || log.event.includes("charged");
+                    const isDanger  = log.event.includes("halted") || log.event.includes("failed");
+                    const color     = isSuccess ? "#22c55e" : isDanger ? "#ef4444" : "#94a3b8";
+                    const bg        = isSuccess ? "rgba(34,197,94,0.06)" : isDanger ? "rgba(239,68,68,0.06)" : "rgba(255,255,255,0.02)";
+                    return (
+                      <div key={log.id} style={{
+                        background:bg, border:`1px solid ${color}20`,
+                        borderLeft:`3px solid ${color}`,
+                        borderRadius:8, padding:"12px 16px",
+                        display:"flex", alignItems:"center", gap:16,
+                      }}>
+                        <div style={{ flex:1 }}>
+                          <div style={{ fontSize:12, fontFamily:"monospace", color, fontWeight:700, marginBottom:3 }}>
+                            {log.event}
+                          </div>
+                          <div style={{ fontSize:11, color:"#475569" }}>
+                            Clinic: {log.clinic_id?.slice(0,8) || "unknown"} ·{" "}
+                            {new Date(log.created_at).toLocaleString("en-IN")}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => alert(JSON.stringify(log.payload, null, 2))}
+                          style={{ background:"none", border:"1px solid rgba(255,255,255,0.1)",
+                            color:"#64748b", borderRadius:6, padding:"4px 10px",
+                            fontSize:11, cursor:"pointer" }}>
+                          View payload
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 

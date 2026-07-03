@@ -19,12 +19,14 @@ import {
   getDoctors,
   getClinicMedia,
   getSeoData,
+  getWorkingHours,
 } from "../lib/supabase";
-import BookingEngine      from "../components/BookingEngine";
-import ClinicFooter       from "../components/ClinicFooter";
-import ClinicMediaSection from "../components/ClinicMediaSection";
+import BookingEngine         from "../components/BookingEngine";
+import ClinicFooter          from "../components/ClinicFooter";
+import ClinicMediaSection    from "../components/ClinicMediaSection";
+import WorkingHoursDisplay   from "../components/WorkingHoursDisplay";
 import { TEMPLATES, suggestTemplate } from "../templates";
-import { applyTheme }                  from "../lib/themes"; // single source of truth
+import { applyTheme }                  from "../lib/themes";
 
 // ── SEO injector ──────────────────────────────────────────────────
 function injectSEO(clinic, services, doctor, seoData) {
@@ -332,6 +334,7 @@ export default function ClinicSite({ slug }) {
   const [doctors,  setDoctors]  = useState([]);
   const [media,    setMedia]    = useState([]);
   const [seoData,  setSeoData]  = useState(null);
+  const [hours,    setHours]    = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState("");
 
@@ -350,28 +353,31 @@ export default function ClinicSite({ slug }) {
       }
 
       // Run all data fetches in parallel — any failure is non-fatal
-      const [svcs, docs, mediaItems, seo] = await Promise.allSettled([
+      const [svcs, docs, mediaItems, seo, hrs] = await Promise.allSettled([
         getServices(c.id),
         getDoctors(c.id),
         getClinicMedia(c.id),
-        getSeoData(c.id),   // maybeSingle — returns null if no row, no 406
+        getSeoData(c.id),
+        getWorkingHours(c.id),
       ]);
 
       const resolvedSvcs  = svcs.status      === "fulfilled" ? svcs.value      : [];
       const resolvedDocs  = docs.status      === "fulfilled" ? docs.value      : [];
       const resolvedMedia = mediaItems.status === "fulfilled" ? mediaItems.value : [];
       const resolvedSeo   = seo.status       === "fulfilled" ? seo.value       : null;
+      const resolvedHrs   = hrs.status       === "fulfilled" ? hrs.value       : [];
 
       setClinic(c);
       setServices(resolvedSvcs);
       setDoctors(resolvedDocs);
       setMedia(resolvedMedia);
       setSeoData(resolvedSeo);
+      setHours(resolvedHrs);
 
       // Inject SEO (graceful whether seoData is null or populated)
       injectSEO(c, resolvedSvcs, resolvedDocs[0], resolvedSeo);
 
-      // ✅ FIXED: Apply theme via inline CSS variables (production-safe)
+      // Apply theme via inline CSS variables (production-safe)
       applyTheme(c.color_theme || c.theme_id || "default");
 
     } catch (e) {
@@ -410,7 +416,8 @@ export default function ClinicSite({ slug }) {
       services={activeServices}
       doctors={doctors}
       media={media}
-      onBookClick={() => setShowBook(true)}
+      hours={hours}
+      onBookClick={() => setShowBook && setShowBook(true)}
     />
   );
 }

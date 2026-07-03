@@ -3,7 +3,9 @@
 // COMPLIANCE FIX E2 — Privacy Policy link
 // Replaces inline footer in ClinicSite.jsx
 
-export default function ClinicFooter({ clinic, doctor }) {
+import WorkingHoursDisplay from "./WorkingHoursDisplay";
+
+export default function ClinicFooter({ clinic, doctor, hours = [] }) {
   const regNo      = doctor?.reg_number   || clinic?.doctor_reg_no;
   const council    = doctor?.council_name || "Medical Council of India";
   const docName    = doctor?.name;
@@ -16,11 +18,11 @@ export default function ClinicFooter({ clinic, doctor }) {
       fontFamily: "'DM Sans', sans-serif",
     }}>
       {/* Main footer content */}
-      <div style={{ maxWidth:1100, margin:"0 auto", padding:"40px 40px 28px" }}>
+      <div style={{ padding:"40px 24px 28px" }}>
         <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr", gap:48, marginBottom:32 }}>
           <div>
             <h3 style={{ fontFamily:"'DM Serif Display',serif", fontSize:22, margin:"0 0 10px" }}>
-              🦷 {clinic?.name}
+              {clinic?.name}
             </h3>
             <p style={{ fontSize:13, color:"rgba(255,255,255,0.5)", lineHeight:1.7, maxWidth:280, margin:"0 0 16px" }}>
               {clinic?.specialty} clinic serving {clinic?.city}, Tamil Nadu. Committed to evidence-based patient care.
@@ -37,10 +39,13 @@ export default function ClinicFooter({ clinic, doctor }) {
             ))}
           </div>
           <div>
-            <h4 style={{ fontSize:13, fontWeight:600, letterSpacing:1, textTransform:"uppercase", color:"rgba(255,255,255,0.4)", marginBottom:14 }}>Information</h4>
-            {[["About Us","#doctor"],["Our Services","#services"],["Location & Hours","#contact"],["Book Appointment","#book"],["Privacy Policy",`/${clinic?.slug}/privacy-policy`]].map(([label, href]) => (
-              <a key={label} href={href} style={{ display:"block", fontSize:13, color:"rgba(255,255,255,0.6)", textDecoration:"none", marginBottom:8 }}>{label}</a>
-            ))}
+            <h4 style={{ fontSize:13, fontWeight:600, letterSpacing:1, textTransform:"uppercase", color:"rgba(255,255,255,0.4)", marginBottom:14 }}>Hours</h4>
+            {hours.length > 0
+              ? <WorkingHoursDisplay hours={hours} style={{ fontSize:12 }}/>
+              : [["About Us","#doctor"],["Our Services","#services"],["Location & Hours","#contact"],["Book Appointment","#book"],["Privacy Policy",`/${clinic?.slug}/privacy-policy`]].map(([label, href]) => (
+                  <a key={label} href={href} style={{ display:"block", fontSize:13, color:"rgba(255,255,255,0.6)", textDecoration:"none", marginBottom:8 }}>{label}</a>
+                ))
+            }
           </div>
         </div>
       </div>
@@ -49,9 +54,9 @@ export default function ClinicFooter({ clinic, doctor }) {
       <div style={{
         borderTop: "1px solid rgba(255,255,255,0.08)",
         background: "rgba(0,0,0,0.2)",
-        padding: "14px 40px",
+        padding: "14px 24px",
       }}>
-        <div style={{ maxWidth:1100, margin:"0 auto" }}>
+        <div style={{ width:"100%" }}>
 
           {/* Reg No. display — MANDATORY under IMC Ethics Regulations 2002 */}
           {regNo ? (
