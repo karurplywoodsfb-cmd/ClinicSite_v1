@@ -29,7 +29,7 @@
   --shadow-md: 0 8px 24px rgba(11, 37, 69, 0.1);
   --shadow-lg: 0 16px 48px rgba(11, 37, 69, 0.14);
   --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  --max-width: 100%;
+  --max-width: 1200px;
   --section-py: 80px;
 }
 
@@ -78,9 +78,8 @@ button {
 
 /* ── Utility Classes ── */
 .cs-container {
-  max-width: var(--max-width);
-  margin: 0;
-  padding: 0;
+  width: 100%;
+  padding: 0 24px;
 }
 
 .cs-section {
@@ -404,9 +403,8 @@ button {
 }
 
 .cs-hero-inner {
-  max-width: var(--max-width);
-  margin: 0;
-  padding: 0;
+  width: 100%;
+  padding: 0 24px;
   display: grid;
   grid-template-columns: 1fr 420px;
   gap: 60px;
