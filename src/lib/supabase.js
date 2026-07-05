@@ -272,13 +272,14 @@ export async function bookAppointment(clinicId, appointment) {
     .from('appointments')
     .insert({
       clinic_id:               clinicId,
+      branch_id:               appointment.branch_id    || null,
       patient_name:            appointment.name,
       phone:                   appointment.phone,
-      email:                   appointment.email    || null,
+      email:                   appointment.email        || null,
       service:                 appointment.service,
       appt_date:               appointment.date,
-      appt_time:               appointment.time     || null,
-      notes:                   appointment.notes    || null,
+      appt_time:               appointment.time         || null,
+      notes:                   appointment.notes        || null,
       status:                  'pending',
       // DPDP Act 2023 — consent audit trail
       consent_appointment:     appointment.consent_appointment    ?? true,

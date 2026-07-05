@@ -450,7 +450,13 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                       borderBottom: i < 4 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
                       <div>
                         <div style={{ fontSize:13, fontWeight:600, color:"#e2e8f0" }}>{a.patient_name}</div>
-                        <div style={{ fontSize:11, color:"#475569" }}>{a.appt_time} · {a.service}</div>
+                        <div style={{ fontSize:11, color:"#475569" }}>{a.appt_time} · {a.service}
+                          {a.branch_id && branches.find(b => b.id === a.branch_id) && (
+                            <span style={{ marginLeft:6, color:"#1e88e5" }}>
+                              · 📍 {branches.find(b => b.id === a.branch_id)?.name}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <Badge status={a.status}/>
                     </div>
@@ -542,7 +548,14 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                           {a.patient_name}
                         </td>
                         <td style={{ padding:"12px 16px", fontSize:13, color:"#94a3b8" }}>{a.phone}</td>
-                        <td style={{ padding:"12px 16px", fontSize:13, color:"#94a3b8" }}>{a.service}</td>
+                        <td style={{ padding:"12px 16px", fontSize:13, color:"#94a3b8" }}>
+                          <div>{a.service}</div>
+                          {a.branch_id && branches.find(b => b.id === a.branch_id) && (
+                            <div style={{ fontSize:11, color:"#1e88e5", marginTop:2 }}>
+                              📍 {branches.find(b => b.id === a.branch_id)?.name}
+                            </div>
+                          )}
+                        </td>
                         <td style={{ padding:"12px 16px" }}>
                           <div style={{ fontSize:13, color:"#e2e8f0" }}>{a.appt_date}</div>
                           <div style={{ fontSize:11, color:"#475569" }}>{a.appt_time}</div>

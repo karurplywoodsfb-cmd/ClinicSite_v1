@@ -23,7 +23,7 @@ function Reveal({ children, delay = 0 }) {
   );
 }
 
-export default function EliteAesthetics({ clinic, services = [], doctors = [], media = [], hours = [], onBookClick }) {
+export default function EliteAesthetics({ clinic, services = [], doctors = [], media = [], hours = [], branches = [], onBookClick }) {
   const [showBook, setShowBook] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const doctor = doctors[0];
@@ -58,7 +58,7 @@ export default function EliteAesthetics({ clinic, services = [], doctors = [], m
           <div style={{ position:"relative", width:"100%", maxWidth:520 }}>
             <button onClick={()=>setShowBook(false)} style={{ position:"absolute", top:-14, right:-14, zIndex:10,
               width:32, height:32, borderRadius:"50%", background:C.white, border:"none", cursor:"pointer", fontSize:16 }}>✕</button>
-            <BookingEngine clinic={clinic} services={activeServices}/>
+            <BookingEngine hours={hours} branches={branches} clinic={clinic} services={activeServices}/>
           </div>
         </div>
       )}

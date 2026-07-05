@@ -335,6 +335,7 @@ export default function ClinicSite({ slug }) {
   const [media,    setMedia]    = useState([]);
   const [seoData,  setSeoData]  = useState(null);
   const [hours,    setHours]    = useState([]);
+  const [branches, setBranches] = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState("");
 
@@ -353,19 +354,21 @@ export default function ClinicSite({ slug }) {
       }
 
       // Run all data fetches in parallel — any failure is non-fatal
-      const [svcs, docs, mediaItems, seo, hrs] = await Promise.allSettled([
+      const [svcs, docs, mediaItems, seo, hrs, branchRes] = await Promise.allSettled([
         getServices(c.id),
         getDoctors(c.id),
         getClinicMedia(c.id),
         getSeoData(c.id),
         getWorkingHours(c.id),
+        supabase.from("clinic_branches").select("*").eq("clinic_id", c.id).eq("is_active", true).order("created_at"),
       ]);
 
-      const resolvedSvcs  = svcs.status      === "fulfilled" ? svcs.value      : [];
-      const resolvedDocs  = docs.status      === "fulfilled" ? docs.value      : [];
-      const resolvedMedia = mediaItems.status === "fulfilled" ? mediaItems.value : [];
-      const resolvedSeo   = seo.status       === "fulfilled" ? seo.value       : null;
-      const resolvedHrs   = hrs.status       === "fulfilled" ? hrs.value       : [];
+      const resolvedSvcs     = svcs.status      === "fulfilled" ? svcs.value      : [];
+      const resolvedDocs     = docs.status      === "fulfilled" ? docs.value      : [];
+      const resolvedMedia    = mediaItems.status === "fulfilled" ? mediaItems.value : [];
+      const resolvedSeo      = seo.status       === "fulfilled" ? seo.value       : null;
+      const resolvedHrs      = hrs.status       === "fulfilled" ? hrs.value       : [];
+      const resolvedBranches = branchRes.status  === "fulfilled" ? (branchRes.value?.data || []) : [];
 
       setClinic(c);
       setServices(resolvedSvcs);
@@ -373,6 +376,7 @@ export default function ClinicSite({ slug }) {
       setMedia(resolvedMedia);
       setSeoData(resolvedSeo);
       setHours(resolvedHrs);
+      setBranches(resolvedBranches);
 
       // Inject SEO (graceful whether seoData is null or populated)
       injectSEO(c, resolvedSvcs, resolvedDocs[0], resolvedSeo);
@@ -417,6 +421,7 @@ export default function ClinicSite({ slug }) {
       doctors={doctors}
       media={media}
       hours={hours}
+      branches={branches}
       onBookClick={() => setShowBook && setShowBook(true)}
     />
   );
