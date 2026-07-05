@@ -4,6 +4,12 @@ import EliteAesthetics   from "./EliteAesthetics";
 import NordicSanctuary   from "./NordicSanctuary";
 import TelehealthPlatform from "./TelehealthPlatform";
 import SurgicalHub       from "./SurgicalHub";
+import Daybreak          from "./Daybreak";
+import MonochromeEditorial from "./MonochromeEditorial";
+import SoftStructure     from "./SoftStructure";
+import IvoryInk          from "./IvoryInk";
+import PorcelainNavy     from "./PorcelainNavy";
+import LinenSage         from "./LinenSage";
 
 export const TEMPLATES = {
   corporate:  {
@@ -45,6 +51,54 @@ export const TEMPLATES = {
     icon:      "⚕️",
     component: SurgicalHub,
     bestFor:   ["Orthopedics","Cardiology","Oncology","Neurology"],
+  },
+  daybreak: {
+    id:        "daybreak",
+    name:      "Daybreak",
+    desc:      "Warm & Approachable — Any Clinic",
+    icon:      "🌅",
+    component: Daybreak,
+    bestFor:   [],
+  },
+  monochrome: {
+    id:        "monochrome",
+    name:      "Monochrome Editorial",
+    desc:      "Bold & Confident — Any Clinic",
+    icon:      "⬛",
+    component: MonochromeEditorial,
+    bestFor:   [],
+  },
+  softstructure: {
+    id:        "softstructure",
+    name:      "Soft Structure",
+    desc:      "Friendly & Modern — Any Clinic",
+    icon:      "🟣",
+    component: SoftStructure,
+    bestFor:   [],
+  },
+  ivoryink: {
+    id:        "ivoryink",
+    name:      "Ivory & Ink",
+    desc:      "Minimalist Premium — Any Clinic",
+    icon:      "🤍",
+    component: IvoryInk,
+    bestFor:   [],
+  },
+  porcelainnavy: {
+    id:        "porcelainnavy",
+    name:      "Porcelain & Navy",
+    desc:      "Minimalist Premium — Any Clinic",
+    icon:      "🔷",
+    component: PorcelainNavy,
+    bestFor:   [],
+  },
+  linensage: {
+    id:        "linensage",
+    name:      "Linen & Sage",
+    desc:      "Minimalist Premium — Any Clinic",
+    icon:      "🌾",
+    component: LinenSage,
+    bestFor:   [],
   },
 };
 
@@ -190,5 +244,102 @@ export const TEMPLATE_PREVIEWS = {
       <rect x="96" y="61" width="18" height="12" rx="2" fill="#fee2e2"/>
       <rect x="9"  y="64" width="14" height="2" rx="1" fill="#b91c1c"/>
       <rect x="9"  y="68" width="18" height="2" rx="1" fill="#94a3b8"/>
+    </svg>`,
+
+  daybreak: `
+    <svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;border-radius:6px;">
+      <rect width="120" height="80" fill="#fbf6ef"/>
+      <circle cx="100" cy="10" r="26" fill="#f4d8c9" opacity="0.7"/>
+      <rect x="0" y="0" width="120" height="9" fill="#fbf6ef"/>
+      <rect x="6" y="3" width="18" height="3" rx="1" fill="#2b2621"/>
+      <rect x="90" y="2" width="24" height="5" rx="8" fill="#e8674a"/>
+      <rect x="6" y="16" width="44" height="5" rx="1" fill="#2b2621"/>
+      <rect x="6" y="24" width="32" height="3" rx="1" fill="#6b6259"/>
+      <rect x="6" y="32" width="20" height="6" rx="8" fill="#2b2621"/>
+      <rect x="66" y="12" width="48" height="30" rx="10" fill="#e3c9b5"/>
+      <rect x="6" y="48" width="26" height="20" rx="4" fill="#ffffff"/>
+      <rect x="34" y="48" width="26" height="20" rx="4" fill="#ffffff"/>
+      <rect x="62" y="48" width="26" height="20" rx="4" fill="#ffffff"/>
+      <rect x="90" y="48" width="24" height="20" rx="4" fill="#ffffff"/>
+    </svg>`,
+
+  monochrome: `
+    <svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;border-radius:6px;">
+      <rect width="120" height="80" fill="#ffffff"/>
+      <rect x="0" y="0" width="120" height="4" fill="#111111"/>
+      <line x1="0" y1="14" x2="120" y2="14" stroke="#dddddd" stroke-width="1"/>
+      <rect x="6" y="6" width="26" height="5" rx="1" fill="#111111"/>
+      <rect x="86" y="7" width="10" height="3" rx="1" fill="#111111"/>
+      <rect x="100" y="7" width="14" height="3" rx="1" fill="#111111"/>
+      <rect x="6" y="22" width="90" height="12" rx="1" fill="#111111"/>
+      <rect x="6" y="38" width="60" height="3" rx="1" fill="#666666"/>
+      <rect x="88" y="40" width="26" height="8" fill="#111111"/>
+      <line x1="0" y1="52" x2="120" y2="52" stroke="#dddddd" stroke-width="1"/>
+      <rect x="6" y="58" width="26" height="16" fill="none" stroke="#dddddd" stroke-width="0.5"/>
+      <rect x="34" y="58" width="26" height="16" fill="none" stroke="#dddddd" stroke-width="0.5"/>
+      <rect x="62" y="58" width="26" height="16" fill="none" stroke="#dddddd" stroke-width="0.5"/>
+      <rect x="90" y="58" width="24" height="16" fill="none" stroke="#dddddd" stroke-width="0.5"/>
+    </svg>`,
+
+  softstructure: `
+    <svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;border-radius:6px;">
+      <rect width="120" height="80" fill="#f2f0fa"/>
+      <rect x="0" y="0" width="120" height="9" fill="#f2f0fa"/>
+      <rect x="6" y="3" width="4" height="3" rx="1" fill="#6947e8"/>
+      <rect x="12" y="3" width="18" height="3" rx="1" fill="#2e2452"/>
+      <rect x="92" y="2" width="22" height="5" rx="3" fill="#2e2452"/>
+      <rect x="30" y="16" width="60" height="5" rx="2" fill="#211a3d"/>
+      <rect x="24" y="24" width="72" height="3" rx="1" fill="#736c8f"/>
+      <rect x="42" y="32" width="18" height="6" rx="3" fill="#6947e8"/>
+      <rect x="62" y="32" width="16" height="6" rx="3" fill="#ffffff"/>
+      <rect x="8"  y="46" width="32" height="18" rx="6" fill="#ffffff"/>
+      <rect x="44" y="46" width="32" height="18" rx="6" fill="#ffffff"/>
+      <rect x="80" y="46" width="32" height="18" rx="6" fill="#ffffff"/>
+      <rect x="8" y="70" width="104" height="8" rx="4" fill="#2e2452"/>
+    </svg>`,
+
+  ivoryink: `
+    <svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;border-radius:6px;">
+      <rect width="120" height="80" fill="#faf8f4"/>
+      <line x1="0" y1="12" x2="120" y2="12" stroke="#e8e3d8" stroke-width="1"/>
+      <rect x="48" y="4" width="24" height="4" rx="1" fill="#1c1c1a"/>
+      <rect x="18" y="24" width="12" height="2" rx="1" fill="#a68a5b"/>
+      <rect x="24" y="32" width="72" height="6" rx="1" fill="#1c1c1a"/>
+      <rect x="34" y="42" width="52" height="3" rx="1" fill="#7a756a"/>
+      <rect x="44" y="52" width="32" height="7" fill="none" stroke="#1c1c1a" stroke-width="1"/>
+      <line x1="0" y1="68" x2="120" y2="68" stroke="#e8e3d8" stroke-width="1"/>
+      <rect x="10" y="72" width="24" height="2" rx="1" fill="#a68a5b"/>
+      <rect x="86" y="72" width="24" height="2" rx="1" fill="#a68a5b"/>
+    </svg>`,
+
+  porcelainnavy: `
+    <svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;border-radius:6px;">
+      <rect width="120" height="80" fill="#fafbfc"/>
+      <rect x="0" y="0" width="120" height="9" fill="#ffffff"/>
+      <rect x="6" y="2.5" width="6" height="6" rx="1" fill="#1e2a3a"/>
+      <rect x="14" y="3" width="18" height="3" rx="1" fill="#12181f"/>
+      <rect x="88" y="2.5" width="26" height="5" rx="2" fill="#1e2a3a"/>
+      <rect x="0"  y="12" width="65" height="30" fill="#fafbfc"/>
+      <rect x="65" y="12" width="55" height="30" fill="#ffffff" stroke="#e4e8ec" stroke-width="0.5"/>
+      <rect x="8"  y="18" width="10" height="4" rx="1" fill="none" stroke="#4a5f7a" stroke-width="0.6"/>
+      <rect x="8"  y="26" width="44" height="5" rx="1" fill="#12181f"/>
+      <rect x="8"  y="33" width="34" height="3" rx="1" fill="#6e7a87"/>
+      <rect x="0" y="46" width="120" height="14" fill="#ffffff" stroke="#e4e8ec" stroke-width="0.5"/>
+      <rect x="8"  y="51" width="24" height="4" rx="1" fill="#12181f"/>
+      <rect x="40" y="51" width="24" height="4" rx="1" fill="#12181f"/>
+      <rect x="72" y="51" width="24" height="4" rx="1" fill="#12181f"/>
+    </svg>`,
+
+  linensage: `
+    <svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;border-radius:6px;">
+      <rect width="120" height="80" fill="#f6f5ef"/>
+      <rect x="50" y="4" width="20" height="4" rx="1" fill="#4a5a45"/>
+      <line x1="20" y1="14" x2="100" y2="14" stroke="#e2e2d3" stroke-width="1"/>
+      <rect x="34" y="22" width="52" height="5" rx="1" fill="#262e22"/>
+      <rect x="30" y="30" width="60" height="3" rx="1" fill="#7d8574"/>
+      <rect x="42" y="38" width="36" height="6" rx="3" fill="#4a5a45"/>
+      <circle cx="20" cy="58" r="10" fill="#ffffff" stroke="#e2e2d3" stroke-width="0.5"/>
+      <circle cx="60" cy="58" r="10" fill="#ffffff" stroke="#e2e2d3" stroke-width="0.5"/>
+      <circle cx="100" cy="58" r="10" fill="#ffffff" stroke="#e2e2d3" stroke-width="0.5"/>
     </svg>`,
 };

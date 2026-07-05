@@ -29,7 +29,7 @@ function Reveal({ children, delay = 0 }) {
   );
 }
 
-export default function MonochromeEditorial({ clinic, services = [], doctors = [], media = [], hours = [], onBookClick }) {
+export default function MonochromeEditorial({ clinic, services = [], doctors = [], media = [], hours = [], branches = [], onBookClick }) {
   const [showBook, setShowBook] = useState(false);
   const doctor = doctors[0];
   const activeServices = services.filter(s => s.is_active !== false);
@@ -60,7 +60,7 @@ export default function MonochromeEditorial({ clinic, services = [], doctors = [
               position:"absolute", top:-14, right:-14, zIndex:10,
               width:32, height:32, borderRadius:"50%", background:"#fff",
               border:`2px solid ${C.text}`, cursor:"pointer", fontSize:16 }}>✕</button>
-            <BookingEngine clinic={clinic} services={activeServices}/>
+            <BookingEngine hours={hours} branches={branches} clinic={clinic} services={activeServices}/>
           </div>
         </div>
       )}
@@ -188,7 +188,7 @@ export default function MonochromeEditorial({ clinic, services = [], doctors = [
             {[["Monday – Friday","9:00 AM – 8:00 PM",true],["Saturday","9:00 AM – 6:00 PM",true],["Sunday","Closed",false]].map(([d,h,o])=>(
               <div key={d} style={{ display:"flex", justifyContent:"space-between", padding:"9px 0", borderBottom:`1px solid ${C.border}`, fontSize:13 }}>
                 <span style={{ color:C.muted }}>{d}</span>
-                <span style={{ fontWeight:700 }}>{h}</span>
+                <span style={{ fontWeight:700, color: o?"#2e7d32":"#c0392b" }}>{h}</span>
               </div>
             ))}
             <div style={{ display:"flex", gap:10, marginTop:22 }}>

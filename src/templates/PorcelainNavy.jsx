@@ -29,7 +29,7 @@ function Reveal({ children, delay = 0 }) {
   );
 }
 
-export default function PorcelainNavy({ clinic, services = [], doctors = [], media = [], hours = [], onBookClick }) {
+export default function PorcelainNavy({ clinic, services = [], doctors = [], media = [], hours = [], branches = [], onBookClick }) {
   const [showBook, setShowBook] = useState(false);
   const doctor = doctors[0];
   const activeServices = services.filter(s => s.is_active !== false);
@@ -63,7 +63,7 @@ export default function PorcelainNavy({ clinic, services = [], doctors = [], med
               position:"absolute", top:-14, right:-14, zIndex:10,
               width:32, height:32, borderRadius:"50%", background:"#fff",
               border:"none", cursor:"pointer", fontSize:16 }}>✕</button>
-            <BookingEngine clinic={clinic} services={activeServices}/>
+            <BookingEngine hours={hours} branches={branches} clinic={clinic} services={activeServices}/>
           </div>
         </div>
       )}
