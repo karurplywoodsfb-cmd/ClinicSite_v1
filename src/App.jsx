@@ -22,6 +22,8 @@ const SuperAdmin         = lazy(() => import("./components/SuperAdmin"));
 const ClinicSitePage     = lazy(() => import("./pages/ClinicSite"));
 const BlogPageComponent  = lazy(() => import("./pages/BlogPage"));
 const PrivacyPolicyPage  = lazy(() => import("./pages/PrivacyPolicyPage"));
+const FeedbackPage       = lazy(() => import("./pages/FeedbackPage"));
+const LiveQueuePage      = lazy(() => import("./pages/LiveQueuePage"));
 const NotFound           = lazy(() => import("./pages/NotFound"));
 
 // ── Shared loader shown during lazy chunk download ────────────────
@@ -185,6 +187,26 @@ function PrivacyPolicyRoute() {
   );
 }
 
+// ── FeedbackRoute: review funnel, self-fetches clinic by slug ─────
+function FeedbackRoute() {
+  const { slug } = useParams();
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <FeedbackPage slug={slug} />
+    </Suspense>
+  );
+}
+
+// ── LiveRoute: live token status, self-fetches clinic by slug ─────
+function LiveRoute() {
+  const { slug } = useParams();
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <LiveQueuePage slug={slug} />
+    </Suspense>
+  );
+}
+
 // ── Custom domain renderer ────────────────────────────────────────
 function CustomDomainSite({ clinicSlug }) {
   if (!clinicSlug) {
@@ -233,6 +255,8 @@ export default function App() {
             <Route path="/:slug/blog"           element={<BlogRoute />} />
             <Route path="/:slug/blog/:postSlug" element={<BlogRoute />} />
             <Route path="/:slug/privacy-policy" element={<PrivacyPolicyRoute />} />
+            <Route path="/:slug/feedback"       element={<FeedbackRoute />} />
+            <Route path="/:slug/live"           element={<LiveRoute />} />
 
             {/* ── Admin (auth-gated; plan enforcement is inside AdminRoute) ── */}
             <Route path="/admin" element={
