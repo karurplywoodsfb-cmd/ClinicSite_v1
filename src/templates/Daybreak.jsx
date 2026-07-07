@@ -7,6 +7,8 @@ import BookingEngine        from "../components/BookingEngine";
 import ClinicFooter         from "../components/ClinicFooter";
 import ClinicMediaSection   from "../components/ClinicMediaSection";
 import { useIsMobile }     from "../hooks/useIsMobile";
+import NavbarPill          from "../components/nav/NavbarPill";
+import HeroTrustChips      from "../components/hero/HeroTrustChips";
 
 function Reveal({ children, delay = 0 }) {
   const ref = useRef(null);
@@ -77,78 +79,17 @@ export default function Daybreak({ clinic, services = [], doctors = [], media = 
       )}
 
       {/* ── Navbar ── */}
-      <nav style={{
-        position:"sticky", top:0, zIndex:100, background:C.bg,
-        padding:"18px 24px", display:"flex", alignItems:"center", justifyContent:"space-between",
-        borderBottom:`1px solid ${C.border}`,
-      }}>
-        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          <div style={{ width:36, height:36, borderRadius:10, overflow:"hidden", flexShrink:0,
-            display:"flex", alignItems:"center", justifyContent:"center",
-            background: clinic.logo_url ? "transparent" : `linear-gradient(135deg,${C.accent},${C.accentLt})` }}>
-            {clinic.logo_url
-              ? <img src={clinic.logo_url} alt={clinic.name} style={{ width:"100%", height:"100%", objectFit:"contain" }}/>
-              : <span style={{ color:"#fff", fontWeight:700, fontSize:15 }}>{(clinic.name||"C").charAt(0).toUpperCase()}</span>}
-          </div>
-          <div style={{ fontFamily:"'Fraunces',serif", fontWeight:600, fontSize:19, color:C.dark }}>{clinic.name}</div>
-        </div>
-        <div style={{ display:"flex", gap:26, alignItems:"center" }}>
-          {!isMobile && (
-            [["Services","#services"],["Doctor","#doctor"],["Contact","#contact"]].map(([l,h]) => (
-            <a key={l} href={h} style={{ textDecoration:"none", color:C.muted, fontSize:13, fontWeight:500 }}>{l}</a>
-          ))
-          )}
-          <button onClick={handleBook} style={{
-            background:C.accent, color:"#fff", border:"none", borderRadius:30,
-            padding:"10px 22px", fontSize:13, fontWeight:600, cursor:"pointer" }}>
-            Book Visit
-          </button>
-        </div>
-      </nav>
+      <NavbarPill
+        clinic={clinic} C={C} isMobile={isMobile} handleBook={handleBook}
+        navLinks={[["Services","#services"],["Doctor","#doctor"],["Contact","#contact"]]}
+        fontHeading="'Fraunces',serif"
+      />
 
       {/* ── Hero ── */}
-      <section style={{ position:"relative", padding:"60px 24px 70px", overflow:"hidden" }}>
-        <div style={{ position:"absolute", width:420, height:420, borderRadius:"50% 50% 45% 55% / 55% 45% 55% 45%",
-          background:C.blob, right:"-60px", top:"-100px", opacity:0.6, zIndex:0 }}/>
-        <div style={{ width:"100%", maxWidth:1100, margin:"0 auto", display:"grid",
-          gridTemplateColumns: isMobile ? "1fr" : "1.1fr 0.9fr", gap:50, alignItems:"center", position:"relative", zIndex:1 }}>
-          <Reveal>
-            <div style={{ fontSize:12, fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", color:C.accent, marginBottom:16 }}>
-              {clinic.specialty ? `${clinic.specialty} · ` : ""}Now accepting new patients
-            </div>
-            <h1 style={{ fontFamily:"'Fraunces',serif", fontWeight:600, fontSize:"clamp(34px,4.5vw,52px)", lineHeight:1.1, color:C.dark, marginBottom:20 }}>
-              {clinic.heroTagline || "Care that feels like coming home"}
-            </h1>
-            <p style={{ fontSize:15, color:C.muted, lineHeight:1.7, maxWidth:440, marginBottom:28 }}>
-              {clinic.about || `${clinic.name} welcomes you with same-day appointments and a team that remembers your name.`}
-            </p>
-            <div style={{ display:"flex", gap:16, alignItems:"center" }}>
-              <button onClick={handleBook} style={{
-                background:C.dark, color:"#fff", border:"none", borderRadius:30,
-                padding:"14px 28px", fontSize:14, fontWeight:600, cursor:"pointer" }}>
-                Book an appointment
-              </button>
-              {clinic.phone && (
-                <a href={`tel:${clinic.phone}`} style={{ color:C.dark, fontSize:14, fontWeight:600, textDecoration:"underline" }}>
-                  Call the clinic
-                </a>
-              )}
-            </div>
-          </Reveal>
-          <Reveal delay={0.15}>
-            <div style={{ background:"#e3c9b5", borderRadius:24, height:340, position:"relative", overflow:"hidden" }}>
-              {doctor?.photo_url && <img src={doctor.photo_url} alt={doctor.name} style={{ width:"100%", height:"100%", objectFit:"cover" }}/>}
-              <div style={{ position:"absolute", bottom:20, left:20, background:"#fff", borderRadius:14,
-                padding:"12px 16px", boxShadow:"0 8px 20px rgba(0,0,0,0.12)" }}>
-                <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, color:C.accent, fontWeight:600 }}>
-                  {clinic.years_experience ? `${clinic.years_experience}+ yrs` : "Trusted"}
-                </div>
-                <div style={{ fontSize:12, color:C.dark }}>in {clinic.city || "your community"}</div>
-              </div>
-            </div>
-          </Reveal>
-        </div>
-      </section>
+      <HeroTrustChips
+        clinic={clinic} doctor={doctor} C={C} isMobile={isMobile} handleBook={handleBook}
+        fontHeading="'Fraunces',serif"
+      />
 
       {/* ── Services ── */}
       {activeServices.length > 0 && (

@@ -4,6 +4,7 @@
 //        /:clinicSlug/blog/:postSlug → Single article
 
 import { useState, useEffect } from "react";
+import Breadcrumb from "../components/Breadcrumb";
 
 // ── Fetch helpers ─────────────────────────────────────────────────
 async function fetchBlogPosts(clinicId, supabase) {
@@ -75,6 +76,15 @@ function BlogList({ clinic, posts, onSelect }) {
         </a>
         <a href={`/${clinic.slug}`} style={{ fontSize: 13, color: "#1565c0", textDecoration: "none", fontWeight: 600 }}>← Back to Website</a>
       </div>
+
+      <Breadcrumb
+        items={[
+          { label: "Home", href: `/${clinic.slug}` },
+          { label: "Blog" },
+        ]}
+        accentColor="#1565c0"
+        textColor="#0b2545"
+      />
 
       <div style={{ maxWidth: 860, margin: "0 auto", padding: "48px 40px" }}>
         {/* Blog header */}
@@ -166,6 +176,16 @@ function BlogArticle({ post, clinic, onBack }) {
           ← All Articles
         </button>
       </div>
+
+      <Breadcrumb
+        items={[
+          { label: "Home", href: `/${clinic.slug}` },
+          { label: "Blog", href: `/${clinic.slug}/blog` },
+          { label: post.title },
+        ]}
+        accentColor="#1565c0"
+        textColor="#0b2545"
+      />
 
       <article style={{ maxWidth: 720, margin: "0 auto", padding: "48px 40px" }}>
         {/* Meta */}
