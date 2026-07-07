@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from "react";
 import BookingEngine        from "../components/BookingEngine";
 import ClinicFooter         from "../components/ClinicFooter";
 import ClinicMediaSection   from "../components/ClinicMediaSection";
+import { useIsMobile }     from "../hooks/useIsMobile";
 
 function Reveal({ children, delay = 0 }) {
   const ref = useRef(null);
@@ -32,6 +33,7 @@ function Reveal({ children, delay = 0 }) {
 export default function SoftStructure({ clinic, services = [], doctors = [], media = [], hours = [], branches = [], onBookClick }) {
   const [showBook, setShowBook] = useState(false);
   const doctor = doctors[0];
+  const isMobile = useIsMobile();
   const activeServices = services.filter(s => s.is_active !== false);
 
   const handleBook = () => {
@@ -50,9 +52,13 @@ export default function SoftStructure({ clinic, services = [], doctors = [], med
     cardBg:  "#ece7fc",
   };
 
+  if (clinic.accent_color) {
+    C.accent = clinic.accent_color;
+  }
+
+
   return (
     <div style={{ fontFamily:"'Inter',sans-serif", background:C.bg, color:C.text, overflowX:"hidden" }}>
-      <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 
       {showBook && (
         <div onClick={e => e.target === e.currentTarget && setShowBook(false)}
@@ -76,9 +82,11 @@ export default function SoftStructure({ clinic, services = [], doctors = [], med
           {clinic.name}
         </div>
         <div style={{ display:"flex", gap:26, alignItems:"center" }}>
-          {[["Services","#services"],["Doctor","#doctor"],["Contact","#contact"]].map(([l,h]) => (
+          {!isMobile && (
+            [["Services","#services"],["Doctor","#doctor"],["Contact","#contact"]].map(([l,h]) => (
             <a key={l} href={h} style={{ textDecoration:"none", color:C.muted, fontSize:13, fontWeight:500 }}>{l}</a>
-          ))}
+          ))
+          )}
           <button onClick={handleBook} style={{
             background:C.dark, color:"#fff", border:"none", borderRadius:10,
             padding:"10px 20px", fontSize:13, fontWeight:600, cursor:"pointer" }}>
@@ -139,7 +147,7 @@ export default function SoftStructure({ clinic, services = [], doctors = [], med
       {doctor && (
         <section id="doctor" style={{ padding:"40px 40px" }}>
           <div style={{ background:C.surface, borderRadius:24, padding:40, display:"grid",
-            gridTemplateColumns:"1fr 1.4fr", gap:44, alignItems:"center", border:`1px solid ${C.border}` }}>
+            gridTemplateColumns: isMobile ? "1fr" : "1fr 1.4fr", gap:44, alignItems:"center", border:`1px solid ${C.border}` }}>
             <Reveal>
               <div style={{ width:"100%", aspectRatio:"1/1", borderRadius:20, background:C.cardBg,
                 display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden" }}>
@@ -172,7 +180,7 @@ export default function SoftStructure({ clinic, services = [], doctors = [], med
 
       {/* ── Contact ── */}
       <section id="contact" style={{ padding:"40px 40px" }}>
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:20 }}>
+        <div style={{ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap:20 }}>
           <Reveal>
             <div style={{ background:C.surface, borderRadius:20, padding:28, border:`1px solid ${C.border}`, height:"100%" }}>
               <div style={{ fontSize:12, fontWeight:700, color:C.accent, textTransform:"uppercase", letterSpacing:1, marginBottom:14 }}>Find us</div>

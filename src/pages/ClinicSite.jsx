@@ -25,6 +25,7 @@ import BookingEngine         from "../components/BookingEngine";
 import ClinicFooter          from "../components/ClinicFooter";
 import ClinicMediaSection    from "../components/ClinicMediaSection";
 import WorkingHoursDisplay   from "../components/WorkingHoursDisplay";
+import ClinicBanner          from "../components/ClinicBanner";
 import { TEMPLATES, suggestTemplate } from "../templates";
 import { applyTheme }                  from "../lib/themes";
 
@@ -415,14 +416,17 @@ export default function ClinicSite({ slug }) {
   const TemplateComponent = templateDef.component;
 
   return (
-    <TemplateComponent
-      clinic={clinic}
-      services={activeServices}
-      doctors={doctors}
-      media={media}
-      hours={hours}
-      branches={branches}
-      onBookClick={() => setShowBook && setShowBook(true)}
-    />
+    <>
+      <ClinicBanner clinic={clinic} />
+      <TemplateComponent
+        clinic={clinic}
+        services={activeServices}
+        doctors={doctors}
+        media={media}
+        hours={hours}
+        branches={branches}
+        onBookClick={() => setShowBook && setShowBook(true)}
+      />
+    </>
   );
 }

@@ -7,6 +7,7 @@ import BookingEngine      from "../components/BookingEngine";
 import ClinicFooter          from "../components/ClinicFooter";
 import WorkingHoursDisplay   from "../components/WorkingHoursDisplay";
 import ClinicMediaSection from "../components/ClinicMediaSection";
+import { useIsMobile }     from "../hooks/useIsMobile";
 
 function Reveal({ children, delay = 0 }) {
   const ref = useRef(null);
@@ -27,6 +28,7 @@ export default function NordicSanctuary({ clinic, services = [], doctors = [], m
   const [showBook, setShowBook] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const doctor = doctors[0];
+  const isMobile = useIsMobile();
   const activeServices = services.filter(s => s.is_active !== false);
 
   const handleBook = () => { if (onBookClick) onBookClick(); else setShowBook(true); };
@@ -48,7 +50,6 @@ export default function NordicSanctuary({ clinic, services = [], doctors = [], m
 
   return (
     <div style={{ fontFamily:"'Inter',sans-serif", background:C.bg, color:C.text, overflowX:"hidden" }}>
-      <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 
       {showBook && (
         <div onClick={e=>e.target===e.currentTarget&&setShowBook(false)}
@@ -88,11 +89,13 @@ export default function NordicSanctuary({ clinic, services = [], doctors = [], m
           <div style={{ fontSize:15, fontWeight:500, color:C.text }}>{clinic.name}</div>
         </div>
         <div style={{ display:"flex", gap:28, alignItems:"center" }}>
-          {[["Services","#services"],["Doctor","#doctor"],["Contact","#contact"]].map(([l,h])=>(
+          {!isMobile && (
+            [["Services","#services"],["Doctor","#doctor"],["Contact","#contact"]].map(([l,h])=>(
             <a key={l} href={h} style={{ textDecoration:"none", color:C.muted, fontSize:13, transition:"color .15s" }}
               onMouseEnter={e=>e.target.style.color=C.accent}
               onMouseLeave={e=>e.target.style.color=C.muted}>{l}</a>
-          ))}
+          ))
+          )}
           <button onClick={handleBook} style={{
             background:C.accent, color:C.white, border:"none", borderRadius:6, padding:"9px 20px",
             fontSize:13, fontWeight:500, cursor:"pointer" }}>
@@ -107,7 +110,7 @@ export default function NordicSanctuary({ clinic, services = [], doctors = [], m
         background:`linear-gradient(170deg, ${C.white} 0%, ${C.bg} 60%)`,
         display:"flex", alignItems:"center", padding:"80px 24px",
       }}>
-        <div style={{ width:"100%", display:"grid", gridTemplateColumns:"1.2fr 1fr", gap:80, alignItems:"center", width:"100%" }}>
+        <div style={{ width:"100%", display:"grid", gridTemplateColumns: isMobile ? "1fr" : "1.2fr 1fr", gap:80, alignItems:"center", width:"100%" }}>
           <div>
             <div style={{ display:"inline-flex", alignItems:"center", gap:8,
               background:`rgba(74,124,89,0.1)`, borderRadius:4, padding:"5px 14px",
@@ -190,7 +193,7 @@ export default function NordicSanctuary({ clinic, services = [], doctors = [], m
       {/* Doctor */}
       {doctor && (
         <section id="doctor" style={{ padding:"80px 24px", background:C.bg }}>
-          <div style={{ width:"100%", display:"grid", gridTemplateColumns:"1fr 1.4fr", gap:60, alignItems:"center" }}>
+          <div style={{ width:"100%", display:"grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1.4fr", gap:60, alignItems:"center" }}>
             <Reveal>
               <div style={{ width:"100%", aspectRatio:"4/5", borderRadius:20, background:C.surface,
                 border:`1px solid ${C.border}`, display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden" }}>
@@ -215,7 +218,7 @@ export default function NordicSanctuary({ clinic, services = [], doctors = [], m
 
       {/* Contact */}
       <section id="contact" style={{ padding:"80px 24px", background:C.white }}>
-        <div style={{ width:"100%", display:"grid", gridTemplateColumns:"1fr 1fr", gap:60 }}>
+        <div style={{ width:"100%", display:"grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap:60 }}>
           <Reveal>
             <div style={{ fontSize:11, fontWeight:600, letterSpacing:2, textTransform:"uppercase", color:C.accent, marginBottom:10 }}>Find Us</div>
             <h2 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:36, fontWeight:400, color:C.text, marginBottom:32 }}>Visit {clinic.name}</h2>

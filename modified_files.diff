@@ -1,0 +1,185 @@
+diff --git a/src/Router.jsx b/src/Router.jsx
+index 206a89e..a6a8b91 100644
+--- a/src/Router.jsx
++++ b/src/Router.jsx
+@@ -9,6 +9,7 @@ import OnboardingWizard        from "./components/OnboardingWizard";
+ import SuperAdmin              from "./components/SuperAdmin";
+ import ClinicSite              from "./pages/ClinicSite";
+ import BlogPage                from "./pages/BlogPage";
++import FeedbackPage            from "./pages/FeedbackPage";
+ import PrivacyPolicyPage, { generatePrivacyPolicy } from "./pages/PrivacyPolicyPage";
+ import { getMyClinic }         from "./lib/supabase";
+ 
+@@ -37,6 +38,7 @@ function getRoute() {
+     if (parts[0]==="blog" && parts[1]) return { type:"blogPost",  clinicSlug:sub, postSlug:parts[1] };
+     if (parts[0]==="blog")             return { type:"blog",      clinicSlug:sub };
+     if (parts[0]==="privacy-policy")   return { type:"privacy",   clinicSlug:sub };
++    if (parts[0]==="feedback")         return { type:"feedback",  clinicSlug:sub };
+     return { type:"clinic", slug:sub };
+   }
+ 
+@@ -46,6 +48,7 @@ function getRoute() {
+     if (parts[1]==="blog" && parts[2]) return { type:"blogPost",  clinicSlug:slug, postSlug:parts[2] };
+     if (parts[1]==="blog")             return { type:"blog",      clinicSlug:slug };
+     if (parts[1]==="privacy-policy")   return { type:"privacy",   clinicSlug:slug };
++    if (parts[1]==="feedback")         return { type:"feedback",  clinicSlug:slug };
+     return { type:"clinic", slug };
+   }
+ 
+@@ -204,6 +207,11 @@ export default function Router() {
+     return <PrivacyPolicyClinic slug={route.clinicSlug} />;
+   }
+ 
++  // ── FEEDBACK (Review Filter Funnel) ────────────────────────────────
++  if (route.type === "feedback") {
++    return <FeedbackPage slug={route.clinicSlug} />;
++  }
++
+   // ── BLOG LIST ────────────────────────────────────────────────────
+   if (route.type === "blog") {
+     return <BlogPage clinicSlug={route.clinicSlug} supabase={supabase} />;
+diff --git a/src/components/AdminPanel.jsx b/src/components/AdminPanel.jsx
+index ba1a8a3..976e317 100644
+--- a/src/components/AdminPanel.jsx
++++ b/src/components/AdminPanel.jsx
+@@ -25,6 +25,8 @@ import {
+ import WorkingHoursDisplay from "./WorkingHoursDisplay";
+ import UpgradeModal    from "./UpgradeModal";
+ import ComplianceTab   from "./ComplianceTab";
++import BannerControl   from "./admin/BannerControl";
++import FeedbackInbox   from "./admin/FeedbackInbox";
+ import AIBlogGenerator from "./AIBlogGenerator";
+ import { TEMPLATES, TEMPLATE_PREVIEWS } from "../templates";
+ import DomainManager          from "../components/admin/DomainManager";
+@@ -107,6 +109,7 @@ const NAV_ITEMS = [
+   { id:"design",       label:"Design & Theme", icon:"🎨" },
+   { id:"blog",         label:"Blog & Content", icon:"✍️"  },
+   { id:"seo",          label:"SEO",            icon:"🔍" },
++  { id:"feedback",     label:"Feedback",       icon:"⭐" },
+   { id:"compliance",   label:"Compliance",     icon:"⚖️"  },
+   { id:"preview",      label:"Preview Site",   icon:"👁️"  },
+   { id:"domain",       label:"Domain",         icon:"🌐" },
+@@ -1356,6 +1359,23 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
+             </div>
+           )}
+ 
++          {/* ═══ FEEDBACK (Phase 1: banner + review funnel) ═══ */}
++          {page === "feedback" && (
++            <div style={{ maxWidth: 640 }}>
++              <h2 style={{ fontSize: 18, fontWeight: 700, color: "#f1f5f9", marginBottom: 16 }}>Site banner</h2>
++              <BannerControl clinic={clinic} onUpdate={(updated) => { setClinic(updated); onClinicUpdate?.(updated); }} />
++
++              <h2 style={{ fontSize: 18, fontWeight: 700, color: "#f1f5f9", margin: "28px 0 16px" }}>Reviews</h2>
++              <div style={{ background: "#0d1526", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: 16, marginBottom: 16, fontSize: 13, color: "#94a3b8" }}>
++                Share this link (or a QR code linking to it) at your front desk: <br />
++                <code style={{ color: "#7dd3fc" }}>{`${window.location.origin}/${clinic.slug}/feedback`}</code>
++              </div>
++              <div style={{ background: "white", borderRadius: 12, padding: 16 }}>
++                <FeedbackInbox clinicId={clinic.id} />
++              </div>
++            </div>
++          )}
++
+           {/* ═══ COMPLIANCE ═══ */}
+           {page === "compliance" && (
+             <ComplianceTab
+diff --git a/src/lib/supabase.js b/src/lib/supabase.js
+index 0b2b7f2..f5df95e 100644
+--- a/src/lib/supabase.js
++++ b/src/lib/supabase.js
+@@ -475,6 +475,55 @@ export async function upsertPrivacyPolicy(clinicId, content) {
+ // REALTIME — live appointment feed in admin
+ // ═══════════════════════════════════════════════════
+ 
++// ═══════════════════════════════════════════════════
++// FEEDBACK (Review Filter Funnel — Phase 1)
++// ═══════════════════════════════════════════════════
++
++// Public insert — called from /:slug/feedback, no auth required.
++// route: 'public' (4-5★, sent toward Google) | 'private' (1-3★, owner-only)
++export async function submitFeedback(clinicId, { rating, comment, patientName, patientPhone }) {
++  const route = rating >= 4 ? 'public' : 'private';
++  const { data, error } = await supabase
++    .from('feedback')
++    .insert({
++      clinic_id: clinicId,
++      rating,
++      comment: comment || null,
++      patient_name: patientName || null,
++      patient_phone: patientPhone || null,
++      route,
++    })
++    .select()
++    .single();
++  if (error) throw error;
++  return data;
++}
++
++// Admin-only — private (1-3★) complaints for the receptionist/owner inbox.
++export async function getPrivateFeedback(clinicId, status = null) {
++  let q = supabase
++    .from('feedback')
++    .select('*')
++    .eq('clinic_id', clinicId)
++    .eq('route', 'private')
++    .order('created_at', { ascending: false });
++  if (status) q = q.eq('status', status);
++  const { data, error } = await q;
++  if (error) throw error;
++  return data || [];
++}
++
++export async function updateFeedbackStatus(feedbackId, status) {
++  const { data, error } = await supabase
++    .from('feedback')
++    .update({ status })
++    .eq('id', feedbackId)
++    .select()
++    .single();
++  if (error) throw error;
++  return data;
++}
++
+ export function subscribeToAppointments(clinicId, callback) {
+   const channel = supabase
+     .channel(`appointments-${clinicId}`)
+diff --git a/src/pages/ClinicSite.jsx b/src/pages/ClinicSite.jsx
+index 40de767..5dc023b 100644
+--- a/src/pages/ClinicSite.jsx
++++ b/src/pages/ClinicSite.jsx
+@@ -25,6 +25,7 @@ import BookingEngine         from "../components/BookingEngine";
+ import ClinicFooter          from "../components/ClinicFooter";
+ import ClinicMediaSection    from "../components/ClinicMediaSection";
+ import WorkingHoursDisplay   from "../components/WorkingHoursDisplay";
++import ClinicBanner          from "../components/ClinicBanner";
+ import { TEMPLATES, suggestTemplate } from "../templates";
+ import { applyTheme }                  from "../lib/themes";
+ 
+@@ -415,14 +416,17 @@ export default function ClinicSite({ slug }) {
+   const TemplateComponent = templateDef.component;
+ 
+   return (
+-    <TemplateComponent
+-      clinic={clinic}
+-      services={activeServices}
+-      doctors={doctors}
+-      media={media}
+-      hours={hours}
+-      branches={branches}
+-      onBookClick={() => setShowBook && setShowBook(true)}
+-    />
++    <>
++      <ClinicBanner clinic={clinic} />
++      <TemplateComponent
++        clinic={clinic}
++        services={activeServices}
++        doctors={doctors}
++        media={media}
++        hours={hours}
++        branches={branches}
++        onBookClick={() => setShowBook && setShowBook(true)}
++      />
++    </>
+   );
+ }
+\ No newline at end of file

@@ -475,6 +475,193 @@ export async function upsertPrivacyPolicy(clinicId, content) {
 // REALTIME — live appointment feed in admin
 // ═══════════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════════
+// FEEDBACK (Review Filter Funnel — Phase 1)
+// ═══════════════════════════════════════════════════
+
+// Public insert — called from /:slug/feedback, no auth required.
+// route: 'public' (4-5★, sent toward Google) | 'private' (1-3★, owner-only)
+export async function submitFeedback(clinicId, { rating, comment, patientName, patientPhone }) {
+  const route = rating >= 4 ? 'public' : 'private';
+  const { data, error } = await supabase
+    .from('feedback')
+    .insert({
+      clinic_id: clinicId,
+      rating,
+      comment: comment || null,
+      patient_name: patientName || null,
+      patient_phone: patientPhone || null,
+      route,
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// Admin-only — private (1-3★) complaints for the receptionist/owner inbox.
+export async function getPrivateFeedback(clinicId, status = null) {
+  let q = supabase
+    .from('feedback')
+    .select('*')
+    .eq('clinic_id', clinicId)
+    .eq('route', 'private')
+    .order('created_at', { ascending: false });
+  if (status) q = q.eq('status', status);
+  const { data, error } = await q;
+  if (error) throw error;
+  return data || [];
+}
+
+export async function updateFeedbackStatus(feedbackId, status) {
+  const { data, error } = await supabase
+    .from('feedback')
+    .update({ status })
+    .eq('id', feedbackId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// ═══════════════════════════════════════════════════
+// LIVE TOKEN QUEUE (Phase 2)
+// ═══════════════════════════════════════════════════
+
+const todayStr = () => new Date().toISOString().split("T")[0];
+
+// Public — used by /:slug/live. Reads the narrow view (no patient PII).
+export async function getPublicQueue(clinicId) {
+  const { data, error } = await supabase
+    .from("queue_public_view")
+    .select("*")
+    .eq("clinic_id", clinicId)
+    .order("position", { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+// Admin/receptionist — full queue including patient name/phone.
+export async function getTodayQueue(clinicId) {
+  const { data, error } = await supabase
+    .from("queue_tokens")
+    .select("*")
+    .eq("clinic_id", clinicId)
+    .eq("queue_date", todayStr())
+    .order("position", { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+// Last N completed tokens, used to compute the rolling ETA average.
+export async function getRecentDoneTokens(clinicId, limit = 15) {
+  const { data, error } = await supabase
+    .from("queue_tokens")
+    .select("called_at, done_at")
+    .eq("clinic_id", clinicId)
+    .eq("status", "done")
+    .order("done_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return data || [];
+}
+
+export async function addQueueToken(clinicId, { patientName, patientPhone, position, tokenNumber, branchId = null, appointmentId = null }) {
+  const { data, error } = await supabase
+    .from("queue_tokens")
+    .insert({
+      clinic_id: clinicId,
+      branch_id: branchId,
+      appointment_id: appointmentId,
+      queue_date: todayStr(),
+      token_number: tokenNumber,
+      patient_name: patientName,
+      patient_phone: patientPhone,
+      status: "waiting",
+      position,
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// Bulk position update — used after Snooze / Resurrect reshuffle.
+export async function updateTokenPositions(updates) {
+  // Supabase JS has no native bulk-update-by-id, so fire them in parallel.
+  await Promise.all(
+    updates.map(({ id, position }) =>
+      supabase.from("queue_tokens").update({ position }).eq("id", id)
+    )
+  );
+}
+
+export async function callNextToken(tokenId) {
+  const { data, error } = await supabase
+    .from("queue_tokens")
+    .update({ status: "serving", called_at: new Date().toISOString() })
+    .eq("id", tokenId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function markTokenDone(tokenId) {
+  const { data, error } = await supabase
+    .from("queue_tokens")
+    .update({ status: "done", done_at: new Date().toISOString() })
+    .eq("id", tokenId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function skipToken(tokenId, currentSkippedCount = 0) {
+  const { data, error } = await supabase
+    .from("queue_tokens")
+    .update({ status: "skipped", skipped_count: currentSkippedCount + 1 })
+    .eq("id", tokenId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// One-click resurrection — brings a skipped token back as next-in-line.
+export async function resurrectToken(tokenId, newPosition) {
+  const { data, error } = await supabase
+    .from("queue_tokens")
+    .update({ status: "waiting", position: newPosition })
+    .eq("id", tokenId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// Patient sets their travel time from the public /live page — via RPC, so
+// anonymous visitors never get write access to the base table (see migration).
+export async function setTravelAlert(tokenId, minutes) {
+  const { error } = await supabase.rpc("set_travel_alert", { p_token_id: tokenId, p_minutes: minutes });
+  if (error) throw error;
+}
+
+// Realtime subscription — both the receptionist dashboard and the public
+// /live page use this so calling next / skipping / snoozing updates instantly.
+export function subscribeToQueue(clinicId, callback) {
+  const channel = supabase
+    .channel(`queue-${clinicId}`)
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "queue_tokens", filter: `clinic_id=eq.${clinicId}` },
+      callback
+    )
+    .subscribe();
+  return () => supabase.removeChannel(channel);
+}
+
 export function subscribeToAppointments(clinicId, callback) {
   const channel = supabase
     .channel(`appointments-${clinicId}`)

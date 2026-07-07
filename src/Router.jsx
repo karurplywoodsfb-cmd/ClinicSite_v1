@@ -9,6 +9,8 @@ import OnboardingWizard        from "./components/OnboardingWizard";
 import SuperAdmin              from "./components/SuperAdmin";
 import ClinicSite              from "./pages/ClinicSite";
 import BlogPage                from "./pages/BlogPage";
+import FeedbackPage            from "./pages/FeedbackPage";
+import LiveQueuePage           from "./pages/LiveQueuePage";
 import PrivacyPolicyPage, { generatePrivacyPolicy } from "./pages/PrivacyPolicyPage";
 import { getMyClinic }         from "./lib/supabase";
 
@@ -37,6 +39,8 @@ function getRoute() {
     if (parts[0]==="blog" && parts[1]) return { type:"blogPost",  clinicSlug:sub, postSlug:parts[1] };
     if (parts[0]==="blog")             return { type:"blog",      clinicSlug:sub };
     if (parts[0]==="privacy-policy")   return { type:"privacy",   clinicSlug:sub };
+    if (parts[0]==="feedback")         return { type:"feedback",  clinicSlug:sub };
+    if (parts[0]==="live")              return { type:"live",      clinicSlug:sub };
     return { type:"clinic", slug:sub };
   }
 
@@ -46,6 +50,8 @@ function getRoute() {
     if (parts[1]==="blog" && parts[2]) return { type:"blogPost",  clinicSlug:slug, postSlug:parts[2] };
     if (parts[1]==="blog")             return { type:"blog",      clinicSlug:slug };
     if (parts[1]==="privacy-policy")   return { type:"privacy",   clinicSlug:slug };
+    if (parts[1]==="feedback")         return { type:"feedback",  clinicSlug:slug };
+    if (parts[1]==="live")              return { type:"live",      clinicSlug:slug };
     return { type:"clinic", slug };
   }
 
@@ -202,6 +208,16 @@ export default function Router() {
   // ── PRIVACY POLICY ───────────────────────────────────────────────
   if (route.type === "privacy") {
     return <PrivacyPolicyClinic slug={route.clinicSlug} />;
+  }
+
+  // ── FEEDBACK (Review Filter Funnel) ────────────────────────────────
+  if (route.type === "feedback") {
+    return <FeedbackPage slug={route.clinicSlug} />;
+  }
+
+  // ── LIVE TOKEN STATUS ────────────────────────────────────────────
+  if (route.type === "live") {
+    return <LiveQueuePage slug={route.clinicSlug} />;
   }
 
   // ── BLOG LIST ────────────────────────────────────────────────────

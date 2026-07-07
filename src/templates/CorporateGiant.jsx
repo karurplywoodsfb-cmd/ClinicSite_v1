@@ -7,6 +7,7 @@ import BookingEngine      from "../components/BookingEngine";
 import ClinicFooter          from "../components/ClinicFooter";
 import WorkingHoursDisplay   from "../components/WorkingHoursDisplay";
 import ClinicMediaSection from "../components/ClinicMediaSection";
+import { useIsMobile }     from "../hooks/useIsMobile";
 
 function Reveal({ children, delay = 0 }) {
   const ref = useRef(null);
@@ -34,6 +35,7 @@ export default function CorporateGiant({ clinic, services = [], doctors = [], me
   const [showBook, setShowBook] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const doctor = doctors[0];
+  const isMobile = useIsMobile();
   const activeServices = services.filter(s => s.is_active !== false);
 
   const handleBook = () => {
@@ -60,7 +62,6 @@ export default function CorporateGiant({ clinic, services = [], doctors = [], me
 
   return (
     <div style={{ fontFamily:"'DM Sans',sans-serif", background: C.bg, color: C.text, overflowX:"hidden" }}>
-      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 
       {/* ── Booking Modal ── */}
       {showBook && (
@@ -107,11 +108,13 @@ export default function CorporateGiant({ clinic, services = [], doctors = [], me
           </div>
         </div>
         <div style={{ display:"flex", gap:28, alignItems:"center" }}>
-          {[["Services","#services"],["Doctor","#doctor"],["Contact","#contact"]].map(([l,h]) => (
+          {!isMobile && (
+            [["Services","#services"],["Doctor","#doctor"],["Contact","#contact"]].map(([l,h]) => (
             <a key={l} href={h} style={{ textDecoration:"none", color:C.muted, fontSize:13, fontWeight:500, transition:"color .15s" }}
               onMouseEnter={e=>e.target.style.color=C.accentLight}
               onMouseLeave={e=>e.target.style.color=C.muted}>{l}</a>
-          ))}
+          ))
+          )}
           <button onClick={handleBook} style={{
             background:`linear-gradient(135deg,${C.accent},${C.accentLight})`,
             color:C.bg, border:"none", borderRadius:6, padding:"9px 22px",
@@ -127,7 +130,7 @@ export default function CorporateGiant({ clinic, services = [], doctors = [], me
         background:`radial-gradient(ellipse 70% 60% at 80% 50%, rgba(201,168,76,0.08), transparent), ${C.bg}`,
         display:"flex", alignItems:"center", padding:"80px 24px",
       }}>
-        <div style={{ width:"100%", display:"grid", gridTemplateColumns:"1.2fr 1fr", gap:80, alignItems:"center", width:"100%" }}>
+        <div style={{ width:"100%", display:"grid", gridTemplateColumns: isMobile ? "1fr" : "1.2fr 1fr", gap:80, alignItems:"center", width:"100%" }}>
           <div>
             <div style={{ display:"inline-flex", alignItems:"center", gap:8,
               border:`1px solid ${C.border}`, borderRadius:4, padding:"5px 14px",
@@ -229,7 +232,7 @@ export default function CorporateGiant({ clinic, services = [], doctors = [], me
       {/* ── Doctor ── */}
       {doctor && (
         <section id="doctor" style={{ padding:"80px 24px", background:C.bg }}>
-          <div style={{ width:"100%", display:"grid", gridTemplateColumns:"1fr 1.4fr", gap:60, alignItems:"center" }}>
+          <div style={{ width:"100%", display:"grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1.4fr", gap:60, alignItems:"center" }}>
             <Reveal>
               <div style={{ width:"100%", aspectRatio:"4/5", borderRadius:16,
                 background:`linear-gradient(160deg,${C.surface},${C.bg})`,
@@ -266,7 +269,7 @@ export default function CorporateGiant({ clinic, services = [], doctors = [], me
 
       {/* ── Contact ── */}
       <section id="contact" style={{ padding:"80px 24px", background:C.surface }}>
-        <div style={{ width:"100%", display:"grid", gridTemplateColumns:"1fr 1fr", gap:60 }}>
+        <div style={{ width:"100%", display:"grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap:60 }}>
           <Reveal>
             <div style={{ fontSize:11, fontWeight:700, letterSpacing:2.5, textTransform:"uppercase", color:C.accent, marginBottom:10 }}>Find Us</div>
             <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:34, color:C.white, marginBottom:32 }}>Visit {clinic.name}</h2>

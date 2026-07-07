@@ -25,6 +25,9 @@ import {
 import WorkingHoursDisplay from "./WorkingHoursDisplay";
 import UpgradeModal    from "./UpgradeModal";
 import ComplianceTab   from "./ComplianceTab";
+import BannerControl   from "./admin/BannerControl";
+import FeedbackInbox   from "./admin/FeedbackInbox";
+import ReceptionistDashboard from "./admin/ReceptionistDashboard";
 import AIBlogGenerator from "./AIBlogGenerator";
 import { TEMPLATES, TEMPLATE_PREVIEWS } from "../templates";
 import DomainManager          from "../components/admin/DomainManager";
@@ -107,6 +110,8 @@ const NAV_ITEMS = [
   { id:"design",       label:"Design & Theme", icon:"🎨" },
   { id:"blog",         label:"Blog & Content", icon:"✍️"  },
   { id:"seo",          label:"SEO",            icon:"🔍" },
+  { id:"queue",        label:"Live Queue",     icon:"🎫" },
+  { id:"feedback",     label:"Feedback",       icon:"⭐" },
   { id:"compliance",   label:"Compliance",     icon:"⚖️"  },
   { id:"preview",      label:"Preview Site",   icon:"👁️"  },
   { id:"domain",       label:"Domain",         icon:"🌐" },
@@ -1352,6 +1357,36 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                     </div>
                   ))}
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* ═══ LIVE QUEUE (Phase 2) ═══ */}
+          {page === "queue" && (
+            <div>
+              <div style={{ background: "#0d1526", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: 16, marginBottom: 16, fontSize: 13, color: "#94a3b8" }}>
+                Show this on a lobby TV: <br />
+                <code style={{ color: "#7dd3fc" }}>{`${window.location.origin}/${clinic.slug}/live?tv=1`}</code>
+                {" · "}Patients can check it on their phone at{" "}
+                <code style={{ color: "#7dd3fc" }}>{`${window.location.origin}/${clinic.slug}/live`}</code>
+              </div>
+              <ReceptionistDashboard clinicId={clinic.id} avgApptMinutesDefault={clinic.avg_appt_minutes_default || 15} />
+            </div>
+          )}
+
+          {/* ═══ FEEDBACK (Phase 1: banner + review funnel) ═══ */}
+          {page === "feedback" && (
+            <div style={{ maxWidth: 640 }}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: "#f1f5f9", marginBottom: 16 }}>Site banner</h2>
+              <BannerControl clinic={clinic} onUpdate={(updated) => { setClinic(updated); onClinicUpdate?.(updated); }} />
+
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: "#f1f5f9", margin: "28px 0 16px" }}>Reviews</h2>
+              <div style={{ background: "#0d1526", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: 16, marginBottom: 16, fontSize: 13, color: "#94a3b8" }}>
+                Share this link (or a QR code linking to it) at your front desk: <br />
+                <code style={{ color: "#7dd3fc" }}>{`${window.location.origin}/${clinic.slug}/feedback`}</code>
+              </div>
+              <div style={{ background: "white", borderRadius: 12, padding: 16 }}>
+                <FeedbackInbox clinicId={clinic.id} />
               </div>
             </div>
           )}
