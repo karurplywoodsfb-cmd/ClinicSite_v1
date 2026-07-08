@@ -273,6 +273,7 @@ export async function bookAppointment(clinicId, appointment) {
     .insert({
       clinic_id:               clinicId,
       branch_id:               appointment.branch_id    || null,
+      doctor_id:               appointment.doctor_id    || null,
       patient_name:            appointment.name,
       phone:                   appointment.phone,
       email:                   appointment.email        || null,
@@ -290,6 +291,23 @@ export async function bookAppointment(clinicId, appointment) {
     .single();
   if (error) throw error;
   return data;
+}
+
+// Doctor-scoped appointments — used so a 'doctor' role only ever queries
+// their own calendar (RLS also enforces this server-side, this just keeps
+// the query itself efficient rather than fetching-then-filtering client-side).
+export async function getAppointmentsForDoctor(clinicId, doctorId, dateFrom, dateTo) {
+  let q = supabase
+    .from('appointments')
+    .select('*')
+    .eq('clinic_id', clinicId)
+    .order('appt_date', { ascending: true });
+  if (doctorId) q = q.eq('doctor_id', doctorId);
+  if (dateFrom) q = q.gte('appt_date', dateFrom);
+  if (dateTo)   q = q.lte('appt_date', dateTo);
+  const { data, error } = await q;
+  if (error) throw error;
+  return data || [];
 }
 
 export async function updateAppointmentStatus(appointmentId, status) {
@@ -660,6 +678,63 @@ export function subscribeToQueue(clinicId, callback) {
     )
     .subscribe();
   return () => supabase.removeChannel(channel);
+}
+
+// ═══════════════════════════════════════════════════
+// STAFF / RBAC (Phase 3)
+// ═══════════════════════════════════════════════════
+
+export async function getClinicStaff(clinicId) {
+  const { data, error } = await supabase
+    .from("clinic_staff")
+    .select("*, doctors(name)")
+    .eq("clinic_id", clinicId)
+    .order("invited_at", { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+// Invites go through an edge function because creating the auth user
+// requires the service-role key (not something the browser should hold).
+export async function inviteStaffMember(clinicId, { email, name, role, doctorId }) {
+  const { data: { session } } = await supabase.auth.getSession();
+  const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invite-staff`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${session?.access_token}`,
+    },
+    body: JSON.stringify({ clinicId, email, name, role, doctorId }),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error || "Could not invite staff member.");
+  return json.data;
+}
+
+export async function updateStaffMember(staffId, updates) {
+  const { data, error } = await supabase
+    .from("clinic_staff")
+    .update(updates)
+    .eq("id", staffId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function removeStaffMember(staffId) {
+  const { error } = await supabase.from("clinic_staff").delete().eq("id", staffId);
+  if (error) throw error;
+}
+
+export async function addDoctor(clinicId, doctor) {
+  const { data, error } = await supabase
+    .from("doctors")
+    .insert({ clinic_id: clinicId, is_active: true, ...doctor })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
 }
 
 export function subscribeToAppointments(clinicId, callback) {

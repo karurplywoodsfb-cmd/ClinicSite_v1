@@ -6,7 +6,6 @@ import { useState, useEffect, useRef } from "react";
 import BookingEngine        from "../components/BookingEngine";
 import ClinicFooter         from "../components/ClinicFooter";
 import ClinicMediaSection   from "../components/ClinicMediaSection";
-import { useIsMobile }     from "../hooks/useIsMobile";
 
 function Reveal({ children, delay = 0 }) {
   const ref = useRef(null);
@@ -33,7 +32,6 @@ function Reveal({ children, delay = 0 }) {
 export default function PorcelainNavy({ clinic, services = [], doctors = [], media = [], hours = [], branches = [], onBookClick }) {
   const [showBook, setShowBook] = useState(false);
   const doctor = doctors[0];
-  const isMobile = useIsMobile();
   const activeServices = services.filter(s => s.is_active !== false);
 
   const handleBook = () => {
@@ -51,14 +49,9 @@ export default function PorcelainNavy({ clinic, services = [], doctors = [], med
     accent2: "#4a5f7a",
   };
 
-  if (clinic.accent_color) {
-    C.accent = clinic.accent_color;
-    C.accent2 = clinic.accent_color;
-  }
-
-
   return (
     <div style={{ fontFamily:"'DM Sans',sans-serif", background:C.bg, color:C.text, overflowX:"hidden" }}>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 
       {showBook && (
         <div onClick={e => e.target === e.currentTarget && setShowBook(false)}
@@ -70,7 +63,7 @@ export default function PorcelainNavy({ clinic, services = [], doctors = [], med
               position:"absolute", top:-14, right:-14, zIndex:10,
               width:32, height:32, borderRadius:"50%", background:"#fff",
               border:"none", cursor:"pointer", fontSize:16 }}>✕</button>
-            <BookingEngine hours={hours} branches={branches} clinic={clinic} services={activeServices}/>
+            <BookingEngine hours={hours} branches={branches} clinic={clinic} services={activeServices} doctors={doctors}/>
           </div>
         </div>
       )}
@@ -86,11 +79,9 @@ export default function PorcelainNavy({ clinic, services = [], doctors = [], med
           <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:19, color:C.text }}>{clinic.name}</div>
         </div>
         <div style={{ display:"flex", gap:30, alignItems:"center" }}>
-          {!isMobile && (
-            [["Services","#services"],["Doctor","#doctor"],["Contact","#contact"]].map(([l,h]) => (
+          {[["Services","#services"],["Doctor","#doctor"],["Contact","#contact"]].map(([l,h]) => (
             <a key={l} href={h} style={{ textDecoration:"none", color:C.muted, fontSize:13, fontWeight:500 }}>{l}</a>
-          ))
-          )}
+          ))}
           <button onClick={handleBook} style={{
             background:C.accent, color:"#fff", border:"none", borderRadius:6,
             padding:"11px 24px", fontSize:13, fontWeight:600, cursor:"pointer" }}>
@@ -100,7 +91,7 @@ export default function PorcelainNavy({ clinic, services = [], doctors = [], med
       </nav>
 
       {/* ── Hero ── */}
-      <section style={{ padding:"70px 48px", display:"grid", gridTemplateColumns: isMobile ? "1fr" : "1.1fr 0.9fr", gap:60, alignItems:"center" }}>
+      <section style={{ padding:"70px 48px", display:"grid", gridTemplateColumns:"1.1fr 0.9fr", gap:60, alignItems:"center" }}>
         <Reveal>
           <div style={{ display:"inline-block", border:`1px solid ${C.border}`, borderRadius:4, padding:"6px 14px",
             fontSize:11, fontWeight:600, color:C.accent2, letterSpacing:1.5, textTransform:"uppercase", marginBottom:24 }}>
@@ -161,7 +152,7 @@ export default function PorcelainNavy({ clinic, services = [], doctors = [], med
       {/* ── Doctor ── */}
       {doctor && (
         <section id="doctor" style={{ padding:"70px 48px" }}>
-          <div style={{ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1.4fr", gap:56, alignItems:"center" }}>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1.4fr", gap:56, alignItems:"center" }}>
             <Reveal>
               <div style={{ width:"100%", aspectRatio:"4/5", borderRadius:10, background:C.surface,
                 border:`1px solid ${C.border}`, display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden" }}>
@@ -194,7 +185,7 @@ export default function PorcelainNavy({ clinic, services = [], doctors = [], med
 
       {/* ── Contact ── */}
       <section id="contact" style={{ padding:"70px 48px", background:C.surface, borderTop:`1px solid ${C.border}` }}>
-        <div style={{ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap:56 }}>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:56 }}>
           <Reveal>
             <div style={{ fontSize:11, fontWeight:700, letterSpacing:2, textTransform:"uppercase", color:C.accent2, marginBottom:10 }}>Find Us</div>
             <h2 style={{ fontFamily:"'DM Serif Display',serif", fontSize:28, color:C.text, marginBottom:28 }}>Visit {clinic.name}</h2>

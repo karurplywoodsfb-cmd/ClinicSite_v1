@@ -29,13 +29,15 @@ function getDates(count = 7) {
   });
 }
 
-export default function BookingEngine({ clinic, services = [], branches = [], hours = [], hidePrice = false }) {
+export default function BookingEngine({ clinic, services = [], branches = [], doctors = [], hours = [], hidePrice = false }) {
   const hasBranches = branches.filter(b => b.is_active !== false).length > 0;
+  const activeDoctors = doctors.filter(d => d.is_active !== false);
   const firstStep   = hasBranches ? 0 : 1;
 
   const [step,          setStep]          = useState(firstStep);
   const [form,          setForm]          = useState({
-    branch: null, service: "", date: null, slot: "", name: "", phone: "", notes: "",
+    branch: null, doctor: activeDoctors.length === 1 ? activeDoctors[0] : null,
+    service: "", date: null, slot: "", name: "", phone: "", notes: "",
   });
   const [consentGiven,  setConsentGiven]  = useState(false);
   const [loading,       setLoading]       = useState(false);
@@ -110,6 +112,7 @@ export default function BookingEngine({ clinic, services = [], branches = [], ho
     try {
       const appt = await bookAppointment(clinic.id, {
         branch_id:              form.branch?.id || null,
+        doctor_id:              form.doctor?.id || null,
         name:                   form.name,
         phone:                  form.phone.startsWith("+") ? form.phone : `+91${form.phone}`,
         service:                form.service,
@@ -261,6 +264,27 @@ export default function BookingEngine({ clinic, services = [], branches = [], ho
                   <div style={{ fontSize:11, color:"#64748b", marginTop:1 }}>
                     Pick a service below to book this slot instantly
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── Doctor selector (only for multi-doctor clinics) ── */}
+            {activeDoctors.length > 1 && (
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 13, color: "#64748b", marginBottom: 8 }}>Choose a doctor:</div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {activeDoctors.map(doc => (
+                    <button key={doc.id} onClick={() => set("doctor", doc)}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", borderRadius: 10, cursor: "pointer",
+                        background: form.doctor?.id === doc.id ? "rgba(21,101,192,0.06)" : "white",
+                        border: `1.5px solid ${form.doctor?.id === doc.id ? "#1565c0" : "#e8eef6"}`,
+                        fontSize: 13, fontWeight: 500, color: "#0b2545",
+                      }}>
+                      {doc.photo_url && <img src={doc.photo_url} alt="" style={{ width: 22, height: 22, borderRadius: "50%", objectFit: "cover" }} />}
+                      {doc.name}
+                    </button>
+                  ))}
                 </div>
               </div>
             )}

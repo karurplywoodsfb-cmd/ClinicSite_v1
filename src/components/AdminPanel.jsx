@@ -28,6 +28,9 @@ import ComplianceTab   from "./ComplianceTab";
 import BannerControl   from "./admin/BannerControl";
 import FeedbackInbox   from "./admin/FeedbackInbox";
 import ReceptionistDashboard from "./admin/ReceptionistDashboard";
+import StaffManagement       from "./admin/StaffManagement";
+import { useRoleContext }    from "./RoleProvider";
+import { PermissionGate }    from "./PermissionGate";
 import AIBlogGenerator from "./AIBlogGenerator";
 import { TEMPLATES, TEMPLATE_PREVIEWS } from "../templates";
 import DomainManager          from "../components/admin/DomainManager";
@@ -115,11 +118,32 @@ const NAV_ITEMS = [
   { id:"compliance",   label:"Compliance",     icon:"⚖️"  },
   { id:"preview",      label:"Preview Site",   icon:"👁️"  },
   { id:"domain",       label:"Domain",         icon:"🌐" },
+  { id:"staff",        label:"Staff",          icon:"👥" },
 ];
+
+// Maps nav items to the permission required to see them. Items with no
+// entry here are visible to every role (dashboard, preview).
+const NAV_PERMISSIONS = {
+  appointments: ["manage_calendar", "manage_own_calendar"],
+  services:     ["manage_clinic_settings"],
+  hours:        ["manage_clinic_settings"],
+  clinic:       ["manage_clinic_settings"],
+  doctor:       ["manage_clinic_settings"],
+  branches:     ["manage_clinic_settings"],
+  design:       ["manage_clinic_settings"],
+  blog:         ["manage_clinic_settings"],
+  seo:          ["manage_clinic_settings"],
+  queue:        ["manage_queue"],
+  feedback:     ["manage_clinic_settings"],
+  compliance:   ["manage_clinic_settings"],
+  domain:       ["manage_clinic_settings"],
+  staff:        ["manage_staff"],
+};
 
 // ── Main component ────────────────────────────────────────────────
 export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, onLogout }) {
   const planContext = usePlanContext(); // PlanEnforcementProvider is guaranteed by App.jsx's AdminRoute
+  const { hasPermission, role } = useRoleContext();
 
   const [page,        setPage]        = useState("dashboard");
   const [clinic,      setClinic]      = useState(initClinic);
@@ -276,7 +300,10 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
 
         {/* Nav */}
         <nav style={{ flex:1, padding:"10px 8px", overflowY:"auto" }}>
-          {NAV_ITEMS.map(item => (
+          {NAV_ITEMS.filter(item => {
+            const required = NAV_PERMISSIONS[item.id];
+            return !required || required.some(p => hasPermission(p));
+          }).map(item => (
             <button key={item.id} onClick={() => setPage(item.id)} style={{
               width:"100%", display:"flex", alignItems:"center", gap:10,
               padding:"9px 10px", borderRadius:8, border:"none", cursor:"pointer",
@@ -1359,6 +1386,13 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                 </div>
               </div>
             </div>
+          )}
+
+          {/* ═══ STAFF (Phase 3: RBAC) ═══ */}
+          {page === "staff" && (
+            <PermissionGate permission="manage_staff">
+              <StaffManagement clinicId={clinic.id} />
+            </PermissionGate>
           )}
 
           {/* ═══ LIVE QUEUE (Phase 2) ═══ */}

@@ -9,6 +9,7 @@ import {
 } from "react-router-dom";
 import { AuthProvider, useAuthContext }from "./contexts/AuthContext";
 import { PlanEnforcementProvider }     from "./components/PlanEnforcementProvider";
+import { RoleProvider }                from "./components/RoleProvider";
 import { useCustomDomain }             from "./hooks/useCustomDomain";
 import { supabase }                    from "./lib/supabase";
 
@@ -85,7 +86,7 @@ function LoginRoute() {
   );
 }
 
-// ── AdminRoute: wraps PlanEnforcementProvider + onboarding gate ──
+// ── AdminRoute: wraps PlanEnforcementProvider + RoleProvider + onboarding gate ──
 function AdminRoute() {
   const { user, clinic, onClinicCreated, setClinic, logout } = useAuthContext();
 
@@ -93,12 +94,14 @@ function AdminRoute() {
     <PlanEnforcementProvider>
       {!clinic
         ? <OnboardingWizard user={user} onComplete={onClinicCreated} />
-        : <AdminPanel
-            user={user}
-            clinic={clinic}
-            onClinicUpdate={setClinic}
-            onLogout={logout}
-          />
+        : <RoleProvider clinic={clinic} user={user}>
+            <AdminPanel
+              user={user}
+              clinic={clinic}
+              onClinicUpdate={setClinic}
+              onLogout={logout}
+            />
+          </RoleProvider>
       }
     </PlanEnforcementProvider>
   );

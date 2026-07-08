@@ -7,7 +7,6 @@ import BookingEngine      from "../components/BookingEngine";
 import ClinicFooter          from "../components/ClinicFooter";
 import WorkingHoursDisplay   from "../components/WorkingHoursDisplay";
 import ClinicMediaSection from "../components/ClinicMediaSection";
-import { useIsMobile }     from "../hooks/useIsMobile";
 
 function Reveal({ children, delay = 0 }) {
   const ref = useRef(null);
@@ -28,7 +27,6 @@ export default function SurgicalHub({ clinic, services = [], doctors = [], media
   const [showBook, setShowBook] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const doctor = doctors[0];
-  const isMobile = useIsMobile();
   const activeServices = services.filter(s => s.is_active !== false);
 
   const handleBook = () => { if (onBookClick) onBookClick(); else setShowBook(true); };
@@ -51,6 +49,7 @@ export default function SurgicalHub({ clinic, services = [], doctors = [], media
 
   return (
     <div style={{ fontFamily:"'IBM Plex Sans',sans-serif", background:C.bg, color:C.text, overflowX:"hidden" }}>
+      <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet"/>
 
       {showBook && (
         <div onClick={e=>e.target===e.currentTarget&&setShowBook(false)}
@@ -59,7 +58,7 @@ export default function SurgicalHub({ clinic, services = [], doctors = [], media
           <div style={{ position:"relative", width:"100%", maxWidth:520 }}>
             <button onClick={()=>setShowBook(false)} style={{ position:"absolute", top:-14, right:-14, zIndex:10,
               width:32, height:32, borderRadius:"50%", background:C.bg, border:"none", cursor:"pointer", fontSize:16 }}>✕</button>
-            <BookingEngine hours={hours} branches={branches} clinic={clinic} services={activeServices}/>
+            <BookingEngine hours={hours} branches={branches} clinic={clinic} services={activeServices} doctors={doctors}/>
           </div>
         </div>
       )}
@@ -93,13 +92,11 @@ export default function SurgicalHub({ clinic, services = [], doctors = [], media
           </div>
         </div>
         <div style={{ display:"flex", gap:28, alignItems:"center" }}>
-          {!isMobile && (
-            [["Services","#services"],["Doctor","#doctor"],["Contact","#contact"]].map(([l,h])=>(
+          {[["Services","#services"],["Doctor","#doctor"],["Contact","#contact"]].map(([l,h])=>(
             <a key={l} href={h} style={{ textDecoration:"none", color:C.muted, fontSize:13, fontWeight:500, transition:"color .15s" }}
               onMouseEnter={e=>e.target.style.color=C.accent}
               onMouseLeave={e=>e.target.style.color=C.muted}>{l}</a>
-          ))
-          )}
+          ))}
           <button onClick={handleBook} style={{
             background:C.accent, color:C.bg, border:"none", padding:"9px 22px",
             fontSize:13, fontWeight:700, cursor:"pointer", letterSpacing:.5, textTransform:"uppercase" }}>
@@ -113,7 +110,7 @@ export default function SurgicalHub({ clinic, services = [], doctors = [], media
         minHeight:"100vh", paddingTop:64,
         display:"flex", alignItems:"stretch",
       }}>
-        <div style={{ width:"100%", display:"grid", gridTemplateColumns: isMobile ? "1fr" : "1.1fr 1fr", width:"100%", alignItems:"center", padding:"0 24px" }}>
+        <div style={{ width:"100%", display:"grid", gridTemplateColumns:"1.1fr 1fr", width:"100%", alignItems:"center", padding:"0 24px" }}>
           <div style={{ padding:"80px 0" }}>
             {/* Red accent bar */}
             <div style={{ width:48, height:4, background:C.accent, marginBottom:28 }}/>
@@ -213,7 +210,7 @@ export default function SurgicalHub({ clinic, services = [], doctors = [], media
       {/* Doctor */}
       {doctor && (
         <section id="doctor" style={{ padding:"80px 24px", background:C.bg }}>
-          <div style={{ width:"100%", display:"grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1.4fr", gap:60, alignItems:"center" }}>
+          <div style={{ width:"100%", display:"grid", gridTemplateColumns:"1fr 1.4fr", gap:60, alignItems:"center" }}>
             <Reveal>
               <div style={{ width:"100%", aspectRatio:"4/5",
                 background:C.surface, border:`2px solid ${C.border}`,
@@ -244,7 +241,7 @@ export default function SurgicalHub({ clinic, services = [], doctors = [], media
 
       {/* Contact */}
       <section id="contact" style={{ padding:"80px 24px", background:C.dark }}>
-        <div style={{ width:"100%", display:"grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap:60 }}>
+        <div style={{ width:"100%", display:"grid", gridTemplateColumns:"1fr 1fr", gap:60 }}>
           <Reveal>
             <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:14 }}>
               <div style={{ width:32, height:3, background:C.accent }}/>

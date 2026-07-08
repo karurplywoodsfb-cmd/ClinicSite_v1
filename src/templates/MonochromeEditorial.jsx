@@ -6,7 +6,6 @@ import { useState, useEffect, useRef } from "react";
 import BookingEngine        from "../components/BookingEngine";
 import ClinicFooter         from "../components/ClinicFooter";
 import ClinicMediaSection   from "../components/ClinicMediaSection";
-import { useIsMobile }     from "../hooks/useIsMobile";
 
 function Reveal({ children, delay = 0 }) {
   const ref = useRef(null);
@@ -33,7 +32,6 @@ function Reveal({ children, delay = 0 }) {
 export default function MonochromeEditorial({ clinic, services = [], doctors = [], media = [], hours = [], branches = [], onBookClick }) {
   const [showBook, setShowBook] = useState(false);
   const doctor = doctors[0];
-  const isMobile = useIsMobile();
   const activeServices = services.filter(s => s.is_active !== false);
 
   const handleBook = () => {
@@ -51,6 +49,7 @@ export default function MonochromeEditorial({ clinic, services = [], doctors = [
 
   return (
     <div style={{ fontFamily:"'Inter',sans-serif", background:C.bg, color:C.text, overflowX:"hidden" }}>
+      <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 
       {showBook && (
         <div onClick={e => e.target === e.currentTarget && setShowBook(false)}
@@ -61,7 +60,7 @@ export default function MonochromeEditorial({ clinic, services = [], doctors = [
               position:"absolute", top:-14, right:-14, zIndex:10,
               width:32, height:32, borderRadius:"50%", background:"#fff",
               border:`2px solid ${C.text}`, cursor:"pointer", fontSize:16 }}>✕</button>
-            <BookingEngine hours={hours} branches={branches} clinic={clinic} services={activeServices}/>
+            <BookingEngine hours={hours} branches={branches} clinic={clinic} services={activeServices} doctors={doctors}/>
           </div>
         </div>
       )}
@@ -78,12 +77,10 @@ export default function MonochromeEditorial({ clinic, services = [], doctors = [
         padding:"22px 40px", borderBottom:`1px solid ${C.border}` }}>
         <div style={{ fontFamily:"'Fraunces',serif", fontWeight:900, fontSize:24, letterSpacing:-1 }}>{clinic.name}</div>
         <div style={{ display:"flex", gap:26, alignItems:"center" }}>
-          {!isMobile && (
-            [["Services","#services"],["Team","#doctor"],["Contact","#contact"]].map(([l,h]) => (
+          {[["Services","#services"],["Team","#doctor"],["Contact","#contact"]].map(([l,h]) => (
             <a key={l} href={h} style={{ textDecoration:"none", color:C.text, fontSize:12,
               textTransform:"uppercase", letterSpacing:1, fontWeight:600 }}>{l}</a>
-          ))
-          )}
+          ))}
           <button onClick={handleBook} style={{
             background:"transparent", border:`2px solid ${C.text}`, color:C.text,
             padding:"9px 20px", fontSize:12, fontWeight:700, textTransform:"uppercase",
@@ -138,7 +135,7 @@ export default function MonochromeEditorial({ clinic, services = [], doctors = [
       {/* ── Doctor ── */}
       {doctor && (
         <section id="doctor" style={{ padding:"56px 40px", borderBottom:`1px solid ${C.border}`,
-          display:"grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1.4fr", gap:56, alignItems:"center" }}>
+          display:"grid", gridTemplateColumns:"1fr 1.4fr", gap:56, alignItems:"center" }}>
           <Reveal>
             <div style={{ width:"100%", aspectRatio:"4/5", background:"#f2f2f2", border:`1px solid ${C.border}`,
               display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden" }}>
@@ -170,7 +167,7 @@ export default function MonochromeEditorial({ clinic, services = [], doctors = [
       <ClinicMediaSection clinic={clinic} mediaItems={media}/>
 
       {/* ── Contact ── */}
-      <section id="contact" style={{ padding:"56px 40px", display:"grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap:56, borderBottom:`1px solid ${C.border}` }}>
+      <section id="contact" style={{ padding:"56px 40px", display:"grid", gridTemplateColumns:"1fr 1fr", gap:56, borderBottom:`1px solid ${C.border}` }}>
         <Reveal>
           <div style={{ fontSize:12, letterSpacing:2, textTransform:"uppercase", color:C.muted, marginBottom:12 }}>Visit</div>
           <h2 style={{ fontFamily:"'Fraunces',serif", fontSize:30, fontWeight:700, marginBottom:28 }}>{clinic.name}</h2>

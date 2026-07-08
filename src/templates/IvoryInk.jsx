@@ -6,7 +6,6 @@ import { useState, useEffect, useRef } from "react";
 import BookingEngine        from "../components/BookingEngine";
 import ClinicFooter         from "../components/ClinicFooter";
 import ClinicMediaSection   from "../components/ClinicMediaSection";
-import { useIsMobile }     from "../hooks/useIsMobile";
 
 function Reveal({ children, delay = 0 }) {
   const ref = useRef(null);
@@ -33,7 +32,6 @@ function Reveal({ children, delay = 0 }) {
 export default function IvoryInk({ clinic, services = [], doctors = [], media = [], hours = [], branches = [], onBookClick }) {
   const [showBook, setShowBook] = useState(false);
   const doctor = doctors[0];
-  const isMobile = useIsMobile();
   const activeServices = services.filter(s => s.is_active !== false);
 
   const handleBook = () => {
@@ -50,13 +48,9 @@ export default function IvoryInk({ clinic, services = [], doctors = [], media = 
     accent:  "#a68a5b",
   };
 
-  if (clinic.accent_color) {
-    C.accent = clinic.accent_color;
-  }
-
-
   return (
     <div style={{ fontFamily:"'DM Sans',sans-serif", background:C.bg, color:C.text, overflowX:"hidden" }}>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 
       {showBook && (
         <div onClick={e => e.target === e.currentTarget && setShowBook(false)}
@@ -68,7 +62,7 @@ export default function IvoryInk({ clinic, services = [], doctors = [], media = 
               position:"absolute", top:-14, right:-14, zIndex:10,
               width:32, height:32, borderRadius:"50%", background:"#fff",
               border:"none", cursor:"pointer", fontSize:16 }}>✕</button>
-            <BookingEngine hours={hours} branches={branches} clinic={clinic} services={activeServices}/>
+            <BookingEngine hours={hours} branches={branches} clinic={clinic} services={activeServices} doctors={doctors}/>
           </div>
         </div>
       )}
@@ -78,12 +72,10 @@ export default function IvoryInk({ clinic, services = [], doctors = [], media = 
         padding:"26px 48px", borderBottom:`1px solid ${C.border}` }}>
         <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:20, color:C.text, letterSpacing:0.5 }}>{clinic.name}</div>
         <div style={{ display:"flex", gap:32, alignItems:"center" }}>
-          {!isMobile && (
-            [["Services","#services"],["Doctor","#doctor"],["Contact","#contact"]].map(([l,h]) => (
+          {[["Services","#services"],["Doctor","#doctor"],["Contact","#contact"]].map(([l,h]) => (
             <a key={l} href={h} style={{ textDecoration:"none", color:C.muted, fontSize:12,
               letterSpacing:1, textTransform:"uppercase" }}>{l}</a>
-          ))
-          )}
+          ))}
           <button onClick={handleBook} style={{
             background:C.text, color:C.bg, border:"none", borderRadius:2,
             padding:"11px 24px", fontSize:12, letterSpacing:1, textTransform:"uppercase",
@@ -142,7 +134,7 @@ export default function IvoryInk({ clinic, services = [], doctors = [], media = 
       {/* ── Doctor ── */}
       {doctor && (
         <section id="doctor" style={{ padding:"80px 48px", background:C.surface, borderTop:`1px solid ${C.border}`, borderBottom:`1px solid ${C.border}` }}>
-          <div style={{ maxWidth:900, margin:"0 auto", display:"grid", gridTemplateColumns: isMobile ? "1fr" : "0.8fr 1.2fr", gap:56, alignItems:"center" }}>
+          <div style={{ maxWidth:900, margin:"0 auto", display:"grid", gridTemplateColumns:"0.8fr 1.2fr", gap:56, alignItems:"center" }}>
             <Reveal>
               <div style={{ width:"100%", aspectRatio:"4/5", background:C.bg, border:`1px solid ${C.border}`,
                 display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden" }}>
@@ -176,7 +168,7 @@ export default function IvoryInk({ clinic, services = [], doctors = [], media = 
 
       {/* ── Contact ── */}
       <section id="contact" style={{ padding:"80px 48px" }}>
-        <div style={{ maxWidth:900, margin:"0 auto", display:"grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap:60 }}>
+        <div style={{ maxWidth:900, margin:"0 auto", display:"grid", gridTemplateColumns:"1fr 1fr", gap:60 }}>
           <Reveal>
             <div style={{ fontSize:11, letterSpacing:2, textTransform:"uppercase", color:C.accent, marginBottom:12 }}>Visit</div>
             <h2 style={{ fontFamily:"'DM Serif Display',serif", fontSize:28, color:C.text, marginBottom:30 }}>{clinic.name}</h2>
