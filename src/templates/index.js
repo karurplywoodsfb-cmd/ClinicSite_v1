@@ -10,6 +10,8 @@ import SoftStructure     from "./SoftStructure";
 import IvoryInk          from "./IvoryInk";
 import PorcelainNavy     from "./PorcelainNavy";
 import LinenSage         from "./LinenSage";
+import SleekCybermed     from "./SleekCybermed";
+import PlayfulEditorial  from "./PlayfulEditorial";
 
 export const TEMPLATES = {
   corporate:  {
@@ -99,6 +101,22 @@ export const TEMPLATES = {
     icon:      "🌾",
     component: LinenSage,
     bestFor:   [],
+  },
+  cybermed: {
+    id:        "cybermed",
+    name:      "Sleek Cybermed",
+    desc:      "High-Tech Innovator — Obsidian & Cyan",
+    icon:      "⚡",
+    component: SleekCybermed,
+    bestFor:   ["Neurology","Laser Eye Care","Orthopedics","Sports Medicine","Oncology"],
+  },
+  playful: {
+    id:        "playful",
+    name:      "Playful Editorial",
+    desc:      "Joyful Comfort — Boutique Pediatrics",
+    icon:      "🧸",
+    component: PlayfulEditorial,
+    bestFor:   ["Pediatrics","Maternity","Child Therapy"],
   },
 };
 
@@ -341,5 +359,52 @@ export const TEMPLATE_PREVIEWS = {
       <circle cx="20" cy="58" r="10" fill="#ffffff" stroke="#e2e2d3" stroke-width="0.5"/>
       <circle cx="60" cy="58" r="10" fill="#ffffff" stroke="#e2e2d3" stroke-width="0.5"/>
       <circle cx="100" cy="58" r="10" fill="#ffffff" stroke="#e2e2d3" stroke-width="0.5"/>
+    </svg>`,
+
+  cybermed: `
+    <svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;border-radius:6px;">
+      <rect width="120" height="80" fill="#0B0F19"/>
+      <rect x="0" y="0" width="120" height="9" fill="rgba(0,229,255,0.05)"/>
+      <rect x="6" y="3" width="16" height="3" rx="1" fill="#E6EEF5"/>
+      <circle cx="90" cy="4.5" r="2" fill="#00E5FF"/>
+      <rect x="96" y="3" width="18" height="3" rx="1" fill="#00E5FF"/>
+      <rect x="8" y="16" width="44" height="5" rx="1" fill="#ffffff"/>
+      <rect x="8" y="23" width="32" height="3" rx="1" fill="#8A97AC"/>
+      <rect x="8" y="30" width="20" height="6" rx="3" fill="#00E5FF"/>
+      <rect x="68" y="12" width="46" height="30" rx="8" fill="#1E293B" stroke="#00E5FF" stroke-width="0.4"/>
+      <circle cx="100" cy="18" r="16" fill="#00E5FF" opacity="0.12"/>
+      <rect x="6"  y="48" width="26" height="16" rx="3" fill="#1E293B"/>
+      <rect x="36" y="48" width="26" height="16" rx="3" fill="#1E293B"/>
+      <rect x="66" y="48" width="26" height="16" rx="3" fill="#1E293B"/>
+      <rect x="96" y="48" width="18" height="16" rx="3" fill="#1E293B"/>
+      <circle cx="12" cy="53" r="1.6" fill="#00E5FF"/>
+      <circle cx="42" cy="53" r="1.6" fill="#00E5FF"/>
+      <circle cx="72" cy="53" r="1.6" fill="#00E5FF"/>
+      <line x1="10" y1="70" x2="10" y2="78" stroke="#00E5FF" stroke-width="0.6"/>
+      <circle cx="10" cy="70" r="2" fill="#0B0F19" stroke="#00E5FF" stroke-width="1"/>
+      <rect x="16" y="68" width="40" height="3" rx="1" fill="#E6EEF5"/>
+      <line x1="10" y1="70" x2="10" y2="78" stroke="#00E5FF" stroke-width="0.6" transform="translate(0,0)"/>
+    </svg>`,
+
+  playful: `
+    <svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;border-radius:6px;">
+      <rect width="120" height="80" fill="#F9F6F0"/>
+      <circle cx="106" cy="6" r="20" fill="#F2A38A" opacity="0.35"/>
+      <circle cx="4" cy="72" r="16" fill="#7BA7C2" opacity="0.25"/>
+      <rect x="0" y="0" width="120" height="9" fill="#F9F6F0"/>
+      <rect x="6" y="2.5" width="6" height="6" rx="2" fill="#E76F51"/>
+      <rect x="14" y="3" width="18" height="3" rx="1.5" fill="#3A2E28"/>
+      <rect x="92" y="2" width="22" height="5" rx="8" fill="#E76F51"/>
+      <rect x="8" y="18" width="42" height="6" rx="2" fill="#3A2E28"/>
+      <rect x="8" y="27" width="30" height="3" rx="1.5" fill="#8A7E74"/>
+      <rect x="8" y="35" width="24" height="7" rx="10" fill="#E76F51"/>
+      <rect x="64" y="14" width="50" height="30" rx="16" fill="#ffffff" stroke="#EFE4D8" stroke-width="0.6"/>
+      <rect x="6"  y="48" width="26" height="18" rx="10" fill="#ffffff" stroke="#EFE4D8" stroke-width="0.5"/>
+      <rect x="36" y="48" width="26" height="18" rx="10" fill="#ffffff" stroke="#EFE4D8" stroke-width="0.5"/>
+      <rect x="66" y="48" width="26" height="18" rx="10" fill="#ffffff" stroke="#EFE4D8" stroke-width="0.5"/>
+      <rect x="96" y="48" width="18" height="18" rx="10" fill="#ffffff" stroke="#EFE4D8" stroke-width="0.5"/>
+      <circle cx="19" cy="56" r="3" fill="#457B9D"/>
+      <circle cx="49" cy="56" r="3" fill="#E76F51"/>
+      <circle cx="79" cy="56" r="3" fill="#457B9D"/>
     </svg>`,
 };
