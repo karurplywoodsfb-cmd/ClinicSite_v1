@@ -425,7 +425,6 @@ export default function ClinicSite({ slug }) {
         media={media}
         hours={hours}
         branches={branches}
-        onBookClick={() => setShowBook && setShowBook(true)}
       />
     </>
   );
