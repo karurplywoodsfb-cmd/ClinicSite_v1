@@ -16,23 +16,24 @@ export type PermissionKey =
   | "manage_calendar"       // book/reschedule/cancel appointments across all doctors
   | "manage_own_calendar"   // doctor managing only their own slots
   | "manage_queue"          // receptionist queue actions (call next/skip/snooze)
-  | "view_medical_records"  // EMR/prescriptions (Phase 4) — doctor + owner only
+  | "view_medical_records"  // EMR/prescriptions — doctor + owner only
+  | "manage_billing"        // create/send OPD invoices — not doctor (billing isn't clinical)
   | "manage_clinic_settings"// banner, domain, theme, plan/billing
   | "view_all_doctors";     // see every doctor's calendar, not just one's own
 
 const MATRIX: Record<Role, PermissionKey[]> = {
   owner: [
     "view_financials", "manage_staff", "manage_calendar", "manage_own_calendar",
-    "manage_queue", "view_medical_records", "manage_clinic_settings", "view_all_doctors",
+    "manage_queue", "view_medical_records", "manage_billing", "manage_clinic_settings", "view_all_doctors",
   ],
   doctor: [
     "manage_own_calendar", "view_medical_records",
   ],
   receptionist: [
-    "manage_calendar", "manage_queue", "view_all_doctors",
+    "manage_calendar", "manage_queue", "manage_billing", "view_all_doctors",
   ],
   accountant: [
-    "view_financials",
+    "view_financials", "manage_billing",
   ],
 };
 

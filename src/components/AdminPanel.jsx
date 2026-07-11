@@ -29,6 +29,9 @@ import BannerControl   from "./admin/BannerControl";
 import FeedbackInbox   from "./admin/FeedbackInbox";
 import ReceptionistDashboard from "./admin/ReceptionistDashboard";
 import StaffManagement       from "./admin/StaffManagement";
+import PrescriptionPad       from "./admin/PrescriptionPad";
+import CrossClinicRequestPanel from "./admin/CrossClinicRequestPanel";
+import BillingForm           from "./admin/BillingForm";
 import { useRoleContext }    from "./RoleProvider";
 import { PermissionGate }    from "./PermissionGate";
 import AIBlogGenerator from "./AIBlogGenerator";
@@ -118,6 +121,9 @@ const NAV_ITEMS = [
   { id:"compliance",   label:"Compliance",     icon:"⚖️"  },
   { id:"preview",      label:"Preview Site",   icon:"👁️"  },
   { id:"domain",       label:"Domain",         icon:"🌐" },
+  { id:"prescriptions", label:"Prescriptions",   icon:"📋" },
+  { id:"billing",      label:"Billing",         icon:"🧾" },
+  { id:"health-share",  label:"Cross-Clinic History", icon:"🔗" },
   { id:"staff",        label:"Staff",          icon:"👥" },
 ];
 
@@ -138,12 +144,15 @@ const NAV_PERMISSIONS = {
   compliance:   ["manage_clinic_settings"],
   domain:       ["manage_clinic_settings"],
   staff:        ["manage_staff"],
+  prescriptions:["view_medical_records"],
+  "health-share": ["view_medical_records"],
+  billing:      ["manage_billing"],
 };
 
 // ── Main component ────────────────────────────────────────────────
 export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, onLogout }) {
   const planContext = usePlanContext(); // PlanEnforcementProvider is guaranteed by App.jsx's AdminRoute
-  const { hasPermission, role } = useRoleContext();
+  const { hasPermission, role, doctorId } = useRoleContext();
 
   const [page,        setPage]        = useState("dashboard");
   const [clinic,      setClinic]      = useState(initClinic);
@@ -1386,6 +1395,27 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                 </div>
               </div>
             </div>
+          )}
+
+          {/* ═══ PRESCRIPTIONS (Phase 4: EMR) ═══ */}
+          {page === "prescriptions" && (
+            <PermissionGate permission="view_medical_records">
+              <PrescriptionPad clinicId={clinic.id} doctorId={doctorId} lockedToDoctor={role === "doctor"} />
+            </PermissionGate>
+          )}
+
+          {/* ═══ BILLING (Phase 4: OPD invoicing) ═══ */}
+          {page === "billing" && (
+            <PermissionGate permission="manage_billing">
+              <BillingForm clinicId={clinic.id} />
+            </PermissionGate>
+          )}
+
+          {/* ═══ CROSS-CLINIC HISTORY (Phase 5: Health Locker) ═══ */}
+          {page === "health-share" && (
+            <PermissionGate permission="view_medical_records">
+              <CrossClinicRequestPanel clinicId={clinic.id} />
+            </PermissionGate>
           )}
 
           {/* ═══ STAFF (Phase 3: RBAC) ═══ */}

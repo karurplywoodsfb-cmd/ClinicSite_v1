@@ -72,9 +72,9 @@ export default function PlayfulEditorial({ clinic, services = [], doctors = [], 
 
       {/* Navbar */}
       <nav style={{
-        position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
-        background: scrolled ? "rgba(249,246,240,0.95)" : "transparent",
-        backdropFilter: scrolled ? "blur(14px)" : "none",
+        position: "sticky", top: 0, left: 0, right: 0, zIndex: 100,
+        background: scrolled ? "rgba(249,246,240,0.95)" : "rgba(249,246,240,0.7)",
+        backdropFilter: "blur(14px)",
         borderBottom: scrolled ? `1px solid ${C.border}` : "1px solid transparent",
         transition: "all .3s", padding: "0 24px", height: 68,
         display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -106,7 +106,7 @@ export default function PlayfulEditorial({ clinic, services = [], doctors = [], 
       </nav>
 
       {/* Hero */}
-      <section style={{ minHeight: "92vh", paddingTop: 68, display: "flex", alignItems: "center", padding: "80px 24px", position: "relative", overflow: "hidden" }}>
+      <section style={{ minHeight: "88vh", display: "flex", alignItems: "center", padding: "80px 24px", position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", top: -80, right: -80, width: 340, height: 340, borderRadius: "50%", background: C.coralLight, opacity: .25 }} />
         <div style={{ position: "absolute", bottom: -100, left: -60, width: 260, height: 260, borderRadius: "50%", background: C.blueLight, opacity: .18 }} />
         <div style={{ width: "100%", display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: 70, alignItems: "center", position: "relative" }}>

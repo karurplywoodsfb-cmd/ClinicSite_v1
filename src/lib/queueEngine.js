@@ -5,6 +5,13 @@
 /**
  * Rolling average consult length, based on the last N completed tokens.
  * Falls back to the clinic's configured default if there isn't enough history.
+ *
+ * CANONICAL DEFINITION: this mirrors the `rolling_avg_minutes()` SQL function
+ * (migration 0005) which the queue-travel-check edge function calls via RPC.
+ * This JS copy exists ONLY so the receptionist dashboard can show an instant
+ * estimate without a network round-trip on every render. If you change the
+ * averaging logic, update the SQL function first — that's the source of truth.
+ *
  * @param {Array}  recentDoneTokens — tokens with status 'done', called_at, done_at
  * @param {number} fallbackMinutes — clinic.avg_appt_minutes_default
  * @param {number} sampleSize      — how many recent tokens to average (default 10)

@@ -737,6 +737,281 @@ export async function addDoctor(clinicId, doctor) {
   return data;
 }
 
+// ═══════════════════════════════════════════════════
+// EMR — PATIENTS & PRESCRIPTIONS (Phase 4)
+// ═══════════════════════════════════════════════════
+
+// Finds-or-creates a patient record keyed by (clinic_id, phone), so repeat
+// visits always link to the same case history.
+export async function findOrCreatePatient(clinicId, { name, phone }) {
+  const { data: existing, error: findErr } = await supabase
+    .from("patients")
+    .select("*")
+    .eq("clinic_id", clinicId)
+    .eq("phone", phone)
+    .maybeSingle();
+  if (findErr) throw findErr;
+  if (existing) return existing;
+
+  const { data, error } = await supabase
+    .from("patients")
+    .insert({ clinic_id: clinicId, name, phone })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function searchPatients(clinicId, query) {
+  const { data, error } = await supabase
+    .from("patients")
+    .select("*")
+    .eq("clinic_id", clinicId)
+    .or(`name.ilike.%${query}%,phone.ilike.%${query}%`)
+    .limit(10);
+  if (error) throw error;
+  return data || [];
+}
+
+export async function updatePatient(patientId, updates) {
+  const { data, error } = await supabase
+    .from("patients")
+    .update(updates)
+    .eq("id", patientId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// Drug name lookup — convenience autocomplete only, never dosage guidance.
+export async function searchDrugMaster(clinicId, query) {
+  const { data, error } = await supabase
+    .from("drug_master")
+    .select("*")
+    .or(`clinic_id.is.null,clinic_id.eq.${clinicId}`)
+    .ilike("name", `%${query}%`)
+    .limit(15);
+  if (error) throw error;
+  return data || [];
+}
+
+export async function addCustomDrug(clinicId, { name, commonForm }) {
+  const { data, error } = await supabase
+    .from("drug_master")
+    .insert({ clinic_id: clinicId, name, common_form: commonForm || null })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// The full case history timeline for a patient — every past prescription.
+export async function getPatientHistory(patientId) {
+  const { data, error } = await supabase
+    .from("prescriptions")
+    .select("*, prescription_items(*), doctors(name)")
+    .eq("patient_id", patientId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function createPrescription(clinicId, { doctorId, patientId, appointmentId, diagnosis, notes, items }) {
+  const { data: rx, error } = await supabase
+    .from("prescriptions")
+    .insert({
+      clinic_id: clinicId, doctor_id: doctorId, patient_id: patientId,
+      appointment_id: appointmentId || null, diagnosis: diagnosis || null, notes: notes || null,
+    })
+    .select()
+    .single();
+  if (error) throw error;
+
+  if (items?.length) {
+    const rows = items.map((it, i) => ({
+      prescription_id: rx.id,
+      drug_name: it.drugName,
+      strength: it.strength || null,
+      dosage_instructions: it.dosageInstructions,
+      quantity: it.quantity || null,
+      sort_order: i,
+    }));
+    const { error: itemsErr } = await supabase.from("prescription_items").insert(rows);
+    if (itemsErr) throw itemsErr;
+  }
+  return rx;
+}
+
+// Calls the shared PDF+WhatsApp edge function (see supabase/functions/generate-document).
+async function sendDocument(type, id) {
+  const { data: { session } } = await supabase.auth.getSession();
+  const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-document`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}` },
+    body: JSON.stringify({ type, id }),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error || "Could not generate/send document.");
+  return json;
+}
+
+export const sendPrescription = (prescriptionId) => sendDocument("prescription", prescriptionId);
+export const sendInvoice      = (invoiceId)      => sendDocument("invoice", invoiceId);
+
+// ═══════════════════════════════════════════════════
+// OPD BILLING (Phase 4)
+// ═══════════════════════════════════════════════════
+
+export async function createInvoice(clinicId, { patientId, appointmentId, items, discount = 0, taxPercent = 0, paymentMode }) {
+  const subtotal = items.reduce((sum, it) => sum + Number(it.amount || 0), 0);
+  const tax      = Math.round((subtotal - discount) * (taxPercent / 100) * 100) / 100;
+  const total    = Math.round((subtotal - discount + tax) * 100) / 100;
+
+  const { data: numData, error: numErr } = await supabase.rpc("next_invoice_number", { p_clinic_id: clinicId });
+  if (numErr) throw numErr;
+
+  const { data: invoice, error } = await supabase
+    .from("invoices")
+    .insert({
+      clinic_id: clinicId, patient_id: patientId || null, appointment_id: appointmentId || null,
+      invoice_number: numData, subtotal, discount, tax, total,
+      payment_mode: paymentMode || null, payment_status: "unpaid",
+    })
+    .select()
+    .single();
+  if (error) throw error;
+
+  const rows = items.map((it, i) => ({
+    invoice_id: invoice.id, description: it.description, category: it.category || "other",
+    amount: it.amount, sort_order: i,
+  }));
+  const { error: itemsErr } = await supabase.from("invoice_items").insert(rows);
+  if (itemsErr) throw itemsErr;
+
+  return invoice;
+}
+
+export async function markInvoicePaid(invoiceId, paymentMode) {
+  const { data, error } = await supabase
+    .from("invoices")
+    .update({ payment_status: "paid", payment_mode: paymentMode })
+    .eq("id", invoiceId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function getInvoices(clinicId, dateFrom = null) {
+  let q = supabase
+    .from("invoices")
+    .select("*, invoice_items(*), patients(name, phone)")
+    .eq("clinic_id", clinicId)
+    .order("created_at", { ascending: false });
+  if (dateFrom) q = q.gte("created_at", dateFrom);
+  const { data, error } = await q;
+  if (error) throw error;
+  return data || [];
+}
+
+// ═══════════════════════════════════════════════════
+// HEALTH LOCKER (Phase 5)
+// ═══════════════════════════════════════════════════
+
+export async function sendLockerOtp(phone) {
+  const { error } = await supabase.auth.signInWithOtp({ phone });
+  if (error) throw error;
+}
+
+export async function verifyLockerOtp(phone, token) {
+  const { data, error } = await supabase.auth.verifyOtp({ phone, token, type: "sms" });
+  if (error) throw error;
+  return data;
+}
+
+// Every patients row across every clinic that matches the logged-in
+// patient's own verified phone number (RLS: patients_self_locker_select).
+export async function getMyLockerRecords() {
+  const { data, error } = await supabase
+    .from("patients")
+    .select("*, clinics(name), prescriptions(*, prescription_items(*), doctors(name), clinics(name))")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getMyLockerSubscription() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data, error } = await supabase
+    .from("locker_subscriptions")
+    .select("*")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateMyEmergencyProfile({ bloodGroup, allergies, contactName, contactPhone }) {
+  const { error } = await supabase.rpc("update_my_emergency_profile", {
+    p_blood_group: bloodGroup || null,
+    p_allergies: allergies || null,
+    p_contact_name: contactName || null,
+    p_contact_phone: contactPhone || null,
+  });
+  if (error) throw error;
+}
+
+// Public — no auth required, works off the unguessable emergency_token alone.
+export async function getEmergencyProfile(token) {
+  const { data, error } = await supabase
+    .from("emergency_profile_view")
+    .select("*")
+    .eq("emergency_token", token)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+// ── Cross-clinic sharing (staff-facing side) ──────────────────────────
+export async function requestHealthShare(clinicId, patientPhone) {
+  const { data: { session } } = await supabase.auth.getSession();
+  const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/request-health-share`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}` },
+    body: JSON.stringify({ clinicId, patientPhone }),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error || "Could not request access.");
+  return json.data;
+}
+
+export async function verifyHealthShare(requestId, otp) {
+  const { data: { session } } = await supabase.auth.getSession();
+  const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-health-share`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}` },
+    body: JSON.stringify({ requestId, otp }),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error || "Could not verify code.");
+  return json.data;
+}
+
+// Once granted, this reads the SAME patients/prescriptions tables — the
+// RLS grant policies (migration 0006) transparently widen what's visible,
+// no separate "shared records" endpoint needed.
+export async function getSharedPatientHistory(patientPhone, currentClinicId) {
+  const { data, error } = await supabase
+    .from("patients")
+    .select("*, clinics(name), prescriptions(*, prescription_items(*), doctors(name), clinics(name))")
+    .eq("phone", patientPhone)
+    .neq("clinic_id", currentClinicId);
+  if (error) throw error;
+  return data || [];
+}
+
 export function subscribeToAppointments(clinicId, callback) {
   const channel = supabase
     .channel(`appointments-${clinicId}`)

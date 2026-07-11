@@ -25,6 +25,8 @@ const BlogPageComponent  = lazy(() => import("./pages/BlogPage"));
 const PrivacyPolicyPage  = lazy(() => import("./pages/PrivacyPolicyPage"));
 const FeedbackPage       = lazy(() => import("./pages/FeedbackPage"));
 const LiveQueuePage      = lazy(() => import("./pages/LiveQueuePage"));
+const HealthLockerPage   = lazy(() => import("./pages/HealthLockerPage"));
+const EmergencyProfilePage = lazy(() => import("./pages/EmergencyProfilePage"));
 const NotFound           = lazy(() => import("./pages/NotFound"));
 
 // ── Shared loader shown during lazy chunk download ────────────────
@@ -210,6 +212,16 @@ function LiveRoute() {
   );
 }
 
+// ── EmergencyRoute: public emergency QR profile, no auth ──────────
+function EmergencyRoute() {
+  const { token } = useParams();
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <EmergencyProfilePage token={token} />
+    </Suspense>
+  );
+}
+
 // ── Custom domain renderer ────────────────────────────────────────
 function CustomDomainSite({ clinicSlug }) {
   if (!clinicSlug) {
@@ -252,6 +264,10 @@ export default function App() {
             {/* ── Public ── */}
             <Route path="/"      element={<LandingPage />} />
             <Route path="/login" element={<LoginRoute />} />
+            <Route path="/myhealth" element={
+              <Suspense fallback={<PageLoader />}><HealthLockerPage /></Suspense>
+            } />
+            <Route path="/emergency/:token" element={<EmergencyRoute />} />
 
             {/* ── Clinic patient pages (public, no auth) ── */}
             <Route path="/:slug"                element={<ClinicSiteRoute />} />

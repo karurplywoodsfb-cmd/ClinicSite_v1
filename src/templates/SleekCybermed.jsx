@@ -52,10 +52,10 @@ export default function SleekCybermed({ clinic, services = [], doctors = [], med
   };
 
   const journey = [
-    { t: "Consult",   d: "Diagnostic review with your specialist" },
-    { t: "Plan",      d: "Personalized treatment protocol built" },
-    { t: "Procedure", d: "Performed with advanced clinical tech" },
-    { t: "Recovery",  d: "Guided follow-up until you're fully well" },
+    { t: "01 · Consult",   d: "Diagnostic review with your specialist" },
+    { t: "02 · Plan",      d: "Personalized treatment protocol built" },
+    { t: "03 · Procedure", d: "Performed with advanced clinical tech" },
+    { t: "04 · Recovery",  d: "Guided follow-up until you're fully well" },
   ];
 
   return (
@@ -77,9 +77,9 @@ export default function SleekCybermed({ clinic, services = [], doctors = [], med
 
       {/* Navbar */}
       <nav style={{
-        position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
-        background: scrolled ? "rgba(11,15,25,0.92)" : "transparent",
-        backdropFilter: scrolled ? "blur(16px)" : "none",
+        position: "sticky", top: 0, left: 0, right: 0, zIndex: 100,
+        background: scrolled ? "rgba(11,15,25,0.92)" : "rgba(11,15,25,0.55)",
+        backdropFilter: "blur(16px)",
         borderBottom: scrolled ? `1px solid ${C.border}` : "1px solid transparent",
         transition: "all .3s", padding: "0 24px", height: 66,
         display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -118,7 +118,7 @@ export default function SleekCybermed({ clinic, services = [], doctors = [], med
 
       {/* Hero */}
       <section style={{
-        minHeight: "100vh", paddingTop: 66,
+        minHeight: "92vh",
         background: `radial-gradient(ellipse 55% 60% at 82% 30%, rgba(0,229,255,0.10), transparent),
                      radial-gradient(ellipse 45% 55% at 15% 85%, rgba(0,229,255,0.05), transparent), ${C.bg}`,
         display: "flex", alignItems: "center", padding: "80px 24px",
@@ -133,7 +133,7 @@ export default function SleekCybermed({ clinic, services = [], doctors = [], med
               {clinic.specialty} · {clinic.city}
             </div>
             <h1 style={{ fontFamily: "'Syne',sans-serif", fontSize: "clamp(36px,4.5vw,58px)",
-              fontWeight: 800, color: C.white, lineHeight: 1.08, marginBottom: 24 }}>
+              fontWeight: 800, color: C.white, lineHeight: 1.05, letterSpacing: "-0.03em", marginBottom: 24 }}>
               {clinic.heroTagline || (<>Precision Care.<br /><span style={{ color: C.cyan, textShadow: `0 0 24px ${C.cyanDim}` }}>Advanced Technology.</span></>)}
             </h1>
             <p style={{ fontSize: 16, color: C.muted, lineHeight: 1.7, marginBottom: 36, maxWidth: 460 }}>
@@ -167,31 +167,67 @@ export default function SleekCybermed({ clinic, services = [], doctors = [], med
         </div>
       </section>
 
-      {/* Services — glow-infused bento grid */}
+      {/* Services — true asymmetric bento grid: first card is a 2x2 feature,
+          every 5th card is a 2x1 wide highlight, the rest are compact tiles */}
       {activeServices.length > 0 && (
         <Section archetypeId={ARCHETYPE} id="services" background={C.bg}>
           <Reveal>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2.5, textTransform: "uppercase", color: C.cyan, marginBottom: 10 }}>Services</div>
-            <h2 style={{ fontFamily: "'Syne',sans-serif", fontSize: "clamp(26px,3vw,38px)", fontWeight: 800, color: C.white, marginBottom: 48 }}>Clinical Capabilities</h2>
+            <h2 style={{ fontFamily: "'Syne',sans-serif", fontSize: "clamp(26px,3vw,38px)", fontWeight: 800, color: C.white, letterSpacing: "-0.02em", marginBottom: 48 }}>Clinical Capabilities</h2>
           </Reveal>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))", gap: 18 }}>
-            {activeServices.map((svc, i) => (
-              <Reveal key={svc.id || i} delay={i * 0.05}>
-                <div className="cybermed-bento" style={{ background: C.slate, borderRadius: 14, padding: "26px 22px",
-                  border: `1px solid ${C.border}`, position: "relative", overflow: "hidden", transition: "all .25s" }}>
-                  <div className="cybermed-glow" style={{ position: "absolute", top: -40, right: -40, width: 140, height: 140,
-                    borderRadius: "50%", background: C.cyan, filter: "blur(50px)", opacity: 0, transition: "opacity .3s" }} />
-                  <div style={{ fontSize: 26, marginBottom: 14, position: "relative" }}>{svc.icon || "⚡"}</div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: C.white, marginBottom: 6, position: "relative" }}>{svc.name}</div>
-                  {svc.description && <div style={{ fontSize: 12.5, color: C.muted, lineHeight: 1.55, position: "relative" }}>{svc.description}</div>}
-                  {svc.price && !svc.hide_price && <div style={{ fontSize: 12, fontWeight: 700, color: C.cyan, marginTop: 12, position: "relative" }}>Fee: {svc.price}</div>}
-                </div>
-              </Reveal>
-            ))}
+          <div className="cybermed-bento-grid">
+            {activeServices.map((svc, i) => {
+              const isFeature = i === 0;
+              const isWide = !isFeature && i % 5 === 4;
+              return (
+                <Reveal key={svc.id || i} delay={i * 0.05}>
+                  <div className={`cybermed-bento ${isFeature ? "cybermed-bento-feature" : isWide ? "cybermed-bento-wide" : ""}`}
+                    style={{ background: isWide ? C.slateLight : C.slate, borderRadius: 16,
+                      padding: isFeature ? 32 : isWide ? "24px 28px" : "24px 22px",
+                      border: `1px solid ${isWide ? "rgba(0,229,255,0.14)" : "rgba(148,163,184,0.12)"}`,
+                      position: "relative", overflow: "hidden",
+                      display: isWide ? "flex" : "block", alignItems: isWide ? "center" : undefined, gap: isWide ? 18 : undefined }}>
+                    {isFeature && (
+                      <div style={{ position: "absolute", width: 220, height: 220, top: -60, right: -60, borderRadius: "50%",
+                        background: "radial-gradient(circle, rgba(0,229,255,0.09) 0%, transparent 70%)" }} />
+                    )}
+                    {isWide && (
+                      <div style={{ width: 46, height: 46, borderRadius: "50%", background: "rgba(0,229,255,0.1)",
+                        display: "flex", alignItems: "center", justifyContent: "center", fontSize: 19, flexShrink: 0, position: "relative" }}>
+                        {svc.icon || "◉"}
+                      </div>
+                    )}
+                    {!isWide && <div style={{ fontSize: isFeature ? 30 : 22, marginBottom: isFeature ? 18 : 12, position: "relative" }}>{svc.icon || "⚡"}</div>}
+                    <div style={{ position: "relative", minWidth: 0 }}>
+                      <div style={{ fontSize: isFeature ? 16 : 14, fontWeight: 700, color: isWide ? C.white : C.cyan, marginBottom: isFeature ? 10 : 5 }}>{svc.name}</div>
+                      {svc.description && <div style={{ fontSize: isFeature ? 13.5 : 12.5, color: C.muted, lineHeight: 1.6 }}>{svc.description}</div>}
+                      {svc.price && !svc.hide_price && <div style={{ fontSize: 12, fontWeight: 700, color: C.cyan, marginTop: 10 }}>Fee: {svc.price}</div>}
+                    </div>
+                    {isFeature && (
+                      <div style={{ position: "absolute", bottom: 24, right: 24, width: 38, height: 38, borderRadius: 8,
+                        border: "1px solid rgba(0,229,255,0.25)", display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 15, color: C.cyan }}>→</div>
+                    )}
+                  </div>
+                </Reveal>
+              );
+            })}
           </div>
           <style>{`
-            .cybermed-bento:hover { border-color: ${C.cyan}; transform: translateY(-4px); }
-            .cybermed-bento:hover .cybermed-glow { opacity: .22; }
+            .cybermed-bento-grid { display:grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 168px; gap: 16px; }
+            .cybermed-bento-feature { grid-column: span 2; grid-row: span 2; }
+            .cybermed-bento-wide { grid-column: span 2; }
+            .cybermed-bento { transition: border-color .3s, box-shadow .3s, transform .3s; height: 100%; box-sizing: border-box; }
+            .cybermed-bento:hover { border-color: rgba(0,229,255,0.35) !important; box-shadow: 0 0 40px rgba(0,229,255,0.08), 0 12px 32px rgba(0,229,255,0.06); transform: translateY(-2px); }
+            @media (max-width: 900px) {
+              .cybermed-bento-grid { grid-template-columns: repeat(2, 1fr); grid-auto-rows: auto; }
+              .cybermed-bento-feature { grid-column: span 2; grid-row: span 1; }
+              .cybermed-bento-wide { grid-column: span 2; }
+            }
+            @media (max-width: 520px) {
+              .cybermed-bento-grid { grid-template-columns: 1fr; }
+              .cybermed-bento-feature, .cybermed-bento-wide { grid-column: span 1; }
+            }
           `}</style>
         </Section>
       )}
@@ -200,7 +236,7 @@ export default function SleekCybermed({ clinic, services = [], doctors = [], med
       <Section archetypeId={ARCHETYPE} id="journey" background={C.slate}>
         <Reveal>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2.5, textTransform: "uppercase", color: C.cyan, marginBottom: 10 }}>The Process</div>
-          <h2 style={{ fontFamily: "'Syne',sans-serif", fontSize: "clamp(26px,3vw,36px)", fontWeight: 800, color: C.white, marginBottom: 56 }}>Your Patient Journey</h2>
+          <h2 style={{ fontFamily: "'Syne',sans-serif", fontSize: "clamp(26px,3vw,36px)", fontWeight: 800, color: C.white, letterSpacing: "-0.02em", marginBottom: 56 }}>Your Patient Journey</h2>
         </Reveal>
         <div style={{ position: "relative", maxWidth: 760, margin: "0 auto" }}>
           <div style={{ position: "absolute", left: 11, top: 6, bottom: 6, width: 1, background: `linear-gradient(180deg, ${C.cyan}, transparent)` }} />
@@ -233,7 +269,7 @@ export default function SleekCybermed({ clinic, services = [], doctors = [], med
             </Reveal>
             <Reveal delay={0.15}>
               <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2.5, textTransform: "uppercase", color: C.cyan, marginBottom: 10 }}>Your Specialist</div>
-              <h2 style={{ fontFamily: "'Syne',sans-serif", fontSize: 36, fontWeight: 800, color: C.white, marginBottom: 6 }}>{doctor.name}</h2>
+              <h2 style={{ fontFamily: "'Syne',sans-serif", fontSize: 36, fontWeight: 800, color: C.white, letterSpacing: "-0.02em", marginBottom: 6 }}>{doctor.name}</h2>
               <div style={{ color: C.cyan, fontWeight: 600, fontSize: 15, marginBottom: 6 }}>{doctor.degree}</div>
               {doctor.reg_number && <div style={{ fontSize: 11, color: C.muted, marginBottom: 20, fontFamily: "monospace" }}>Reg No: {doctor.reg_number}{doctor.council_name ? ` — ${doctor.council_name}` : ""}</div>}
               {doctor.bio && <p style={{ color: C.muted, lineHeight: 1.8, fontSize: 15, marginBottom: 28 }}>{doctor.bio}</p>}
@@ -254,7 +290,7 @@ export default function SleekCybermed({ clinic, services = [], doctors = [], med
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 60 }}>
           <Reveal>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2.5, textTransform: "uppercase", color: C.cyan, marginBottom: 10 }}>Find Us</div>
-            <h2 style={{ fontFamily: "'Syne',sans-serif", fontSize: 34, fontWeight: 800, color: C.white, marginBottom: 32 }}>Visit {clinic.name}</h2>
+            <h2 style={{ fontFamily: "'Syne',sans-serif", fontSize: 34, fontWeight: 800, color: C.white, letterSpacing: "-0.02em", marginBottom: 32 }}>Visit {clinic.name}</h2>
             {[["📍", "Address", clinic.address || `${clinic.city}, Tamil Nadu`], ["📞", "Phone", clinic.phone], ["✉️", "Email", clinic.email]]
               .filter(([, , v]) => v).map(([icon, label, value]) => (
                 <div key={label} style={{ display: "flex", gap: 16, marginBottom: 20, alignItems: "flex-start" }}>

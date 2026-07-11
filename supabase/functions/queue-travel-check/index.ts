@@ -34,17 +34,17 @@ async function sendWhatsApp(phone: string, message: string) {
   });
 }
 
-// Mirrors src/lib/queueEngine.js — kept in sync manually since edge functions
-// can't import from src/. If you change the rolling-average logic there,
-// update it here too.
-function rollingAvg(doneTokens: any[], fallback: number, sampleSize = 10) {
-  const durations = doneTokens
-    .filter(t => t.called_at && t.done_at)
-    .slice(-sampleSize)
-    .map(t => (new Date(t.done_at).getTime() - new Date(t.called_at).getTime()) / 60000)
-    .filter(m => m > 0 && m < 120);
-  if (durations.length < 3) return fallback;
-  return Math.round(durations.reduce((a, b) => a + b, 0) / durations.length);
+// Rolling-average is now computed in the database (see migration 0005's
+// rolling_avg_minutes() function) — this is the single source of truth.
+// Previously this file had its own JS reimplementation of queueEngine.js's
+// getRollingAvgMinutes, with a comment saying "keep in sync manually."
+// That's exactly the kind of duplication that silently drifts — removed.
+async function rollingAvg(clinicId: string, fallback: number) {
+  const { data, error } = await supabase.rpc("rolling_avg_minutes", {
+    p_clinic_id: clinicId, p_fallback: fallback, p_sample_size: 10,
+  });
+  if (error) { console.error("rolling_avg_minutes RPC failed:", error.message); return fallback; }
+  return data ?? fallback;
 }
 
 serve(async (_req) => {
@@ -72,15 +72,7 @@ serve(async (_req) => {
       const pending = waiting.filter(t => t.travel_minutes && !t.travel_alert_sent);
       if (!pending.length) continue;
 
-      const { data: doneTokens } = await supabase
-        .from("queue_tokens")
-        .select("called_at, done_at")
-        .eq("clinic_id", clinic.id)
-        .eq("status", "done")
-        .order("done_at", { ascending: false })
-        .limit(15);
-
-      const avgMinutes = rollingAvg(doneTokens || [], clinic.avg_appt_minutes_default || 15);
+      const avgMinutes = await rollingAvg(clinic.id, clinic.avg_appt_minutes_default || 15);
 
       for (const token of pending) {
         const ahead = waiting.filter(t => t.position < token.position).length;
