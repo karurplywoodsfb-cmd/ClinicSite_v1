@@ -1,10 +1,12 @@
 // src/components/admin/ServicesPage.jsx
 // AdminPanel "Services" tab. Extracted from AdminPanel.jsx.
+// Image upload added: each service can have a photo (image_url column),
+// shown as a small thumbnail replacing the emoji icon once uploaded.
 
 import { Toggle, SaveBtn } from "./ui";
-import { updateService } from "../../lib/supabase";
+import { supabase, updateService } from "../../lib/supabase";
 
-export default function ServicesPage({ services, setServices, planContext, onRequestUpgrade, saved, saving, setSaved, doSave }) {
+export default function ServicesPage({ clinic, services, setServices, planContext, onRequestUpgrade, saved, saving, setSaved, doSave }) {
   const limit   = planContext.limits?.features?.services ?? 5;
   const count   = services.filter(s => s.is_active !== false).length;
   const atLimit = count >= limit;
@@ -18,6 +20,30 @@ export default function ServicesPage({ services, setServices, planContext, onReq
       )
     ).then(() => { setSaved(true); setTimeout(()=>setSaved(false),2000); })
     .catch(e => alert("Save failed: " + e.message));
+  };
+
+  const uploadServiceImage = async (svc, file) => {
+    if (!file || !clinic?.id) return;
+    try {
+      const ext  = file.name.split(".").pop();
+      const path = `${clinic.id}/services/${svc.id}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("clinic-media")
+        .upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: { publicUrl } } = supabase.storage
+        .from("clinic-media")
+        .getPublicUrl(path);
+      if (typeof svc.id === "string" && svc.id.length > 8)
+        await updateService(svc.id, { image_url: publicUrl });
+      setServices(p => p.map(s => s.id === svc.id ? { ...s, image_url: publicUrl } : s));
+    } catch (e) { alert("Image upload failed: " + e.message); }
+  };
+
+  const removeServiceImage = async (svc) => {
+    if (typeof svc.id === "string" && svc.id.length > 8)
+      await updateService(svc.id, { image_url: null }).catch(console.error);
+    setServices(p => p.map(s => s.id === svc.id ? { ...s, image_url: null } : s));
   };
 
   return (
@@ -43,7 +69,26 @@ export default function ServicesPage({ services, setServices, planContext, onReq
             transition:"opacity .2s",
           }}>
             <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:12 }}>
-              <span style={{ fontSize:24 }}>{svc.icon || "🏥"}</span>
+              <div style={{ position:"relative", flexShrink:0 }}>
+                <input type="file" accept="image/*" id={`svc-img-${svc.id}`} style={{ display:"none" }}
+                  onChange={e => uploadServiceImage(svc, e.target.files?.[0])}/>
+                <label htmlFor={`svc-img-${svc.id}`} style={{
+                  width:40, height:40, borderRadius:8, cursor:"pointer",
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                  background: svc.image_url ? "transparent" : "rgba(255,255,255,0.05)",
+                  border:"1px solid rgba(255,255,255,0.1)", overflow:"hidden",
+                }} title={svc.image_url ? "Click to replace photo" : "Click to add a photo"}>
+                  {svc.image_url
+                    ? <img src={svc.image_url} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
+                    : <span style={{ fontSize:20 }}>{svc.icon || "🏥"}</span>}
+                </label>
+                {svc.image_url && (
+                  <button onClick={() => removeServiceImage(svc)} title="Remove photo" style={{
+                    position:"absolute", top:-6, right:-6, width:16, height:16, borderRadius:"50%",
+                    background:"#ef4444", color:"white", border:"none", fontSize:10, lineHeight:"16px",
+                    cursor:"pointer", padding:0 }}>✕</button>
+                )}
+              </div>
               <input value={svc.name}
                 onChange={e => setServices(p => p.map(s => s.id === svc.id ? {...s, name:e.target.value} : s))}
                 style={{ background:"transparent", border:"none", color:"#e2e8f0",

@@ -370,6 +370,7 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
           {/* ═══ SERVICES ═══ */}
           {page === "services" && (
             <ServicesPage
+              clinic={clinic}
               services={services}
               setServices={setServices}
               planContext={planContext}

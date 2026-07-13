@@ -109,10 +109,13 @@ export default function EliteAesthetics({ clinic, services = [], doctors = [], m
       {/* Hero */}
       <section style={{
         minHeight:"100vh", paddingTop:66,
-        background:`radial-gradient(ellipse 60% 70% at 80% 50%, rgba(181,115,90,0.1), transparent), ${C.bg}`,
+        background: clinic.hero_image_url
+          ? `linear-gradient(rgba(253,248,245,0.88), rgba(253,248,245,0.93)), url(${clinic.hero_image_url})`
+          : `radial-gradient(ellipse 60% 70% at 80% 50%, rgba(181,115,90,0.1), transparent), ${C.bg}`,
+        backgroundSize:"cover", backgroundPosition:"center",
         display:"flex", alignItems:"center", padding:"80px 24px",
       }}>
-        <div style={{ width:"100%", display:"grid", gridTemplateColumns:"1.2fr 1fr", gap:80, alignItems:"center", width:"100%" }}>
+        <div style={{ width:"100%", display:"grid", gridTemplateColumns:"1.2fr 1fr", gap:80, alignItems:"center" }}>
           <div>
             <div style={{ display:"inline-flex", alignItems:"center", gap:8,
               background:`rgba(181,115,90,0.1)`, border:`1px solid ${C.border}`, borderRadius:4,
@@ -184,7 +187,9 @@ export default function EliteAesthetics({ clinic, services = [], doctors = [], m
                     border:`1px solid ${C.border}`, transition:"all .25s" }}
                     onMouseEnter={e=>{e.currentTarget.style.borderColor=C.accentLight; e.currentTarget.style.transform="translateY(-4px)"; e.currentTarget.style.boxShadow=`0 12px 32px rgba(181,115,90,0.15)`}}
                     onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border; e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="none"}}>
-                    <div style={{ fontSize:28, marginBottom:12 }}>{svc.icon||"✨"}</div>
+                    {svc.image_url
+                      ? <img src={svc.image_url} alt={svc.name} style={{ width:"100%", height:100, objectFit:"cover", borderRadius:10, marginBottom:12 }}/>
+                      : <div style={{ fontSize:28, marginBottom:12 }}>{svc.icon||"✨"}</div>}
                     <div style={{ fontSize:14, fontWeight:500, color:C.text, marginBottom:6 }}>{svc.name}</div>
                     {svc.description && <div style={{ fontSize:12, color:C.muted, lineHeight:1.6 }}>{svc.description}</div>}
                     {svc.price && !svc.hide_price && <div style={{ fontSize:12, fontWeight:500, color:C.accent, marginTop:10 }}>Fee: {svc.price}</div>}

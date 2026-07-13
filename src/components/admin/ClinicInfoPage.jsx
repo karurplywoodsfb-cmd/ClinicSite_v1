@@ -37,6 +37,31 @@ export default function ClinicInfoPage({
     setClinic(updated); setClinicEdit(updated); onClinicUpdate?.(updated);
   };
 
+  const handleHeroUpload = async (e) => {
+    if (!e.target.files?.[0] || !clinic?.id) return;
+    try {
+      const file = e.target.files[0];
+      const ext  = file.name.split(".").pop();
+      const path = `${clinic.id}/hero.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("clinic-media")
+        .upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: { publicUrl } } = supabase.storage
+        .from("clinic-media")
+        .getPublicUrl(path);
+      const updated = await updateClinic(clinic.id, { hero_image_url: publicUrl });
+      setClinic(updated);
+      setClinicEdit(updated);
+      onClinicUpdate?.(updated);
+    } catch (e) { alert("Hero image upload failed: " + e.message); }
+  };
+
+  const removeHeroImage = async () => {
+    const updated = await updateClinic(clinic.id, { hero_image_url: null });
+    setClinic(updated); setClinicEdit(updated); onClinicUpdate?.(updated);
+  };
+
   return (
     <div style={{ maxWidth:680 }}>
       <div style={{
@@ -80,6 +105,50 @@ export default function ClinicInfoPage({
                 marginTop:8, fontSize:11, color:"#f87171", background:"none",
                 border:"none", cursor:"pointer", padding:0,
               }}>Remove logo</button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div style={{
+        background:"rgba(255,255,255,0.02)",
+        border:"1px solid rgba(255,255,255,0.07)",
+        borderRadius:12, padding:20, marginBottom:20,
+      }}>
+        <div style={{ fontSize:11, fontFamily:"monospace", fontWeight:600,
+          color:"#64748b", letterSpacing:.5, marginBottom:14 }}>HERO BACKGROUND IMAGE</div>
+        <div style={{ display:"flex", alignItems:"center", gap:20 }}>
+          <div style={{
+            width:140, height:80, borderRadius:10, overflow:"hidden",
+            background:"rgba(255,255,255,0.04)",
+            border:"1px solid rgba(255,255,255,0.1)",
+            display:"flex", alignItems:"center", justifyContent:"center",
+            flexShrink:0,
+          }}>
+            {clinicEdit.hero_image_url
+              ? <img src={clinicEdit.hero_image_url} alt="Hero background"
+                  style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
+              : <div style={{ fontSize:22 }}>🖼️</div>
+            }
+          </div>
+          <div>
+            <input type="file" accept="image/*" id="hero-upload" style={{ display:"none" }} onChange={handleHeroUpload}/>
+            <label htmlFor="hero-upload" style={{
+              background:"rgba(255,255,255,0.05)",
+              border:"1px solid rgba(255,255,255,0.12)",
+              color:"#94a3b8", borderRadius:8, padding:"8px 16px",
+              fontSize:12, cursor:"pointer", display:"inline-block",
+            }}>
+              📷 Upload Hero Image
+            </label>
+            <div style={{ fontSize:11, color:"#334155", marginTop:6 }}>
+              Landscape photo recommended (clinic exterior, lobby, treatment room) · Max 5MB
+            </div>
+            {clinicEdit.hero_image_url && (
+              <button onClick={removeHeroImage} style={{
+                marginTop:8, fontSize:11, color:"#f87171", background:"none",
+                border:"none", cursor:"pointer", padding:0,
+              }}>Remove hero image</button>
             )}
           </div>
         </div>

@@ -124,10 +124,13 @@ export default function CorporateGiant({ clinic, services = [], doctors = [], me
       {/* ── Hero ── */}
       <section style={{
         minHeight:"100vh", paddingTop:68,
-        background:`radial-gradient(ellipse 70% 60% at 80% 50%, rgba(201,168,76,0.08), transparent), ${C.bg}`,
+        background: clinic.hero_image_url
+          ? `linear-gradient(rgba(11,25,41,0.82), rgba(11,25,41,0.9)), url(${clinic.hero_image_url})`
+          : `radial-gradient(ellipse 70% 60% at 80% 50%, rgba(201,168,76,0.08), transparent), ${C.bg}`,
+        backgroundSize:"cover", backgroundPosition:"center",
         display:"flex", alignItems:"center", padding:"80px 24px",
       }}>
-        <div style={{ width:"100%", display:"grid", gridTemplateColumns:"1.2fr 1fr", gap:80, alignItems:"center", width:"100%" }}>
+        <div style={{ width:"100%", display:"grid", gridTemplateColumns:"1.2fr 1fr", gap:80, alignItems:"center" }}>
           <div>
             <div style={{ display:"inline-flex", alignItems:"center", gap:8,
               border:`1px solid ${C.border}`, borderRadius:4, padding:"5px 14px",
@@ -214,7 +217,9 @@ export default function CorporateGiant({ clinic, services = [], doctors = [], me
                     border:`1px solid ${C.border}`, transition:"all .25s", cursor:"pointer" }}
                     onMouseEnter={e=>{e.currentTarget.style.borderColor=C.accent; e.currentTarget.style.transform="translateY(-4px)"}}
                     onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border; e.currentTarget.style.transform="none"}}>
-                    <div style={{ fontSize:28, marginBottom:12 }}>{svc.icon||"🏥"}</div>
+                    {svc.image_url
+                      ? <img src={svc.image_url} alt={svc.name} style={{ width:"100%", height:100, objectFit:"cover", borderRadius:8, marginBottom:12 }}/>
+                      : <div style={{ fontSize:28, marginBottom:12 }}>{svc.icon||"🏥"}</div>}
                     <div style={{ fontSize:14, fontWeight:600, color:C.white, marginBottom:6 }}>{svc.name}</div>
                     {svc.description && <div style={{ fontSize:12, color:C.muted, lineHeight:1.5 }}>{svc.description}</div>}
                     {svc.price && !svc.hide_price && <div style={{ fontSize:12, fontWeight:600, color:C.accent, marginTop:10 }}>Fee: {svc.price}</div>}

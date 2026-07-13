@@ -129,7 +129,9 @@ export default function Daybreak({ clinic, services = [], doctors = [], media = 
           </Reveal>
           <Reveal delay={0.15}>
             <div style={{ background:"#e3c9b5", borderRadius:24, height:340, position:"relative", overflow:"hidden" }}>
-              {doctor?.photo_url && <img src={doctor.photo_url} alt={doctor.name} style={{ width:"100%", height:"100%", objectFit:"cover" }}/>}
+              {(clinic.hero_image_url || doctor?.photo_url) &&
+                <img src={clinic.hero_image_url || doctor.photo_url} alt={clinic.hero_image_url ? clinic.name : doctor.name}
+                  style={{ width:"100%", height:"100%", objectFit:"cover" }}/>}
               <div style={{ position:"absolute", bottom:20, left:20, background:"#fff", borderRadius:14,
                 padding:"12px 16px", boxShadow:"0 8px 20px rgba(0,0,0,0.12)" }}>
                 <div style={{ fontFamily:"'Fraunces',serif", fontSize:18, color:C.accent, fontWeight:600 }}>
@@ -154,8 +156,10 @@ export default function Daybreak({ clinic, services = [], doctors = [], media = 
               {activeServices.map((svc, i) => (
                 <Reveal key={svc.id||i} delay={i*0.05}>
                   <div style={{ background:C.surface, borderRadius:16, padding:22 }}>
-                    <div style={{ width:36, height:36, borderRadius:10, background:"#fbe4d8",
-                      display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, marginBottom:14 }}>{svc.icon||"🩺"}</div>
+                    {svc.image_url
+                      ? <img src={svc.image_url} alt={svc.name} style={{ width:"100%", height:90, objectFit:"cover", borderRadius:12, marginBottom:14 }}/>
+                      : <div style={{ width:36, height:36, borderRadius:10, background:"#fbe4d8",
+                          display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, marginBottom:14 }}>{svc.icon||"🩺"}</div>}
                     <div style={{ fontSize:14, fontWeight:700, color:C.dark, marginBottom:6 }}>{svc.name}</div>
                     {svc.description && <div style={{ fontSize:12, color:C.muted, lineHeight:1.6 }}>{svc.description}</div>}
                     {svc.price && !svc.hide_price && <div style={{ fontSize:12, fontWeight:700, color:C.accent, marginTop:10 }}>Fee: {svc.price}</div>}
