@@ -165,13 +165,13 @@ export async function notifyReminders(appointments, clinic) {
 export const EMAIL_COMPLIANCE_FOOTER = (clinicOwnerId) => `
 
 ---
-You are receiving this email as a registered ClinicSite.in platform user.
+You are receiving this email as a registered WaSpace platform user.
 
 To unsubscribe from platform communications:
 • Visit: ${APP_URL}/admin/notifications
 • Or reply to this email with the word UNSUBSCRIBE
 
-${import.meta.env.VITE_SUPPORT_EMAIL || 'support@clinicsite.in'}
+${import.meta.env.VITE_SUPPORT_EMAIL || 'support@waspace.in'}
 Data processed under the Digital Personal Data Protection Act, 2023.
 `;
 
@@ -192,7 +192,7 @@ export async function sendBroadcastEmail(subject, body, supabaseClient) {
   // const resend = new Resend(process.env.RESEND_API_KEY);
   // for (const clinic of clinics) {
   //   await resend.emails.send({
-  //     from: "ClinicSite <noreply@clinicsite.in>",
+  //     from: "WaSpace <noreply@waspace.in>",
   //     to: clinic.email,
   //     subject,
   //     text: compliantBody.replace("{{clinic_id}}", clinic.id),

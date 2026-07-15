@@ -216,7 +216,7 @@ export default function ComplianceTab({ clinic, doctor, onNavigate }) {
         Telemedicine Practice Guidelines 2020 (MoH India).
         <br/>
         <span style={{ color: "#334155" }}>
-          ClinicSite.in is not a law firm. This checklist is a best-effort compliance guide.
+          WaSpace is not a law firm. This checklist is a best-effort compliance guide.
           Consult a qualified legal advisor for definitive advice specific to your practice.
         </span>
       </div>

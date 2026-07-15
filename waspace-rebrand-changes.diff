@@ -1,0 +1,1587 @@
+diff --git a/index.html b/index.html
+index cfe37f1..d52ae89 100644
+--- a/index.html
++++ b/index.html
+@@ -4,7 +4,7 @@
+     <meta charset="UTF-8" />
+     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+-    <title>ClinicSite.in — Clinic Websites for India</title>
++    <title>WaSpace — Clinic Websites for India</title>
+   </head>
+   <body>
+     <div id="root"></div>
+diff --git a/src/App.jsx b/src/App.jsx
+index 4d46f67..c6e1ddc 100644
+--- a/src/App.jsx
++++ b/src/App.jsx
+@@ -39,7 +39,7 @@ function PageLoader() {
+       <div style={{ textAlign: "center" }}>
+         <div style={{ fontSize: 40, animation: "spin 2s linear infinite" }}>🦷</div>
+         <div style={{ color: "#475569", fontSize: 14, marginTop: 12, fontFamily: "sans-serif" }}>
+-          Loading ClinicSite...
++          Loading WaSpace...
+         </div>
+         <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
+       </div>
+@@ -233,9 +233,9 @@ function CustomDomainSite({ clinicSlug }) {
+       }}>
+         <div style={{ fontSize: 40 }}>🔍</div>
+         <div style={{ color: "#64748b", fontSize: 15 }}>Clinic not found on this domain.</div>
+-        <a href="https://clinicsite.in"
++        <a href="https://waspace.in"
+           style={{ color: "#1565c0", fontSize: 13, textDecoration: "none" }}>
+-          Powered by ClinicSite.in
++          Powered by WaSpace
+         </a>
+       </div>
+     );
+diff --git a/src/Router.jsx b/src/Router.jsx
+index 866cdf3..dad0a41 100644
+--- a/src/Router.jsx
++++ b/src/Router.jsx
+@@ -19,7 +19,7 @@ function getSubdomainSlug() {
+   const h = window.location.hostname;
+   if (h.includes("localhost")) return null;
+   if (h.endsWith(".vercel.app")) return null;
+-  if (!h.endsWith(".clinicsite.in")) return null;
++  if (!h.endsWith(".waspace.in")) return null;
+   const p = h.split(".");
+   if (p.length >= 3) return p[0];
+   return null;
+@@ -97,7 +97,7 @@ function Spinner() {
+   return (
+     <div style={{ minHeight:"100vh", background:"#080c14", display:"flex", alignItems:"center", justifyContent:"center", flexDirection:"column", gap:16, fontFamily:"sans-serif" }}>
+       <div style={{ fontSize:40, animation:"spin 2s linear infinite" }}>🦷</div>
+-      <div style={{ color:"#475569", fontSize:14 }}>Loading ClinicSite...</div>
++      <div style={{ color:"#475569", fontSize:14 }}>Loading WaSpace...</div>
+       <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
+     </div>
+   );
+diff --git a/src/components/AdminPanel.jsx b/src/components/AdminPanel.jsx
+index b772ab2..0e1bbf7 100644
+--- a/src/components/AdminPanel.jsx
++++ b/src/components/AdminPanel.jsx
+@@ -234,7 +234,7 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
+             display:"flex", alignItems:"center", justifyContent:"center", fontSize:16, flexShrink:0 }}>🦷</div>
+           {sideOpen && (
+             <div style={{ overflow:"hidden" }}>
+-              <div style={{ fontSize:12, fontWeight:700, color:"#f1f5f9", whiteSpace:"nowrap" }}>ClinicSite</div>
++              <div style={{ fontSize:12, fontWeight:700, color:"#f1f5f9", whiteSpace:"nowrap" }}>WaSpace</div>
+               <div style={{ fontSize:10, color:"#475569", whiteSpace:"nowrap" }}>Admin Panel</div>
+             </div>
+           )}
+@@ -302,7 +302,7 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
+               {NAV_ITEMS.find(n => n.id === page)?.label}
+             </div>
+             <div style={{ fontSize:11, color:"#475569", fontFamily:"monospace" }}>
+-              {clinic?.slug}.clinicsite.in
++              {clinic?.slug}.waspace.in
+               {" · "}
+               <span style={{ color: clinic?.is_published ? "#22c55e" : "#64748b" }}>
+                 {clinic?.is_published ? "🟢 Live" : "⚫ Hidden"}
+@@ -530,7 +530,7 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
+                   <div style={{ fontSize:18, fontWeight:700, color:"#e2e8f0", marginBottom:8 }}>Custom Domain — Premium Feature</div>
+                   <div style={{ fontSize:14, color:"#64748b", maxWidth:380, lineHeight:1.7, marginBottom:24 }}>
+                     Connect your own domain (e.g. <em>www.drsharma.com</em>) on the Premium or Enterprise plan.
+-                    Your clinic is currently live at <strong style={{ color:"#7dd3fc" }}>{clinic?.slug}.clinicsite.in</strong>
++                    Your clinic is currently live at <strong style={{ color:"#7dd3fc" }}>{clinic?.slug}.waspace.in</strong>
+                   </div>
+                   <button onClick={() => setShowUpgrade(true)} style={{
+                     background:"#1565c0", color:"white", border:"none", borderRadius:10,
+diff --git a/src/components/ClinicFooter.jsx b/src/components/ClinicFooter.jsx
+index b6277dd..d091a46 100644
+--- a/src/components/ClinicFooter.jsx
++++ b/src/components/ClinicFooter.jsx
+@@ -104,7 +104,7 @@ export default function ClinicFooter({ clinic, doctor, hours = [] }) {
+               <a href={`/${clinic?.slug}/privacy-policy`} style={{ fontSize:11, color:"rgba(255,255,255,0.35)", textDecoration:"none" }}>Privacy Policy</a>
+               <a href={`/${clinic?.slug}/terms`} style={{ fontSize:11, color:"rgba(255,255,255,0.35)", textDecoration:"none" }}>Terms of Use</a>
+               <span style={{ fontSize:11, color:"rgba(255,255,255,0.2)", fontFamily:"monospace" }}>
+-                Powered by ClinicSite.in
++                Powered by WaSpace
+               </span>
+             </div>
+           </div>
+diff --git a/src/components/ComplianceTab.jsx b/src/components/ComplianceTab.jsx
+index 989d96f..be1be3f 100644
+--- a/src/components/ComplianceTab.jsx
++++ b/src/components/ComplianceTab.jsx
+@@ -216,7 +216,7 @@ export default function ComplianceTab({ clinic, doctor, onNavigate }) {
+         Telemedicine Practice Guidelines 2020 (MoH India).
+         <br/>
+         <span style={{ color: "#334155" }}>
+-          ClinicSite.in is not a law firm. This checklist is a best-effort compliance guide.
++          WaSpace is not a law firm. This checklist is a best-effort compliance guide.
+           Consult a qualified legal advisor for definitive advice specific to your practice.
+         </span>
+       </div>
+diff --git a/src/components/Login.jsx b/src/components/Login.jsx
+index 37f51b2..9c7be68 100644
+--- a/src/components/Login.jsx
++++ b/src/components/Login.jsx
+@@ -99,7 +99,7 @@ export default function Login({ onLogin }) {
+             boxShadow: "0 8px 32px rgba(21,101,192,0.35)",
+           }}>🦷</div>
+           <h1 style={{ fontSize: 24, fontWeight: 700, color: "#f1f5f9", margin: "0 0 6px" }}>
+-            ClinicSite Admin
++            WaSpace Admin
+           </h1>
+           <p style={{ fontSize: 14, color: "#475569", margin: 0 }}>
+             {step === "email" ? "Sign in to manage your clinic website" : "Check your inbox for the code"}
+diff --git a/src/components/OnboardingWizard.jsx b/src/components/OnboardingWizard.jsx
+index 3ca871c..dd5aa4b 100644
+--- a/src/components/OnboardingWizard.jsx
++++ b/src/components/OnboardingWizard.jsx
+@@ -1,12 +1,29 @@
+ // src/components/OnboardingWizard.jsx
+ // Self-onboarding wizard — replaces manual seed SQL
+-// New clinic owner signs up → answers 6 steps → site is live
++// New clinic owner signs up → answers a few steps → site is live
+ // Saves everything to Supabase automatically
++//
++// Visual design follows the WaSpace onboarding mockup: a single centered
++// card, numbered step badge + progress bar, light lavender background.
+ 
+ import { useState } from "react";
+ import { usePlanEnforcement } from "../hooks/usePlanEnforcement";
+ import { PlanUpgradeModal } from "./PlanUpgradeModal";
+ import { supabase } from "../lib/supabase";
++import { TEMPLATES } from "../templates";
++
++// ── Brand tokens ─────────────────────────────────────────────────
++const BRAND = {
++  primary:  "#5B5CEB",
++  primaryD: "#4645C7",
++  navy:     "#1E2A44",
++  green:    "#22C55E",
++  gold:     "#D4AF37",
++  bg:       "#F6F8FC",
++  border:   "#E7E9F3",
++  text:     "#1E2A44",
++  sub:      "#64748B",
++};
+ 
+ // ── Specialty → keyword map ───────────────────────────────────────
+ const SPECIALTY_DATA = {
+@@ -64,25 +81,10 @@ function generateSEO(clinic, services) {
+   };
+ }
+ 
+-// ── Step components ───────────────────────────────────────────────
+-
+-function StepWrap({ children }) {
+-  return (
+-    <div style={{ animation: "fadeUp .35s ease both" }}>
+-      <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}`}</style>
+-      {children}
+-    <PlanUpgradeModal
+-        isOpen={showUpgrade}
+-        onClose={() => setShowUpgrade(false)}
+-        requiredPlan="premium"
+-        featureName={upgradeFeature}
+-      />
+-    </div>
+-  );
+-}
++// ── Shared UI primitives ────────────────────────────────────────
+ 
+ function Label({ children }) {
+-  return <div style={{ fontSize:11, fontFamily:"monospace", fontWeight:700, letterSpacing:1, color:"#64748b", textTransform:"uppercase", marginBottom:8 }}>{children}</div>;
++  return <div style={{ fontSize:13, fontWeight:600, color:BRAND.text, marginBottom:8 }}>{children}</div>;
+ }
+ 
+ function Input({ value, onChange, placeholder, type="text" }) {
+@@ -90,44 +92,131 @@ function Input({ value, onChange, placeholder, type="text" }) {
+   return (
+     <input type={type} value={value} onChange={e => onChange(e.target.value)}
+       placeholder={placeholder} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+-      style={{ width:"100%", padding:"11px 14px", background:"rgba(255,255,255,0.05)", border:`1.5px solid ${focused?"rgba(21,101,192,0.6)":"rgba(255,255,255,0.1)"}`, color:"#e2e8f0", borderRadius:9, fontSize:14, fontFamily:"inherit", outline:"none", boxSizing:"border-box", transition:"border-color .2s" }}
++      style={{ width:"100%", padding:"11px 14px", background:"white",
++        border:`1.5px solid ${focused ? BRAND.primary : BRAND.border}`, color:BRAND.text,
++        borderRadius:9, fontSize:14, fontFamily:"inherit", outline:"none", boxSizing:"border-box",
++        transition:"border-color .2s" }}
+     />
+   );
+ }
+ 
+-// ── Main wizard ───────────────────────────────────────────────────
++function TextArea({ value, onChange, placeholder, rows=3 }) {
++  return (
++    <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} rows={rows}
++      style={{ width:"100%", padding:"11px 14px", background:"white", border:`1.5px solid ${BRAND.border}`,
++        color:BRAND.text, borderRadius:9, fontSize:14, fontFamily:"inherit", outline:"none",
++        boxSizing:"border-box", resize:"vertical", lineHeight:1.6 }} />
++  );
++}
+ 
+-const TOTAL_STEPS = 6;
++function ChoiceCard({ selected, icon, label, onClick }) {
++  return (
++    <button onClick={onClick} style={{
++      padding:"16px 10px", borderRadius:12, cursor:"pointer", textAlign:"center", fontFamily:"inherit",
++      background: selected ? "rgba(91,92,235,0.08)" : "white",
++      border: `1.5px solid ${selected ? BRAND.primary : BRAND.border}`,
++      color: selected ? BRAND.primary : BRAND.sub,
++      position:"relative", transition:"all .15s",
++    }}>
++      {selected && (
++        <div style={{ position:"absolute", top:8, right:8, width:16, height:16, borderRadius:"50%",
++          background:BRAND.primary, color:"white", fontSize:10, display:"flex", alignItems:"center", justifyContent:"center" }}>✓</div>
++      )}
++      <div style={{ fontSize:22, marginBottom:6 }}>{icon}</div>
++      <div style={{ fontSize:12, fontWeight:600 }}>{label}</div>
++    </button>
++  );
++}
++
++function Progress({ step, total }) {
++  return (
++    <div style={{ display:"flex", gap:5, flex:1, margin:"0 14px" }}>
++      {Array.from({ length: total }).map((_, i) => (
++        <div key={i} style={{ height:5, flex:1, borderRadius:99, background: i < step ? BRAND.primary : BRAND.border, transition:"background .3s" }} />
++      ))}
++    </div>
++  );
++}
++
++// Every step (except welcome/done) is wrapped in this card shell.
++function Shell({ step, total, onSkip, children }) {
++  return (
++    <div style={{ minHeight:"100vh", background:BRAND.bg, display:"flex", alignItems:"center", justifyContent:"center", padding:24, fontFamily:"'DM Sans',sans-serif" }}>
++      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
++      <style>{`@keyframes waFadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}`}</style>
++      <div style={{ width:"100%", maxWidth:600, background:"white", borderRadius:20, border:`1px solid ${BRAND.border}`, boxShadow:"0 24px 60px rgba(30,42,68,0.10)", padding:32, animation:"waFadeUp .3s ease both" }}>
++        <div style={{ display:"flex", alignItems:"center", marginBottom:28 }}>
++          <div style={{ width:30, height:30, borderRadius:"50%", background:BRAND.primary, color:"white", fontSize:13, fontWeight:700, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>{step}</div>
++          <Progress step={step} total={total} />
++          {onSkip && <button onClick={onSkip} style={{ background:"none", border:"none", color:BRAND.sub, fontSize:13, cursor:"pointer", fontFamily:"inherit" }}>Skip</button>}
++        </div>
++        {children}
++      </div>
++    </div>
++  );
++}
++
++function NavRow({ onBack, onNext, nextLabel="Next →", nextDisabled=false, loading=false }) {
++  return (
++    <div style={{ display:"flex", gap:12, marginTop:28 }}>
++      {onBack && (
++        <button onClick={onBack} style={{ padding:"12px 20px", background:"white", border:`1.5px solid ${BRAND.border}`, color:BRAND.text, borderRadius:10, fontSize:14, fontWeight:600, cursor:"pointer", fontFamily:"inherit" }}>
++          Back
++        </button>
++      )}
++      <button onClick={onNext} disabled={nextDisabled || loading} style={{
++        flex:1, padding:"12px", borderRadius:10, fontSize:14, fontWeight:700, fontFamily:"inherit",
++        border:"none", color:"white",
++        background: (nextDisabled || loading) ? "#C7CCE8" : BRAND.primary,
++        cursor: (nextDisabled || loading) ? "not-allowed" : "pointer",
++        boxShadow: (nextDisabled || loading) ? "none" : "0 8px 20px rgba(91,92,235,0.28)",
++        transition:"all .2s",
++      }}>
++        {loading ? "Working…" : nextLabel}
++      </button>
++    </div>
++  );
++}
++
++// ── Main wizard ───────────────────────────────────────────────────
++// Step numbering (matches the WaSpace onboarding flow — welcome and the
++// final success screen sit outside the numbered progress bar):
++//   1 Clinic type   2 Clinic details   3 Location   4 Contact
++//   5 Doctor        6 Template         7 Services   8 Hours & launch
++const TOTAL_STEPS = 8;
+ 
+ export default function OnboardingWizard({ user, onComplete }) {
+-  const [step, setStep]     = useState(1);
+-  const [saving, setSaving] = useState(false);
+-  const [error, setError]   = useState("");
+-  const [done, setDone]     = useState(false);
++  const [started, setStarted] = useState(false);
++  const [step, setStep]       = useState(1);
++  const [saving, setSaving]   = useState(false);
++  const [error, setError]     = useState("");
++  const [done, setDone]       = useState(false);
+   const [liveUrl, setLiveUrl] = useState("");
+   const { limits } = usePlanEnforcement();
+   const [showUpgrade, setShowUpgrade] = useState(false);
+   const [upgradeFeature, setUpgradeFeature] = useState("");
+ 
++  const maxServices = typeof limits?.features?.services === "number" ? limits.features.services : 5;
++
+   const [data, setData] = useState({
+-    // Step 1
+-    clinicName:     "",
+-    specialty:      "",
+-    city:           "",
+-    // Step 2
+-    phone:          "",
+-    whatsapp:       "",
+-    email:          "",
+-    address:        "",
+-    // Step 3
+-    doctorName:     "",
+-    doctorDegree:   "",
+-    doctorSpec:     "",
+-    doctorExp:      "",
+-    doctorBio:      "",
+-    // Step 4
+-    services:       [],
+-    // Step 5
++    clinicName:   "",
++    specialty:    "",
++    tagline:      "",
++    city:         "",
++    pincode:      "",
++    state:        "",
++    address:      "",
++    phone:        "",
++    whatsapp:     "",
++    email:        "",
++    wantsContactForm: true,
++    doctorName:   "",
++    doctorDegree: "",
++    doctorSpec:   "",
++    doctorExp:    "",
++    doctorBio:    "",
++    template:     "",
++    services:     [],
+     hours: {
+       Monday: { open:"09:00", close:"20:00", closed:false },
+       Tuesday: { open:"09:00", close:"20:00", closed:false },
+@@ -137,20 +226,20 @@ export default function OnboardingWizard({ user, onComplete }) {
+       Saturday: { open:"09:00", close:"18:00", closed:false },
+       Sunday: { open:"", close:"", closed:true },
+     },
+-    // Step 6
+     about: "",
+   });
+ 
+   const set = (key, val) => setData(p => ({ ...p, [key]: val }));
+ 
+-  const progress = ((step - 1) / TOTAL_STEPS) * 100;
+-
+   // ── Validation per step ─────────────────────────────────────────
+   const canNext = () => {
+-    if (step === 1) return data.clinicName.trim() && data.specialty && data.city.trim();
+-    if (step === 2) return data.phone.trim() && data.address.trim();
+-    if (step === 3) return data.doctorName.trim() && data.doctorDegree.trim();
+-    if (step === 4) return data.services.length > 0;
++    if (step === 1) return !!data.specialty;
++    if (step === 2) return data.clinicName.trim().length > 0;
++    if (step === 3) return data.address.trim() && data.city.trim();
++    if (step === 4) return data.phone.trim().length > 0;
++    if (step === 5) return data.doctorName.trim() && data.doctorDegree.trim();
++    if (step === 6) return !!data.template;
++    if (step === 7) return data.services.length > 0;
+     return true;
+   };
+ 
+@@ -160,6 +249,7 @@ export default function OnboardingWizard({ user, onComplete }) {
+     setError("");
+     try {
+       const slug = slugify(data.clinicName);
++      const fullAddress = [data.address, data.pincode, data.state].filter(Boolean).join(", ");
+ 
+       // 1. Insert clinic
+       const { data: clinic, error: clinicErr } = await supabase
+@@ -173,8 +263,8 @@ export default function OnboardingWizard({ user, onComplete }) {
+           phone:      data.phone,
+           whatsapp:   data.whatsapp || data.phone,
+           email:      data.email,
+-          address:    data.address,
+-          about:      data.about || `Expert ${data.specialty.toLowerCase()} care in ${data.city}.`,
++          address:    fullAddress,
++          about:      data.about || data.tagline || `Expert ${data.specialty.toLowerCase()} care in ${data.city}.`,
+           plan:       "free",
+           is_published: true,
+         })
+@@ -218,7 +308,11 @@ export default function OnboardingWizard({ user, onComplete }) {
+       const seo = generateSEO({ name: data.clinicName, specialty: data.specialty, city: data.city, phone: data.phone }, data.services);
+       await supabase.from("seo_data").insert({ clinic_id: clinic.id, ...seo });
+ 
+-      const url = `${slug}.clinicsite.in`;
++      // NOTE: data.template ("chosen template id") is currently not persisted —
++      // the `clinics` table has no template/theme column in the live schema yet.
++      // Once that column exists, add `template: data.template` to the insert above.
++
++      const url = `${slug}.waspace.in`;
+       setLiveUrl(url);
+       setDone(true);
+       onComplete?.(clinic);
+@@ -230,36 +324,54 @@ export default function OnboardingWizard({ user, onComplete }) {
+     }
+   };
+ 
++  // ── WELCOME screen ──────────────────────────────────────────────
++  if (!started) {
++    return (
++      <div style={{ minHeight:"100vh", background:BRAND.bg, display:"flex", alignItems:"center", justifyContent:"center", padding:24, fontFamily:"'DM Sans',sans-serif" }}>
++        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
++        <div style={{ width:"100%", maxWidth:440, background:"white", borderRadius:20, border:`1px solid ${BRAND.border}`, boxShadow:"0 24px 60px rgba(30,42,68,0.10)", padding:40, textAlign:"center" }}>
++          <div style={{ width:64, height:64, borderRadius:16, margin:"0 auto 22px", background:`linear-gradient(135deg, ${BRAND.primary}, ${BRAND.primaryD})`, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Pacifico','Segoe Script',cursive", fontSize:30, color:"white" }}>Wa</div>
++          <h1 style={{ fontSize:24, fontWeight:800, color:BRAND.text, marginBottom:10 }}>Welcome to <span style={{ color:BRAND.primary }}>WaSpace</span></h1>
++          <p style={{ fontSize:14, color:BRAND.sub, lineHeight:1.7, marginBottom:28 }}>
++            The easiest way for clinics to build beautiful, high-converting websites — no code, no hassle.
++          </p>
++          <button onClick={() => setStarted(true)} style={{ width:"100%", padding:"13px", background:BRAND.primary, border:"none", borderRadius:10, color:"white", fontSize:15, fontWeight:700, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 8px 20px rgba(91,92,235,0.28)" }}>
++            Get Started →
++          </button>
++        </div>
++      </div>
++    );
++  }
++
+   // ── DONE screen ─────────────────────────────────────────────────
+   if (done) {
+     return (
+-      <div style={{ minHeight:"100vh", background:"#080c14", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'DM Sans',sans-serif", padding:24 }}>
+-        <div style={{ maxWidth:480, width:"100%", textAlign:"center" }}>
+-          <div style={{ fontSize:64, marginBottom:16, animation:"bounce 1s ease" }}>🎉</div>
+-          <style>{`@keyframes bounce{0%,100%{transform:translateY(0)}40%{transform:translateY(-20px)}60%{transform:translateY(-10px)}}`}</style>
+-          <h1 style={{ fontSize:28, fontWeight:700, color:"#f1f5f9", marginBottom:8 }}>Your site is live!</h1>
+-          <p style={{ color:"#64748b", fontSize:15, marginBottom:28 }}>
+-            {data.clinicName} is now online and searchable on Google.
++      <div style={{ minHeight:"100vh", background:BRAND.bg, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'DM Sans',sans-serif", padding:24 }}>
++        <div style={{ maxWidth:480, width:"100%", background:"white", borderRadius:20, border:`1px solid ${BRAND.border}`, boxShadow:"0 24px 60px rgba(30,42,68,0.10)", padding:40, textAlign:"center" }}>
++          <div style={{ fontSize:56, marginBottom:16 }}>🎉</div>
++          <h1 style={{ fontSize:24, fontWeight:800, color:BRAND.text, marginBottom:8 }}>You're all set!</h1>
++          <p style={{ color:BRAND.sub, fontSize:14, marginBottom:26, lineHeight:1.6 }}>
++            {data.clinicName} is now live and searchable on Google.
+           </p>
+           <div style={{ background:"rgba(34,197,94,0.08)", border:"1px solid rgba(34,197,94,0.25)", borderRadius:12, padding:"16px 20px", marginBottom:24 }}>
+-            <div style={{ fontSize:11, color:"#22c55e", fontFamily:"monospace", marginBottom:6 }}>YOUR LIVE URL</div>
+-            <div style={{ fontSize:17, fontWeight:700, color:"#22c55e" }}>🌐 {liveUrl}</div>
++            <div style={{ fontSize:11, color:BRAND.green, fontWeight:700, letterSpacing:1, marginBottom:6 }}>YOUR LIVE URL</div>
++            <div style={{ fontSize:17, fontWeight:700, color:BRAND.green }}>🌐 {liveUrl}</div>
+           </div>
+-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:24 }}>
++          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:26 }}>
+             {[
+               ["🔍","SEO Configured","Auto-applied for " + data.city],
+               ["📅","Booking Ready","Patients can book online"],
+               ["💬","WhatsApp Active","One-tap patient contact"],
+               ["📊","Admin Panel","Manage everything"],
+             ].map(([icon,title,sub]) => (
+-              <div key={title} style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:10, padding:"14px 12px", textAlign:"left" }}>
++              <div key={title} style={{ background:BRAND.bg, border:`1px solid ${BRAND.border}`, borderRadius:10, padding:"14px 12px", textAlign:"left" }}>
+                 <div style={{ fontSize:20, marginBottom:6 }}>{icon}</div>
+-                <div style={{ fontSize:13, fontWeight:600, color:"#e2e8f0" }}>{title}</div>
+-                <div style={{ fontSize:11, color:"#475569" }}>{sub}</div>
++                <div style={{ fontSize:13, fontWeight:600, color:BRAND.text }}>{title}</div>
++                <div style={{ fontSize:11, color:BRAND.sub }}>{sub}</div>
+               </div>
+             ))}
+           </div>
+-          <button onClick={() => onComplete?.()} style={{ width:"100%", padding:"13px", background:"linear-gradient(135deg,#1565c0,#1e88e5)", border:"none", borderRadius:10, color:"white", fontSize:15, fontWeight:700, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 4px 16px rgba(21,101,192,0.3)" }}>
++          <button onClick={() => onComplete?.()} style={{ width:"100%", padding:"13px", background:BRAND.primary, border:"none", borderRadius:10, color:"white", fontSize:15, fontWeight:700, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 8px 20px rgba(91,92,235,0.28)" }}>
+             Go to Admin Panel →
+           </button>
+         </div>
+@@ -267,275 +379,254 @@ export default function OnboardingWizard({ user, onComplete }) {
+     );
+   }
+ 
+-  // ── Wizard shell ─────────────────────────────────────────────────
++  // ── Wizard steps ─────────────────────────────────────────────────
+   return (
+-    <div style={{ minHeight:"100vh", background:"#080c14", display:"flex", fontFamily:"'DM Sans',sans-serif" }}>
+-      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
++    <>
++      <Shell step={step} total={TOTAL_STEPS} onSkip={step < TOTAL_STEPS ? () => setStep(s => Math.min(s + 1, TOTAL_STEPS)) : null}>
+ 
+-      {/* Left panel */}
+-      <div style={{ width:280, flexShrink:0, background:"#0d1526", borderRight:"1px solid rgba(255,255,255,0.06)", padding:"32px 24px", display:"flex", flexDirection:"column" }}>
+-        <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:40 }}>
+-          <div style={{ width:36, height:36, borderRadius:10, background:"linear-gradient(135deg,#1565c0,#1e88e5)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>🦷</div>
++        {/* STEP 1: Clinic type */}
++        {step === 1 && (
+           <div>
+-            <div style={{ fontSize:13, fontWeight:700, color:"#f1f5f9" }}>ClinicSite</div>
+-            <div style={{ fontSize:10, color:"#475569" }}>Setup Wizard</div>
++            <h2 style={{ fontSize:22, fontWeight:800, color:BRAND.text, marginBottom:4 }}>What type of clinic do you run?</h2>
++            <p style={{ fontSize:13.5, color:BRAND.sub, marginBottom:22 }}>This helps us personalize your website experience.</p>
++            <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10 }}>
++              {Object.entries(SPECIALTY_DATA).map(([sp, info]) => (
++                <ChoiceCard key={sp} icon={info.icon} label={sp} selected={data.specialty === sp} onClick={() => set("specialty", sp)} />
++              ))}
++            </div>
+           </div>
+-        </div>
++        )}
+ 
+-        {[
+-          [1,"Clinic Basics","Name, specialty, city"],
+-          [2,"Contact Info","Phone, address"],
+-          [3,"Doctor Profile","Name, degree, bio"],
+-          [4,"Services","What you offer"],
+-          [5,"Working Hours","When you're open"],
+-          [6,"About & Launch","Final details"],
+-        ].map(([n, title, sub]) => (
+-          <div key={n} style={{ display:"flex", gap:12, marginBottom:20, alignItems:"flex-start" }}>
+-            <div style={{ width:28, height:28, borderRadius:"50%", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:700, fontFamily:"monospace",
+-              background: step > n ? "#22c55e" : step === n ? "#1565c0" : "rgba(255,255,255,0.06)",
+-              color: step >= n ? "white" : "#334155",
+-              border: `2px solid ${step > n ? "#22c55e" : step === n ? "#1565c0" : "rgba(255,255,255,0.08)"}`,
+-              transition:"all .3s",
+-            }}>
+-              {step > n ? "✓" : n}
++        {/* STEP 2: Clinic details */}
++        {step === 2 && (
++          <div>
++            <h2 style={{ fontSize:22, fontWeight:800, color:BRAND.text, marginBottom:4 }}>Tell us about your clinic</h2>
++            <p style={{ fontSize:13.5, color:BRAND.sub, marginBottom:22 }}>Add basic information to get started.</p>
++            <div style={{ marginBottom:16 }}>
++              <Label>Clinic Name</Label>
++              <Input value={data.clinicName} onChange={v => set("clinicName", v)} placeholder="e.g. Bright Smile Dental Clinic" />
++            </div>
++            <div style={{ marginBottom:16 }}>
++              <Label>Specialization (Optional)</Label>
++              <Input value={data.doctorSpec} onChange={v => set("doctorSpec", v)} placeholder="Cosmetic Dentistry, Implantology" />
+             </div>
+-            <div style={{ paddingTop:4 }}>
+-              <div style={{ fontSize:13, fontWeight:600, color: step >= n ? "#e2e8f0" : "#334155", transition:"color .3s" }}>{title}</div>
+-              <div style={{ fontSize:11, color:"#334155", marginTop:1 }}>{sub}</div>
++            <div>
++              <Label>Tagline (Optional)</Label>
++              <Input value={data.tagline} onChange={v => set("tagline", v.slice(0,60))} placeholder="Creating Healthy Smiles, Every Day 😊" />
++              <div style={{ textAlign:"right", fontSize:11, color:"#B4B9D6", marginTop:4 }}>{data.tagline.length}/60</div>
+             </div>
+           </div>
+-        ))}
+-
+-        <div style={{ marginTop:"auto", background:"rgba(34,197,94,0.06)", border:"1px solid rgba(34,197,94,0.2)", borderRadius:10, padding:"12px 14px" }}>
+-          <div style={{ fontSize:10, color:"#22c55e", fontFamily:"monospace", marginBottom:4 }}>ESTIMATED TIME</div>
+-          <div style={{ fontSize:18, fontWeight:700, color:"#22c55e" }}>~5 minutes</div>
+-          <div style={{ fontSize:11, color:"#475569", marginTop:2 }}>Then your site is live</div>
+-        </div>
+-      </div>
+-
+-      {/* Right panel */}
+-      <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
+-        {/* Progress bar */}
+-        <div style={{ height:3, background:"rgba(255,255,255,0.06)" }}>
+-          <div style={{ height:"100%", width:`${progress}%`, background:"linear-gradient(90deg,#1565c0,#22c55e)", transition:"width .4s ease", borderRadius:"0 2px 2px 0" }} />
+-        </div>
+-
+-        <div style={{ flex:1, overflowY:"auto", padding:"40px 48px" }}>
+-          <div style={{ maxWidth:560 }}>
+-
+-            {/* ── STEP 1: Clinic basics ── */}
+-            {step === 1 && (
+-              <StepWrap>
+-                <div style={{ fontSize:11, color:"#1565c0", fontFamily:"monospace", fontWeight:700, letterSpacing:2, marginBottom:8 }}>STEP 1 OF 6</div>
+-                <h2 style={{ fontSize:26, fontWeight:700, color:"#f1f5f9", marginBottom:6 }}>Tell us about your clinic</h2>
+-                <p style={{ fontSize:14, color:"#64748b", marginBottom:28, lineHeight:1.6 }}>This is what patients will see when they find you on Google.</p>
+-
+-                <div style={{ marginBottom:18 }}>
+-                  <Label>Clinic Name *</Label>
+-                  <Input value={data.clinicName} onChange={v => set("clinicName",v)} placeholder="e.g. Karur Dental Clinic" />
+-                </div>
++        )}
+ 
+-                <div style={{ marginBottom:18 }}>
+-                  <Label>Specialty *</Label>
+-                  <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10 }}>
+-                    {Object.entries(SPECIALTY_DATA).map(([sp, info]) => (
+-                      <button key={sp} onClick={() => set("specialty", sp)} style={{
+-                        padding:"10px 8px", borderRadius:9, cursor:"pointer", textAlign:"center", fontFamily:"inherit",
+-                        background: data.specialty === sp ? "rgba(21,101,192,0.15)" : "rgba(255,255,255,0.03)",
+-                        border: `1.5px solid ${data.specialty === sp ? "rgba(21,101,192,0.5)" : "rgba(255,255,255,0.08)"}`,
+-                        color: data.specialty === sp ? "#7dd3fc" : "#64748b",
+-                        transition:"all .15s",
+-                      }}>
+-                        <div style={{ fontSize:20, marginBottom:4 }}>{info.icon}</div>
+-                        <div style={{ fontSize:11, fontWeight:600 }}>{sp}</div>
+-                      </button>
+-                    ))}
+-                  </div>
+-                </div>
++        {/* STEP 3: Location */}
++        {step === 3 && (
++          <div>
++            <h2 style={{ fontSize:22, fontWeight:800, color:BRAND.text, marginBottom:4 }}>Where is your clinic located?</h2>
++            <p style={{ fontSize:13.5, color:BRAND.sub, marginBottom:22 }}>This helps us show your location on the website.</p>
++            <div style={{ marginBottom:16 }}>
++              <Label>Address</Label>
++              <Input value={data.address} onChange={v => set("address", v)} placeholder="123, Anna Salai, T. Nagar" />
++            </div>
++            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14, marginBottom:16 }}>
++              <div>
++                <Label>City</Label>
++                <Input value={data.city} onChange={v => set("city", v)} placeholder="Chennai" />
++              </div>
++              <div>
++                <Label>Pincode</Label>
++                <Input value={data.pincode} onChange={v => set("pincode", v)} placeholder="600017" />
++              </div>
++            </div>
++            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
++              <div>
++                <Label>State</Label>
++                <Input value={data.state} onChange={v => set("state", v)} placeholder="Tamil Nadu" />
++              </div>
++              <div>
++                <Label>Country</Label>
++                <Input value="India" onChange={() => {}} />
++              </div>
++            </div>
++          </div>
++        )}
+ 
+-                <div style={{ marginBottom:18 }}>
+-                  <Label>City *</Label>
+-                  <Input value={data.city} onChange={v => set("city",v)} placeholder="e.g. Karur, Coimbatore, Chennai" />
+-                </div>
+-              </StepWrap>
+-            )}
++        {/* STEP 4: Contact */}
++        {step === 4 && (
++          <div>
++            <h2 style={{ fontSize:22, fontWeight:800, color:BRAND.text, marginBottom:4 }}>Add your contact details</h2>
++            <p style={{ fontSize:13.5, color:BRAND.sub, marginBottom:22 }}>These details will be visible on your website.</p>
++            <div style={{ marginBottom:16 }}>
++              <Label>Phone Number</Label>
++              <Input value={data.phone} onChange={v => set("phone", v)} placeholder="98765 43210" type="tel" />
++            </div>
++            <div style={{ marginBottom:16 }}>
++              <Label>Email Address</Label>
++              <Input value={data.email} onChange={v => set("email", v)} placeholder="info@brightsmiledental.com" type="email" />
++            </div>
++            <div style={{ marginBottom:16 }}>
++              <Label>WhatsApp Number (Optional)</Label>
++              <Input value={data.whatsapp} onChange={v => set("whatsapp", v)} placeholder="98765 43210" type="tel" />
++            </div>
++            <label style={{ display:"flex", alignItems:"center", gap:8, fontSize:13, color:BRAND.text, cursor:"pointer" }}>
++              <input type="checkbox" checked={data.wantsContactForm} onChange={e => set("wantsContactForm", e.target.checked)} />
++              Yes, I want a contact form on my website
++            </label>
++          </div>
++        )}
+ 
+-            {/* ── STEP 2: Contact ── */}
+-            {step === 2 && (
+-              <StepWrap>
+-                <div style={{ fontSize:11, color:"#1565c0", fontFamily:"monospace", fontWeight:700, letterSpacing:2, marginBottom:8 }}>STEP 2 OF 6</div>
+-                <h2 style={{ fontSize:26, fontWeight:700, color:"#f1f5f9", marginBottom:6 }}>Contact information</h2>
+-                <p style={{ fontSize:14, color:"#64748b", marginBottom:28 }}>Patients will use these to reach you.</p>
+-
+-                {[
+-                  ["Phone Number *","phone","tel","+91 98400 00000"],
+-                  ["WhatsApp Number","whatsapp","tel","Same as phone if same"],
+-                  ["Email Address","email","email","clinic@email.com"],
+-                  ["Full Address *","address","text","Street, Area, City, Pincode"],
+-                ].map(([label, key, type, placeholder]) => (
+-                  <div key={key} style={{ marginBottom:16 }}>
+-                    <Label>{label}</Label>
+-                    <Input value={data[key]} onChange={v => set(key,v)} placeholder={placeholder} type={type} />
+-                  </div>
+-                ))}
+-              </StepWrap>
+-            )}
++        {/* STEP 5: Doctor */}
++        {step === 5 && (
++          <div>
++            <h2 style={{ fontSize:22, fontWeight:800, color:BRAND.text, marginBottom:4 }}>Doctor profile</h2>
++            <p style={{ fontSize:13.5, color:BRAND.sub, marginBottom:22 }}>Builds patient trust. You can add more doctors later.</p>
++            {[
++              ["Doctor's Full Name","doctorName","Dr. Ramesh Kumar"],
++              ["Degree / Qualification","doctorDegree","BDS, MDS – Periodontology"],
++              ["Years of Experience","doctorExp","12 Years"],
++            ].map(([label, key, placeholder]) => (
++              <div key={key} style={{ marginBottom:16 }}>
++                <Label>{label}</Label>
++                <Input value={data[key]} onChange={v => set(key, v)} placeholder={placeholder} />
++              </div>
++            ))}
++            <div>
++              <Label>Short Bio</Label>
++              <TextArea value={data.doctorBio} onChange={v => set("doctorBio", v)} placeholder="Brief background about the doctor's experience and expertise…" />
++            </div>
++          </div>
++        )}
+ 
+-            {/* ── STEP 3: Doctor ── */}
+-            {step === 3 && (
+-              <StepWrap>
+-                <div style={{ fontSize:11, color:"#1565c0", fontFamily:"monospace", fontWeight:700, letterSpacing:2, marginBottom:8 }}>STEP 3 OF 6</div>
+-                <h2 style={{ fontSize:26, fontWeight:700, color:"#f1f5f9", marginBottom:6 }}>Doctor profile</h2>
+-                <p style={{ fontSize:14, color:"#64748b", marginBottom:28 }}>Builds patient trust. You can add more doctors later.</p>
+-
+-                {[
+-                  ["Doctor's Full Name *","doctorName","Dr. Ramesh Kumar"],
+-                  ["Degree / Qualification *","doctorDegree","BDS, MDS – Periodontology"],
+-                  ["Specialization","doctorSpec","Periodontist & Implantologist"],
+-                  ["Years of Experience","doctorExp","12 Years"],
+-                ].map(([label, key, placeholder]) => (
+-                  <div key={key} style={{ marginBottom:16 }}>
+-                    <Label>{label}</Label>
+-                    <Input value={data[key]} onChange={v => set(key,v)} placeholder={placeholder} />
++        {/* STEP 6: Template */}
++        {step === 6 && (
++          <div>
++            <h2 style={{ fontSize:22, fontWeight:800, color:BRAND.text, marginBottom:4 }}>Choose your template</h2>
++            <p style={{ fontSize:13.5, color:BRAND.sub, marginBottom:22 }}>You can change it anytime later.</p>
++            <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12 }}>
++              {Object.values(TEMPLATES).slice(0, 6).map(t => (
++                <button key={t.id} onClick={() => set("template", t.id)} style={{
++                  borderRadius:12, overflow:"hidden", cursor:"pointer", textAlign:"left", fontFamily:"inherit", padding:0,
++                  background:"white", border:`1.5px solid ${data.template === t.id ? BRAND.primary : BRAND.border}`,
++                  position:"relative",
++                }}>
++                  {data.template === t.id && (
++                    <div style={{ position:"absolute", top:6, right:6, width:16, height:16, borderRadius:"50%", background:BRAND.primary, color:"white", fontSize:10, display:"flex", alignItems:"center", justifyContent:"center", zIndex:1 }}>✓</div>
++                  )}
++                  <div style={{ height:56, background:`linear-gradient(135deg, ${BRAND.navy}, ${BRAND.primary})`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:22 }}>{t.icon}</div>
++                  <div style={{ padding:"8px 10px" }}>
++                    <div style={{ fontSize:11.5, fontWeight:700, color:BRAND.text }}>{t.name}</div>
++                    <div style={{ fontSize:10, color:BRAND.sub }}>{t.desc}</div>
+                   </div>
+-                ))}
+-                <div style={{ marginBottom:16 }}>
+-                  <Label>Short Bio</Label>
+-                  <textarea value={data.doctorBio} onChange={e => set("doctorBio",e.target.value)}
+-                    placeholder="Brief background about the doctor's experience and expertise..."
+-                    rows={3} style={{ width:"100%", padding:"11px 14px", background:"rgba(255,255,255,0.05)", border:"1.5px solid rgba(255,255,255,0.1)", color:"#e2e8f0", borderRadius:9, fontSize:14, fontFamily:"inherit", outline:"none", boxSizing:"border-box", resize:"vertical", lineHeight:1.6 }} />
+-                </div>
+-              </StepWrap>
+-            )}
++                </button>
++              ))}
++            </div>
++          </div>
++        )}
+ 
+-            {/* ── STEP 4: Services ── */}
+-            {step === 4 && (
+-              <StepWrap>
+-                <div style={{ fontSize:11, color:"#1565c0", fontFamily:"monospace", fontWeight:700, letterSpacing:2, marginBottom:8 }}>STEP 4 OF 6</div>
+-                <h2 style={{ fontSize:26, fontWeight:700, color:"#f1f5f9", marginBottom:6 }}>Select your services</h2>
+-                <p style={{ fontSize:14, color:"#64748b", marginBottom:28 }}>Choose what you offer. You can add more from the admin panel.</p>
+-
+-                <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+-                  {(DEFAULT_SERVICES[data.specialty] || DEFAULT_SERVICES["General Practice"]).map(svc => {
+-                    const selected = data.services.includes(svc);
+-                    const atLimit = data.services.length >= maxServices && !selected;
+-                    return (
+-                      <button key={svc} onClick={() => { if (atLimit) { setUpgradeFeature("services"); setShowUpgrade(true); return; } set("services", selected ? data.services.filter(s=>s!==svc) : [...data.services, svc]); }}
+-                        style={{ display:"flex", alignItems:"center", gap:12, padding:"12px 16px", borderRadius:10, cursor:"pointer", fontFamily:"inherit", textAlign:"left",
+-                          background: selected ? "rgba(21,101,192,0.12)" : "rgba(255,255,255,0.03)",
+-                          border: `1.5px solid ${selected ? "rgba(21,101,192,0.4)" : "rgba(255,255,255,0.08)"}`,
+-                          transition:"all .15s",
+-                        }}>
+-                        <div style={{ width:22, height:22, borderRadius:6, background: selected ? "#1565c0" : "rgba(255,255,255,0.08)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, flexShrink:0, transition:"all .15s" }}>
+-                          {selected ? "✓" : SERVICE_ICONS[svc] || "🏥"}
+-                        </div>
+-                        <span style={{ fontSize:14, color: selected ? "#7dd3fc" : "#94a3b8", fontWeight: selected ? 600 : 400 }}>{svc}</span>
+-                      </button>
+-                    );
+-                  })}
+-                </div>
+-                <div style={{ marginTop:12, fontSize:12, color: data.services.length >= maxServices ? "#f87171" : "#334155" }}>{data.services.length} of {maxServices > 100000 ? "Unlimited" : maxServices} selected</div>
+-              </StepWrap>
+-            )}
++        {/* STEP 7: Services */}
++        {step === 7 && (
++          <div>
++            <h2 style={{ fontSize:22, fontWeight:800, color:BRAND.text, marginBottom:4 }}>Select your services</h2>
++            <p style={{ fontSize:13.5, color:BRAND.sub, marginBottom:22 }}>Choose what you offer. You can add more from the admin panel.</p>
++            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
++              {(DEFAULT_SERVICES[data.specialty] || DEFAULT_SERVICES["General Practice"]).map(svc => {
++                const selected = data.services.includes(svc);
++                const atLimit = data.services.length >= maxServices && !selected;
++                return (
++                  <button key={svc} onClick={() => {
++                    if (atLimit) { setUpgradeFeature("services"); setShowUpgrade(true); return; }
++                    set("services", selected ? data.services.filter(s => s !== svc) : [...data.services, svc]);
++                  }} style={{
++                    display:"flex", alignItems:"center", gap:10, padding:"10px 12px", borderRadius:10, cursor:"pointer", fontFamily:"inherit", textAlign:"left",
++                    background: selected ? "rgba(91,92,235,0.08)" : "white",
++                    border:`1.5px solid ${selected ? BRAND.primary : BRAND.border}`,
++                  }}>
++                    <div style={{ width:20, height:20, borderRadius:6, background: selected ? BRAND.primary : BRAND.bg, color:"white", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, flexShrink:0 }}>
++                      {selected ? "✓" : ""}
++                    </div>
++                    <span style={{ fontSize:13, color: selected ? BRAND.primary : BRAND.text, fontWeight: selected ? 600 : 400 }}>{svc}</span>
++                  </button>
++                );
++              })}
++            </div>
++            <div style={{ marginTop:12, fontSize:12, color: data.services.length >= maxServices ? "#EF4444" : BRAND.sub }}>
++              {data.services.length} of {maxServices > 100000 ? "Unlimited" : maxServices} selected
++            </div>
++          </div>
++        )}
+ 
+-            {/* ── STEP 5: Hours ── */}
+-            {step === 5 && (
+-              <StepWrap>
+-                <div style={{ fontSize:11, color:"#1565c0", fontFamily:"monospace", fontWeight:700, letterSpacing:2, marginBottom:8 }}>STEP 5 OF 6</div>
+-                <h2 style={{ fontSize:26, fontWeight:700, color:"#f1f5f9", marginBottom:6 }}>Working hours</h2>
+-                <p style={{ fontSize:14, color:"#64748b", marginBottom:28 }}>Shown on your website. Patients know when to visit.</p>
+-
+-                {Object.entries(data.hours).map(([day, h]) => (
+-                  <div key={day} style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
+-                    <div style={{ width:100, fontSize:13, color: h.closed ? "#334155" : "#94a3b8", flexShrink:0 }}>{day}</div>
+-                    {h.closed ? (
+-                      <div style={{ flex:1, fontSize:13, color:"#ef4444" }}>Closed</div>
+-                    ) : (
+-                      <div style={{ display:"flex", gap:8, alignItems:"center", flex:1 }}>
+-                        <input type="time" value={h.open} onChange={e => set("hours",{...data.hours,[day]:{...h,open:e.target.value}})}
+-                          style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", color:"#e2e8f0", borderRadius:7, padding:"6px 10px", fontSize:13, fontFamily:"monospace", outline:"none", width:100 }} />
+-                        <span style={{ color:"#334155" }}>to</span>
+-                        <input type="time" value={h.close} onChange={e => set("hours",{...data.hours,[day]:{...h,close:e.target.value}})}
+-                          style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", color:"#e2e8f0", borderRadius:7, padding:"6px 10px", fontSize:13, fontFamily:"monospace", outline:"none", width:100 }} />
+-                      </div>
+-                    )}
+-                    <button onClick={() => set("hours",{...data.hours,[day]:{...h,closed:!h.closed}})}
+-                      style={{ background: h.closed ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)", border:`1px solid ${h.closed?"rgba(34,197,94,0.3)":"rgba(239,68,68,0.3)"}`, color: h.closed ? "#22c55e" : "#f87171", borderRadius:7, padding:"5px 12px", fontSize:11, cursor:"pointer", fontFamily:"inherit", fontWeight:600, whiteSpace:"nowrap" }}>
+-                      {h.closed ? "Set Open" : "Mark Closed"}
+-                    </button>
++        {/* STEP 8: Hours + about + review + launch */}
++        {step === 8 && (
++          <div>
++            <h2 style={{ fontSize:22, fontWeight:800, color:BRAND.text, marginBottom:4 }}>Working hours & final details</h2>
++            <p style={{ fontSize:13.5, color:BRAND.sub, marginBottom:18 }}>Shown on your website, then we'll build it.</p>
++
++            {Object.entries(data.hours).map(([day, h]) => (
++              <div key={day} style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 0", borderBottom:`1px solid ${BRAND.border}` }}>
++                <div style={{ width:88, fontSize:12.5, color: h.closed ? "#B4B9D6" : BRAND.text, flexShrink:0 }}>{day}</div>
++                {h.closed ? (
++                  <div style={{ flex:1, fontSize:12.5, color:"#EF4444" }}>Closed</div>
++                ) : (
++                  <div style={{ display:"flex", gap:6, alignItems:"center", flex:1 }}>
++                    <input type="time" value={h.open} onChange={e => set("hours",{...data.hours,[day]:{...h,open:e.target.value}})}
++                      style={{ background:"white", border:`1px solid ${BRAND.border}`, color:BRAND.text, borderRadius:7, padding:"5px 8px", fontSize:12, outline:"none", width:92 }} />
++                    <span style={{ color:"#B4B9D6", fontSize:12 }}>to</span>
++                    <input type="time" value={h.close} onChange={e => set("hours",{...data.hours,[day]:{...h,close:e.target.value}})}
++                      style={{ background:"white", border:`1px solid ${BRAND.border}`, color:BRAND.text, borderRadius:7, padding:"5px 8px", fontSize:12, outline:"none", width:92 }} />
+                   </div>
+-                ))}
+-              </StepWrap>
+-            )}
++                )}
++                <button onClick={() => set("hours",{...data.hours,[day]:{...h,closed:!h.closed}})}
++                  style={{ background: h.closed ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.08)", border:`1px solid ${h.closed?"rgba(34,197,94,0.3)":"rgba(239,68,68,0.25)"}`, color: h.closed ? BRAND.green : "#EF4444", borderRadius:7, padding:"4px 10px", fontSize:10.5, cursor:"pointer", fontFamily:"inherit", fontWeight:600, whiteSpace:"nowrap" }}>
++                  {h.closed ? "Set Open" : "Close"}
++                </button>
++              </div>
++            ))}
+ 
+-            {/* ── STEP 6: About + launch ── */}
+-            {step === 6 && (
+-              <StepWrap>
+-                <div style={{ fontSize:11, color:"#1565c0", fontFamily:"monospace", fontWeight:700, letterSpacing:2, marginBottom:8 }}>STEP 6 OF 6</div>
+-                <h2 style={{ fontSize:26, fontWeight:700, color:"#f1f5f9", marginBottom:6 }}>Almost done!</h2>
+-                <p style={{ fontSize:14, color:"#64748b", marginBottom:28 }}>One last thing — a short intro about your clinic.</p>
+-
+-                <div style={{ marginBottom:20 }}>
+-                  <Label>About Your Clinic</Label>
+-                  <textarea value={data.about} onChange={e => set("about",e.target.value)}
+-                    placeholder={`e.g. ${data.clinicName} has been serving ${data.city} with expert ${(data.specialty||"").toLowerCase()} care for over 10 years...`}
+-                    rows={4} style={{ width:"100%", padding:"11px 14px", background:"rgba(255,255,255,0.05)", border:"1.5px solid rgba(255,255,255,0.1)", color:"#e2e8f0", borderRadius:9, fontSize:14, fontFamily:"inherit", outline:"none", boxSizing:"border-box", resize:"vertical", lineHeight:1.6 }} />
+-                </div>
++            <div style={{ margin:"18px 0" }}>
++              <Label>About Your Clinic (Optional)</Label>
++              <TextArea value={data.about} onChange={v => set("about", v)}
++                placeholder={`e.g. ${data.clinicName || "Your clinic"} has been serving ${data.city || "your city"} with expert care for over 10 years…`} />
++            </div>
+ 
+-                {/* Summary card */}
+-                <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:12, padding:20, marginBottom:24 }}>
+-                  <div style={{ fontSize:11, color:"#64748b", fontFamily:"monospace", marginBottom:14 }}>REVIEW YOUR SETUP</div>
+-                  {[
+-                    ["Clinic", data.clinicName],
+-                    ["Specialty", `${SPECIALTY_DATA[data.specialty]?.icon} ${data.specialty}`],
+-                    ["City", data.city],
+-                    ["Doctor", data.doctorName],
+-                    ["Services", `${data.services.length} services`],
+-                    ["Your URL", `${slugify(data.clinicName)}.clinicsite.in`],
+-                  ].map(([k,v]) => (
+-                    <div key={k} style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:"1px solid rgba(255,255,255,0.04)", fontSize:13 }}>
+-                      <span style={{ color:"#475569" }}>{k}</span>
+-                      <span style={{ color:"#e2e8f0", fontWeight:600 }}>{v}</span>
+-                    </div>
+-                  ))}
++            <div style={{ background:BRAND.bg, border:`1px solid ${BRAND.border}`, borderRadius:12, padding:16, marginBottom:20 }}>
++              <div style={{ fontSize:11, color:BRAND.sub, fontWeight:700, letterSpacing:1, marginBottom:10 }}>REVIEW YOUR SETUP</div>
++              {[
++                ["Clinic", data.clinicName],
++                ["Specialty", `${SPECIALTY_DATA[data.specialty]?.icon || ""} ${data.specialty}`],
++                ["City", data.city],
++                ["Doctor", data.doctorName],
++                ["Services", `${data.services.length} services`],
++                ["Your URL", `${slugify(data.clinicName || "your-clinic")}.waspace.in`],
++              ].map(([k,v]) => (
++                <div key={k} style={{ display:"flex", justifyContent:"space-between", padding:"6px 0", borderBottom:`1px solid ${BRAND.border}`, fontSize:12.5 }}>
++                  <span style={{ color:BRAND.sub }}>{k}</span>
++                  <span style={{ color:BRAND.text, fontWeight:600 }}>{v}</span>
+                 </div>
++              ))}
++            </div>
+ 
+-                {error && (
+-                  <div style={{ background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.25)", borderRadius:8, padding:"10px 14px", fontSize:13, color:"#f87171", marginBottom:16 }}>
+-                    ⚠️ {error}
+-                  </div>
+-                )}
+-              </StepWrap>
++            {error && (
++              <div style={{ background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.25)", borderRadius:8, padding:"10px 14px", fontSize:13, color:"#EF4444", marginBottom:16 }}>
++                ⚠️ {error}
++              </div>
+             )}
+-
+-            {/* ── Navigation ── */}
+-            <div style={{ display:"flex", gap:12, marginTop:32 }}>
+-              {step > 1 && (
+-                <button onClick={() => setStep(s => s-1)} style={{ flex:1, padding:"12px", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", color:"#94a3b8", borderRadius:10, fontSize:14, cursor:"pointer", fontFamily:"inherit" }}>
+-                  ← Back
+-                </button>
+-              )}
+-              {step < TOTAL_STEPS ? (
+-                <button onClick={() => canNext() && setStep(s=>s+1)} disabled={!canNext()}
+-                  style={{ flex:2, padding:"12px", background: canNext() ? "linear-gradient(135deg,#1565c0,#1e88e5)" : "rgba(255,255,255,0.05)", border:"none", borderRadius:10, color: canNext() ? "white" : "#334155", fontSize:14, fontWeight:700, cursor: canNext() ? "pointer" : "not-allowed", fontFamily:"inherit", transition:"all .2s", boxShadow: canNext() ? "0 4px 16px rgba(21,101,192,0.3)" : "none" }}>
+-                  Continue →
+-                </button>
+-              ) : (
+-                <button onClick={handleFinish} disabled={saving}
+-                  style={{ flex:2, padding:"12px", background: saving ? "rgba(21,101,192,0.4)" : "linear-gradient(135deg,#1565c0,#22c55e)", border:"none", borderRadius:10, color:"white", fontSize:14, fontWeight:700, cursor: saving ? "not-allowed" : "pointer", fontFamily:"inherit", boxShadow:"0 4px 16px rgba(21,101,192,0.3)" }}>
+-                  {saving ? "🚀 Launching your site..." : "🚀 Launch My Site!"}
+-                </button>
+-              )}
+-            </div>
+           </div>
+-        </div>
+-      </div>
+-    <PlanUpgradeModal
++        )}
++
++        <NavRow
++          onBack={step > 1 ? () => setStep(s => s - 1) : () => setStarted(false)}
++          onNext={step < TOTAL_STEPS ? () => canNext() && setStep(s => s + 1) : handleFinish}
++          nextLabel={step < TOTAL_STEPS ? "Next →" : "🚀 Create My Website"}
++          nextDisabled={!canNext()}
++          loading={saving}
++        />
++      </Shell>
++
++      <PlanUpgradeModal
+         isOpen={showUpgrade}
+         onClose={() => setShowUpgrade(false)}
+         requiredPlan="premium"
+         featureName={upgradeFeature}
+       />
+-    </div>
++    </>
+   );
+-}
+\ No newline at end of file
++}
+diff --git a/src/components/SuperAdmin.jsx b/src/components/SuperAdmin.jsx
+index 5031359..197a757 100644
+--- a/src/components/SuperAdmin.jsx
++++ b/src/components/SuperAdmin.jsx
+@@ -124,7 +124,7 @@ export default function SuperAdmin({ user }) {
+           <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+             <div style={{ width:34, height:34, borderRadius:9, background:"linear-gradient(135deg,#dc2626,#ea580c)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16 }}>⚡</div>
+             <div>
+-              <div style={{ fontSize:13, fontWeight:700, color:"#f1f5f9" }}>ClinicSite</div>
++              <div style={{ fontSize:13, fontWeight:700, color:"#f1f5f9" }}>WaSpace</div>
+               <div style={{ fontSize:10, color:"#dc2626", fontFamily:"monospace", fontWeight:600 }}>SUPERADMIN</div>
+             </div>
+           </div>
+@@ -501,9 +501,9 @@ export default function SuperAdmin({ user }) {
+               <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:12, padding:24 }}>
+                 <div style={{ fontFamily:"monospace", fontSize:12, color:"#64748b", marginBottom:16 }}>PLATFORM SETTINGS</div>
+                 {[
+-                  { label:"Platform Name",  value:"ClinicSite" },
+-                  { label:"Platform URL",   value:"clinicsite.in" },
+-                  { label:"Support Email",  value:"support@clinicsite.in" },
++                  { label:"Platform Name",  value:"WaSpace" },
++                  { label:"Platform URL",   value:"waspace.in" },
++                  { label:"Support Email",  value:"support@waspace.in" },
+                   { label:"Free Plan Limit", value:"3 pages, 1 doctor" },
+                 ].map(s => (
+                   <div key={s.label} style={{ marginBottom:16 }}>
+diff --git a/src/components/admin/DomainManager.jsx b/src/components/admin/DomainManager.jsx
+index 1c8fdbc..227ac05 100644
+--- a/src/components/admin/DomainManager.jsx
++++ b/src/components/admin/DomainManager.jsx
+@@ -108,7 +108,7 @@ export default function DomainManager({ clinic }) {
+     <div style={{ maxWidth: 680, fontFamily: "'DM Sans', sans-serif" }}>
+       <h2 style={{ fontSize: 20, fontWeight: 700, color: "#0f172a", marginBottom: 6 }}>Custom Domain</h2>
+       <p style={{ fontSize: 14, color: "#64748b", marginBottom: 24 }}>
+-        Point your own domain (e.g. <strong>www.drsmithclinic.in</strong>) to your ClinicSite page.
++        Point your own domain (e.g. <strong>www.drsmithclinic.in</strong>) to your WaSpace page.
+       </p>
+ 
+       {/* Current status */}
+diff --git a/src/components/admin/PreviewPage.jsx b/src/components/admin/PreviewPage.jsx
+index fe8446f..3f9e633 100644
+--- a/src/components/admin/PreviewPage.jsx
++++ b/src/components/admin/PreviewPage.jsx
+@@ -68,7 +68,7 @@ export default function PreviewPage({ clinic, hasRegNo, handlePublish, publishin
+           </div>
+           <div style={{ flex:1, background:"rgba(255,255,255,0.05)", borderRadius:6,
+             padding:"4px 12px", fontSize:12, color:"#475569", fontFamily:"monospace" }}>
+-            🔒 {clinic?.slug}.clinicsite.in
++            🔒 {clinic?.slug}.waspace.in
+           </div>
+         </div>
+ 
+diff --git a/src/components/admin/SeoPage.jsx b/src/components/admin/SeoPage.jsx
+index 0de791e..3eb71b8 100644
+--- a/src/components/admin/SeoPage.jsx
++++ b/src/components/admin/SeoPage.jsx
+@@ -32,7 +32,7 @@ export default function SeoPage({ clinic, hasRegNo }) {
+   const metaTags = [
+     ["TITLE", `${clinic?.name} | ${clinic?.specialty} in ${clinic?.city} | Book Appointment`],
+     ["DESCRIPTION", `Expert ${(clinic?.specialty||"").toLowerCase()} care in ${clinic?.city}. Book appointment online.`],
+-    ["CANONICAL", `https://${clinic?.slug}.clinicsite.in`],
++    ["CANONICAL", `https://${clinic?.slug}.waspace.in`],
+   ];
+ 
+   return (
+diff --git a/src/hooks/useCustomDomain.js b/src/hooks/useCustomDomain.js
+index 36d709e..c05845d 100644
+--- a/src/hooks/useCustomDomain.js
++++ b/src/hooks/useCustomDomain.js
+@@ -7,8 +7,8 @@ import { useState, useEffect } from "react";
+ import { supabase } from "../lib/supabase";
+ 
+ const PLATFORM_DOMAINS = [
+-  "clinicsite.in",
+-  "www.clinicsite.in",
++  "waspace.in",
++  "www.waspace.in",
+   "kdcv101.vercel.app",
+   "localhost",
+   "127.0.0.1",
+diff --git a/src/lib/notifications.js b/src/lib/notifications.js
+index 7be702f..8460ab7 100644
+--- a/src/lib/notifications.js
++++ b/src/lib/notifications.js
+@@ -165,13 +165,13 @@ export async function notifyReminders(appointments, clinic) {
+ export const EMAIL_COMPLIANCE_FOOTER = (clinicOwnerId) => `
+ 
+ ---
+-You are receiving this email as a registered ClinicSite.in platform user.
++You are receiving this email as a registered WaSpace platform user.
+ 
+ To unsubscribe from platform communications:
+ • Visit: ${APP_URL}/admin/notifications
+ • Or reply to this email with the word UNSUBSCRIBE
+ 
+-${import.meta.env.VITE_SUPPORT_EMAIL || 'support@clinicsite.in'}
++${import.meta.env.VITE_SUPPORT_EMAIL || 'support@waspace.in'}
+ Data processed under the Digital Personal Data Protection Act, 2023.
+ `;
+ 
+@@ -192,7 +192,7 @@ export async function sendBroadcastEmail(subject, body, supabaseClient) {
+   // const resend = new Resend(process.env.RESEND_API_KEY);
+   // for (const clinic of clinics) {
+   //   await resend.emails.send({
+-  //     from: "ClinicSite <noreply@clinicsite.in>",
++  //     from: "WaSpace <noreply@waspace.in>",
+   //     to: clinic.email,
+   //     subject,
+   //     text: compliantBody.replace("{{clinic_id}}", clinic.id),
+diff --git a/src/lib/razorpay.js b/src/lib/razorpay.js
+index ce59905..5af530d 100644
+--- a/src/lib/razorpay.js
++++ b/src/lib/razorpay.js
+@@ -123,7 +123,7 @@ export async function openCheckout({ plan, clinic, user, onSuccess, onError }) {
+       subscription_id: subscriptionId,
+       name:            "ClinicSite",
+       description:     `${PLANS[plan].name} Plan — ₹${PLANS[plan].price}/month`,
+-      image:           `${import.meta.env.VITE_APP_URL || "https://clinicsite.in"}/logo.png`,
++      image:           `${import.meta.env.VITE_APP_URL || "https://waspace.in"}/logo.png`,
+ 
+       prefill: {
+         name:    clinic.name,
+diff --git a/src/pages/ClinicSite.jsx b/src/pages/ClinicSite.jsx
+index 11cd572..1de4536 100644
+--- a/src/pages/ClinicSite.jsx
++++ b/src/pages/ClinicSite.jsx
+@@ -77,13 +77,13 @@ function injectSEO(clinic, services, doctor, seoData) {
+     canon.setAttribute("rel", "canonical");
+     document.head.appendChild(canon);
+   }
+-  canon.setAttribute("href", `https://${clinic.slug}.clinicsite.in`);
++  canon.setAttribute("href", `https://${clinic.slug}.waspace.in`);
+ 
+   // OG tags
+   setOG("og:title",       `${name} — ${specialty} in ${city}`);
+   setOG("og:description", desc);
+   setOG("og:type",        "website");
+-  setOG("og:url",         `https://${clinic.slug}.clinicsite.in`);
++  setOG("og:url",         `https://${clinic.slug}.waspace.in`);
+ 
+   // JSON-LD schema — use stored schema if available, else auto-generate
+   const schema = seoData?.schema_json || {
+@@ -402,7 +402,7 @@ export default function ClinicSite({ slug }) {
+       <div style={{ fontSize:40 }}>⚠️</div>
+       <div style={{ color:"var(--color-danger)", fontWeight:600, fontSize:16 }}>Clinic not found</div>
+       <div style={{ color:"var(--color-text-muted)", fontSize:14, textAlign:"center", maxWidth:400 }}>{error}</div>
+-      <a href="/" style={{ marginTop:8, fontSize:13, color:"var(--color-primary)" }}>← Back to ClinicSite</a>
++      <a href="/" style={{ marginTop:8, fontSize:13, color:"var(--color-primary)" }}>← Back to WaSpace</a>
+     </div>
+   );
+ 
+diff --git a/src/pages/LandingPage.jsx b/src/pages/LandingPage.jsx
+index 17c86c0..409e843 100644
+--- a/src/pages/LandingPage.jsx
++++ b/src/pages/LandingPage.jsx
+@@ -1,62 +1,375 @@
+ // src/pages/LandingPage.jsx
+-// Public marketing landing page — shown at clinicsite.in/
++// Public marketing landing page — shown at waspace.in/
++// Brand: WaSpace — layout follows the approved marketing mockup.
++
++// ── Brand tokens ─────────────────────────────────────────────────
++const BRAND = {
++  primary:   "#5B5CEB",
++  primaryD:  "#4645C7",
++  navy:      "#1E2A44",
++  green:     "#22C55E",
++  gold:      "#D4AF37",
++  bgTint:    "#F6F8FC",
++  border:    "#E7E9F3",
++};
++
++// ── Real product data (kept in sync with src/config/planConfig.ts) ─
++const PLANS = [
++  {
++    id: "free", name: "Starter", price: "₹0", period: "/month",
++    desc: "Perfect for getting started",
++    features: ["1 website", "WaSpace branding", "50 appointments / mo", "3 services listed", "Basic templates"],
++    cta: "Start Free", highlight: false,
++  },
++  {
++    id: "premium", name: "Premium", price: "₹499", period: "/month",
++    desc: "Everything you need to grow",
++    features: ["1 website", "Custom domain", "500 appointments / mo", "20 services listed", "Priority support", "Advanced analytics"],
++    cta: "Start 7-Day Free Trial", highlight: true, badge: "Most Popular",
++  },
++  {
++    id: "enterprise", name: "Enterprise", price: "₹1,999", period: "/month",
++    desc: "For multi-location clinics",
++    features: ["Unlimited appointments", "White-label (remove branding)", "API access", "Team management", "Bulk operations"],
++    cta: "Talk to Us", highlight: false,
++  },
++];
++
++const FEATURES = [
++  { icon: "🧩", title: "Guided Setup Wizard", desc: "Answer a few questions about your clinic and get a live website in minutes — no coding." },
++  { icon: "🩺", title: "Specialty Templates", desc: "13 templates purpose-built for dental, dermatology, ortho, physiotherapy and more." },
++  { icon: "📅", title: "Online Appointments", desc: "Patients book straight from your site. DPDP Act 2023 compliant by default." },
++  { icon: "💬", title: "WhatsApp Notifications", desc: "Automatic booking confirmations and reminders sent over WhatsApp & SMS." },
++  { icon: "🔍", title: "Built-in SEO", desc: "Auto-generated meta tags, schema markup and keywords so clinics rank on Google." },
++  { icon: "🌐", title: "Custom Domain", desc: "Point your own domain, like www.yourclinic.in, straight to your WaSpace site." },
++];
++
++const TEMPLATES = [
++  { name: "Corporate Giant", desc: "Multi-Specialty Hospital", icon: "🏥" },
++  { name: "Elite Aesthetics", desc: "Dermatology & Cosmetic", icon: "✨" },
++  { name: "Nordic Sanctuary", desc: "Physiotherapy & Wellness", icon: "🌿" },
++  { name: "Surgical Hub", desc: "Orthopedics & Cardiology", icon: "⚕️" },
++];
++
++const TESTIMONIALS = [
++  { quote: "WaSpace made it incredibly easy to build our clinic website. We started getting appointment requests within the first week!", name: "Dr. Priya Sharma", role: "Dental Clinic, Chennai" },
++  { quote: "The templates are beautiful and professional. My website looks amazing on mobile, and setup took less than an hour.", name: "Dr. Arvind Kumar", role: "Multispecialty Clinic, Coimbatore" },
++  { quote: "Best platform for clinics. Simple, fast, and patient friendly. The WhatsApp reminders alone cut our no-shows in half.", name: "Dr. Neha Patel", role: "Family Clinic, Karur" },
++];
++
++function Logo() {
++  return (
++    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
++      <div style={{
++        width: 34, height: 34, borderRadius: 9,
++        background: `linear-gradient(135deg, ${BRAND.primary}, ${BRAND.primaryD})`,
++        display: "flex", alignItems: "center", justifyContent: "center",
++        fontFamily: "'Pacifico','Segoe Script',cursive", fontSize: 17, color: "white",
++        flexShrink: 0,
++      }}>Wa</div>
++      <span style={{ fontSize: 19, fontWeight: 800, color: BRAND.navy, letterSpacing: -0.3 }}>WaSpace</span>
++    </div>
++  );
++}
+ 
+ export default function LandingPage() {
+   return (
+-    <div style={{
+-      minHeight:"100vh", background:"#080c14", color:"white",
+-      fontFamily:"'DM Sans',sans-serif", display:"flex", flexDirection:"column",
+-      alignItems:"center", justifyContent:"center", padding:40, textAlign:"center",
+-    }}>
+-      <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet"/>
++    <div style={{ fontFamily: "'DM Sans',sans-serif", color: BRAND.navy, background: "white" }}>
++      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+ 
+-      <div style={{
+-        width:60, height:60, borderRadius:16,
+-        background:"linear-gradient(135deg,#1565c0,#1e88e5)",
+-        display:"flex", alignItems:"center", justifyContent:"center",
+-        fontSize:30, marginBottom:24, boxShadow:"0 8px 32px rgba(21,101,192,0.4)",
+-      }}>🏥</div>
++      <style>{`
++        .wa-container{max-width:1160px;margin:0 auto;padding:0 24px;}
++        .wa-nav-links{display:flex;gap:32px;align-items:center;}
++        .wa-nav-links a{color:#475569;text-decoration:none;font-size:14.5px;font-weight:500;}
++        .wa-nav-links a:hover{color:${BRAND.primary};}
++        .wa-btn{display:inline-flex;align-items:center;gap:6px;padding:11px 22px;border-radius:9px;font-size:14.5px;font-weight:700;cursor:pointer;text-decoration:none;border:none;font-family:inherit;transition:all .15s;}
++        .wa-btn-primary{background:${BRAND.primary};color:white;box-shadow:0 6px 18px rgba(91,92,235,.28);}
++        .wa-btn-primary:hover{background:${BRAND.primaryD};}
++        .wa-btn-outline{background:white;color:${BRAND.navy};border:1.5px solid ${BRAND.border};}
++        .wa-btn-outline:hover{border-color:${BRAND.primary};color:${BRAND.primary};}
++        .wa-hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;}
++        .wa-hero-badge{display:block;}
++        .wa-feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
++        .wa-template-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
++        .wa-testimonial-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
++        .wa-pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
++        .wa-footer-grid{display:grid;grid-template-columns:1.4fr repeat(4,1fr);gap:32px;}
++        @media (max-width:900px){
++          .wa-nav-links{display:none;}
++          .wa-hero-badge{display:none;}
++          .wa-hero-grid{grid-template-columns:1fr;}
++          .wa-feature-grid{grid-template-columns:repeat(2,1fr);}
++          .wa-template-grid{grid-template-columns:repeat(2,1fr);}
++          .wa-testimonial-grid{grid-template-columns:1fr;}
++          .wa-pricing-grid{grid-template-columns:1fr;}
++          .wa-footer-grid{grid-template-columns:repeat(2,1fr);}
++        }
++      `}</style>
+ 
+-      <div style={{
+-        fontFamily:"'DM Serif Display',serif",
+-        fontSize:"clamp(36px,5vw,64px)", lineHeight:1.1,
+-        marginBottom:20, maxWidth:700,
+-      }}>
+-        Your Clinic Website<br/>
+-        <em style={{ fontStyle:"italic", color:"#1e88e5" }}>in 10 Minutes</em>
+-      </div>
+-
+-      <p style={{ fontSize:18, color:"rgba(255,255,255,0.55)", maxWidth:500, lineHeight:1.7, marginBottom:40 }}>
+-        Built for Indian clinics. Auto-SEO. Appointment booking. DPDP-compliant. Free to start.
+-      </p>
+-
+-      <div style={{ display:"flex", gap:14, flexWrap:"wrap", justifyContent:"center", marginBottom:60 }}>
+-        <a href="/login" style={{
+-          background:"#1565c0", color:"white", textDecoration:"none",
+-          borderRadius:12, padding:"16px 36px", fontSize:16, fontWeight:700,
+-          boxShadow:"0 8px 24px rgba(21,101,192,0.4)",
+-        }}>
+-          Get Started Free →
+-        </a>
+-      </div>
+-
+-      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))", gap:20, maxWidth:700, width:"100%" }}>
+-        {[
+-          ["🏥","6.5L+ Clinics","In India, mostly undigitised"],
+-          ["⏱️","10 Minutes","From signup to live site"],
+-          ["⚖️","DPDP Compliant","Built for Indian medical law"],
+-        ].map(([icon,title,sub]) => (
+-          <div key={title} style={{
+-            background:"rgba(255,255,255,0.04)",
+-            border:"1px solid rgba(255,255,255,0.08)",
+-            borderRadius:12, padding:20,
++      {/* ── Nav ── */}
++      <header style={{ borderBottom: `1px solid ${BRAND.border}`, position: "sticky", top: 0, background: "rgba(255,255,255,0.92)", backdropFilter: "blur(8px)", zIndex: 50 }}>
++        <div className="wa-container" style={{ height: 68, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
++          <Logo />
++          <nav className="wa-nav-links">
++            <a href="#features">Features</a>
++            <a href="#templates">Templates</a>
++            <a href="#pricing">Pricing</a>
++            <a href="#faq">Resources</a>
++          </nav>
++          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
++            <a href="/login" className="wa-btn wa-btn-outline" style={{ padding: "9px 18px" }}>Login</a>
++            <a href="/login" className="wa-btn wa-btn-primary">Get Started Free</a>
++          </div>
++        </div>
++      </header>
++
++      {/* ── Hero ── */}
++      <section style={{ padding: "80px 0 64px" }}>
++        <div className="wa-container wa-hero-grid">
++          <div>
++            <h1 style={{ fontSize: "clamp(34px,4.2vw,48px)", lineHeight: 1.12, fontWeight: 800, letterSpacing: -1, marginBottom: 18 }}>
++              Beautiful Websites for <span style={{ color: BRAND.primary }}>Modern Clinics</span>
++            </h1>
++            <p style={{ fontSize: 17, color: "#5B6472", lineHeight: 1.7, marginBottom: 28, maxWidth: 460 }}>
++              Create, customize, and launch your clinic website in minutes. No coding. No hassle.
++            </p>
++            <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
++              <a href="/login" className="wa-btn wa-btn-primary" style={{ padding: "14px 26px", fontSize: 15.5 }}>Start Building for Free →</a>
++              <a href="#templates" className="wa-btn wa-btn-outline" style={{ padding: "14px 26px", fontSize: 15.5 }}>View Templates</a>
++            </div>
++            <div style={{ fontSize: 13, color: "#94A3B8" }}>✓ No credit card required</div>
++          </div>
++
++          {/* Mock browser preview of a generated clinic site */}
++          <div style={{ position: "relative" }}>
++            <div style={{ background: "white", borderRadius: 16, border: `1px solid ${BRAND.border}`, boxShadow: "0 24px 60px rgba(30,42,68,0.12)", overflow: "hidden" }}>
++              <div style={{ display: "flex", gap: 6, padding: "12px 14px", borderBottom: `1px solid ${BRAND.border}` }}>
++                <div style={{ width: 9, height: 9, borderRadius: 99, background: "#F87171" }} />
++                <div style={{ width: 9, height: 9, borderRadius: 99, background: "#FBBF24" }} />
++                <div style={{ width: 9, height: 9, borderRadius: 99, background: BRAND.green }} />
++              </div>
++              <div style={{ padding: 22 }}>
++                <div style={{ fontSize: 13, fontWeight: 700, color: BRAND.primary, marginBottom: 14 }}>♥ SmileCare Dental</div>
++                <div style={{ fontSize: 21, fontWeight: 800, lineHeight: 1.25, marginBottom: 8 }}>
++                  Compassionate Care for a <span style={{ color: BRAND.primary }}>Healthier</span> Everyday
++                </div>
++                <div style={{ fontSize: 12.5, color: "#64748B", marginBottom: 16, lineHeight: 1.6 }}>
++                  Gentle, advanced dental care for a healthier, happier you.
++                </div>
++                <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
++                  <div style={{ background: BRAND.primary, color: "white", fontSize: 12, fontWeight: 700, padding: "8px 16px", borderRadius: 8 }}>Book Appointment</div>
++                  <div style={{ border: `1px solid ${BRAND.border}`, fontSize: 12, fontWeight: 700, padding: "8px 16px", borderRadius: 8 }}>Our Services</div>
++                </div>
++                <div style={{ display: "flex", gap: 18, borderTop: `1px solid ${BRAND.border}`, paddingTop: 14 }}>
++                  {[["10+", "Years Experience"], ["2.5K+", "Happy Patients"], ["4.9★", "Google Rating"]].map(([n, l]) => (
++                    <div key={l}>
++                      <div style={{ fontSize: 15, fontWeight: 800, color: BRAND.navy }}>{n}</div>
++                      <div style={{ fontSize: 10.5, color: "#94A3B8" }}>{l}</div>
++                    </div>
++                  ))}
++                </div>
++              </div>
++            </div>
++            <div className="wa-hero-badge" style={{ position: "absolute", bottom: -22, right: -18, width: 120, background: "white", borderRadius: 14, border: `1px solid ${BRAND.border}`, boxShadow: "0 20px 40px rgba(30,42,68,0.14)", padding: 12 }}>
++              <div style={{ fontSize: 10, fontWeight: 700, color: BRAND.primary, marginBottom: 4 }}>SmileCare</div>
++              <div style={{ fontSize: 9, color: "#94A3B8" }}>Compassionate care, every day.</div>
++            </div>
++          </div>
++        </div>
++      </section>
++
++      {/* ── Built for every specialty (real template categories) ── */}
++      <section style={{ padding: "28px 0 56px", borderTop: `1px solid ${BRAND.border}`, borderBottom: `1px solid ${BRAND.border}`, background: BRAND.bgTint }}>
++        <div className="wa-container">
++          <div style={{ textAlign: "center", fontSize: 12, fontWeight: 700, letterSpacing: 1, color: "#94A3B8", marginBottom: 18 }}>BUILT FOR EVERY CLINIC SPECIALTY</div>
++          <div style={{ display: "flex", justifyContent: "center", gap: 36, flexWrap: "wrap" }}>
++            {["🦷 Dental", "🩹 Physiotherapy", "✨ Dermatology", "👁️ Eye Care", "🦴 Orthopedics", "🌿 Ayurveda"].map(t => (
++              <div key={t} style={{ fontSize: 14, fontWeight: 600, color: "#64748B" }}>{t}</div>
++            ))}
++          </div>
++        </div>
++      </section>
++
++      {/* ── Features ── */}
++      <section id="features" style={{ padding: "72px 0" }}>
++        <div className="wa-container">
++          <div style={{ textAlign: "center", maxWidth: 600, margin: "0 auto 44px" }}>
++            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1, color: BRAND.primary, marginBottom: 10 }}>EVERYTHING YOU NEED</div>
++            <h2 style={{ fontSize: 30, fontWeight: 800, letterSpacing: -0.5 }}>All the Tools to Grow Your Clinic Online</h2>
++          </div>
++          <div className="wa-feature-grid">
++            {FEATURES.map(f => (
++              <div key={f.title} style={{ border: `1px solid ${BRAND.border}`, borderRadius: 14, padding: 24, background: "white" }}>
++                <div style={{ width: 44, height: 44, borderRadius: 11, background: BRAND.bgTint, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, marginBottom: 14 }}>{f.icon}</div>
++                <div style={{ fontSize: 15.5, fontWeight: 700, marginBottom: 6 }}>{f.title}</div>
++                <div style={{ fontSize: 13.5, color: "#64748B", lineHeight: 1.6 }}>{f.desc}</div>
++              </div>
++            ))}
++          </div>
++        </div>
++      </section>
++
++      {/* ── Templates ── */}
++      <section id="templates" style={{ padding: "72px 0", background: BRAND.bgTint }}>
++        <div className="wa-container">
++          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 32, flexWrap: "wrap", gap: 12 }}>
++            <div>
++              <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1, color: BRAND.primary, marginBottom: 10 }}>BEAUTIFULLY DESIGNED TEMPLATES</div>
++              <h2 style={{ fontSize: 28, fontWeight: 800, letterSpacing: -0.5, marginBottom: 6 }}>Stunning Templates for Every Specialty</h2>
++              <p style={{ fontSize: 14, color: "#64748B" }}>13 templates to choose from. Customize your way, and go live in minutes.</p>
++            </div>
++            <a href="/login" style={{ color: BRAND.primary, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>View All Templates →</a>
++          </div>
++          <div className="wa-template-grid">
++            {TEMPLATES.map(t => (
++              <div key={t.name} style={{ background: "white", border: `1px solid ${BRAND.border}`, borderRadius: 14, overflow: "hidden" }}>
++                <div style={{ height: 100, background: `linear-gradient(135deg, ${BRAND.navy}, ${BRAND.primary})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 34 }}>{t.icon}</div>
++                <div style={{ padding: 16 }}>
++                  <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{t.name}</div>
++                  <div style={{ fontSize: 12, color: "#94A3B8" }}>{t.desc}</div>
++                </div>
++              </div>
++            ))}
++          </div>
++        </div>
++      </section>
++
++      {/* ── How it works ── */}
++      <section style={{ padding: "72px 0" }}>
++        <div className="wa-container" style={{ textAlign: "center" }}>
++          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1, color: BRAND.primary, marginBottom: 10 }}>HOW IT WORKS</div>
++          <h2 style={{ fontSize: 30, fontWeight: 800, letterSpacing: -0.5, marginBottom: 44 }}>Launch Your Website in 3 Simple Steps</h2>
++          <div style={{ display: "flex", justifyContent: "center", gap: 60, flexWrap: "wrap" }}>
++            {[
++              ["🧭", "Choose a Template", "Pick a template that fits your clinic's specialty."],
++              ["✏️", "Customize Easily", "Answer a few questions in our setup wizard to match your brand."],
++              ["🚀", "Publish & Go Live", "Your website is ready. Share it with the world."],
++            ].map(([icon, title, sub], i) => (
++              <div key={title} style={{ maxWidth: 220 }}>
++                <div style={{ width: 56, height: 56, borderRadius: "50%", background: i === 2 ? BRAND.green : BRAND.primary, color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, margin: "0 auto 16px" }}>{icon}</div>
++                <div style={{ fontSize: 15.5, fontWeight: 700, marginBottom: 6 }}>{title}</div>
++                <div style={{ fontSize: 13.5, color: "#64748B", lineHeight: 1.6 }}>{sub}</div>
++              </div>
++            ))}
++          </div>
++        </div>
++      </section>
++
++      {/* ── Testimonials ── */}
++      <section style={{ padding: "72px 0", background: BRAND.bgTint }}>
++        <div className="wa-container">
++          <h2 style={{ fontSize: 28, fontWeight: 800, letterSpacing: -0.5, textAlign: "center", marginBottom: 40 }}>Loved by Doctors &amp; Clinic Owners</h2>
++          <div className="wa-testimonial-grid">
++            {TESTIMONIALS.map(t => (
++              <div key={t.name} style={{ background: "white", border: `1px solid ${BRAND.border}`, borderRadius: 14, padding: 22 }}>
++                <div style={{ color: BRAND.gold, fontSize: 14, marginBottom: 12 }}>★★★★★</div>
++                <p style={{ fontSize: 13.5, color: "#475569", lineHeight: 1.7, marginBottom: 18 }}>{t.quote}</p>
++                <div style={{ fontSize: 13.5, fontWeight: 700 }}>{t.name}</div>
++                <div style={{ fontSize: 12, color: "#94A3B8" }}>{t.role}</div>
++              </div>
++            ))}
++          </div>
++        </div>
++      </section>
++
++      {/* ── Pricing ── */}
++      <section id="pricing" style={{ padding: "72px 0" }}>
++        <div className="wa-container">
++          <div style={{ textAlign: "center", marginBottom: 40 }}>
++            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1, color: BRAND.primary, marginBottom: 10 }}>SIMPLE PRICING</div>
++            <h2 style={{ fontSize: 30, fontWeight: 800, letterSpacing: -0.5, marginBottom: 8 }}>Start Free. Upgrade Anytime.</h2>
++            <p style={{ fontSize: 14, color: "#64748B" }}>Choose the plan that's right for your clinic.</p>
++          </div>
++          <div className="wa-pricing-grid">
++            {PLANS.map(p => (
++              <div key={p.id} style={{
++                position: "relative", background: p.highlight ? BRAND.navy : "white",
++                border: p.highlight ? "none" : `1px solid ${BRAND.border}`,
++                borderRadius: 16, padding: 28,
++                boxShadow: p.highlight ? "0 20px 48px rgba(30,42,68,0.25)" : "none",
++                transform: p.highlight ? "translateY(-8px)" : "none",
++              }}>
++                {p.badge && (
++                  <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: BRAND.gold, color: BRAND.navy, fontSize: 11, fontWeight: 800, padding: "4px 14px", borderRadius: 99 }}>{p.badge}</div>
++                )}
++                <div style={{ fontSize: 15, fontWeight: 700, color: p.highlight ? "white" : BRAND.navy, marginBottom: 4 }}>{p.name}</div>
++                <div style={{ fontSize: 12.5, color: p.highlight ? "rgba(255,255,255,0.6)" : "#94A3B8", marginBottom: 18 }}>{p.desc}</div>
++                <div style={{ marginBottom: 22 }}>
++                  <span style={{ fontSize: 34, fontWeight: 800, color: p.highlight ? "white" : BRAND.navy }}>{p.price}</span>
++                  <span style={{ fontSize: 13, color: p.highlight ? "rgba(255,255,255,0.6)" : "#94A3B8" }}>{p.period}</span>
++                </div>
++                <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 26 }}>
++                  {p.features.map(f => (
++                    <div key={f} style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13, color: p.highlight ? "rgba(255,255,255,0.85)" : "#475569" }}>
++                      <span style={{ color: BRAND.green }}>✓</span>{f}
++                    </div>
++                  ))}
++                </div>
++                <a href="/login" className="wa-btn" style={{
++                  width: "100%", justifyContent: "center", padding: "12px",
++                  background: p.highlight ? "white" : BRAND.bgTint,
++                  color: BRAND.navy,
++                }}>{p.cta}</a>
++              </div>
++            ))}
++          </div>
++        </div>
++      </section>
++
++      {/* ── CTA banner ── */}
++      <section style={{ padding: "56px 0" }}>
++        <div className="wa-container">
++          <div style={{
++            background: `linear-gradient(120deg, ${BRAND.primary}, ${BRAND.primaryD})`,
++            borderRadius: 20, padding: "44px 40px", display: "flex", alignItems: "center",
++            justifyContent: "space-between", flexWrap: "wrap", gap: 20, color: "white",
+           }}>
+-            <div style={{ fontSize:28, marginBottom:8 }}>{icon}</div>
+-            <div style={{ fontSize:18, fontWeight:700, marginBottom:4 }}>{title}</div>
+-            <div style={{ fontSize:13, color:"rgba(255,255,255,0.45)" }}>{sub}</div>
++            <div>
++              <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 6 }}>Ready to Grow Your Clinic Online?</div>
++              <div style={{ fontSize: 14, opacity: 0.85 }}>Join clinics across India building their online presence with WaSpace.</div>
++            </div>
++            <a href="/login" className="wa-btn" style={{ background: "white", color: BRAND.primary, padding: "14px 28px", fontSize: 15 }}>Start Building for Free →</a>
++          </div>
++        </div>
++      </section>
++
++      {/* ── Footer ── */}
++      <footer style={{ borderTop: `1px solid ${BRAND.border}`, background: BRAND.bgTint, padding: "48px 0 28px" }}>
++        <div className="wa-container">
++          <div className="wa-footer-grid" style={{ marginBottom: 36 }}>
++            <div>
++              <Logo />
++              <p style={{ fontSize: 13, color: "#64748B", marginTop: 14, lineHeight: 1.7, maxWidth: 240 }}>
++                The simplest way for clinics to create a stunning website that patients love.
++              </p>
++            </div>
++            {[
++              ["Product", ["Features", "Templates", "Pricing", "Changelog"]],
++              ["Resources", ["Help Center", "Blog", "Guides", "Webinars"]],
++              ["Company", ["About Us", "Contact Us", "Careers", "Affiliate Program"]],
++            ].map(([title, links]) => (
++              <div key={title}>
++                <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 14 }}>{title}</div>
++                {links.map(l => (
++                  <div key={l} style={{ fontSize: 13, color: "#64748B", marginBottom: 10 }}>{l}</div>
++                ))}
++              </div>
++            ))}
++            <div>
++              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 14 }}>Stay Updated</div>
++              <p style={{ fontSize: 12.5, color: "#64748B", marginBottom: 12 }}>Get tips on growing your clinic online.</p>
++              <div style={{ display: "flex", border: `1px solid ${BRAND.border}`, borderRadius: 9, overflow: "hidden", background: "white" }}>
++                <input placeholder="Enter your email" style={{ flex: 1, border: "none", outline: "none", padding: "10px 12px", fontSize: 12.5, fontFamily: "inherit" }} />
++                <button className="wa-btn wa-btn-primary" style={{ borderRadius: 0, padding: "10px 14px" }}>→</button>
++              </div>
++            </div>
++          </div>
++          <div style={{ borderTop: `1px solid ${BRAND.border}`, paddingTop: 20, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12, fontSize: 12.5, color: "#94A3B8" }}>
++            <div>© {new Date().getFullYear()} WaSpace. All rights reserved.</div>
++            <a href="/privacy" style={{ color: "#94A3B8", textDecoration: "none" }}>Privacy Policy</a>
+           </div>
+-        ))}
+-      </div>
++        </div>
++      </footer>
+     </div>
+   );
+ }
+diff --git a/src/pages/PrivacyPolicyPage.jsx b/src/pages/PrivacyPolicyPage.jsx
+index 29478f4..6534f5e 100644
+--- a/src/pages/PrivacyPolicyPage.jsx
++++ b/src/pages/PrivacyPolicyPage.jsx
+@@ -57,7 +57,7 @@ export default function PrivacyPolicyPage({ clinic, doctor }) {
+         </div>
+         {renderMarkdown(policy.content)}
+         <div style={{ marginTop:40, padding:"16px 20px", background:"#f4f8fd", border:"1px solid #dce8f5", borderRadius:10, fontSize:11, color:"#94a3b8", fontFamily:"monospace", lineHeight:1.8 }}>
+-          Auto-generated by ClinicSite.in · Version {policy.version} · {new Date(policy.generated_at).toLocaleDateString("en-IN")} · DPDP Act 2023 · DPDP Rules 2025
++          Auto-generated by WaSpace · Version {policy.version} · {new Date(policy.generated_at).toLocaleDateString("en-IN")} · DPDP Act 2023 · DPDP Rules 2025
+         </div>
+       </div>
+     </div>
+diff --git a/src/templates/index.html b/src/templates/index.html
+index d69ce5b..8265f29 100644
+--- a/src/templates/index.html
++++ b/src/templates/index.html
+@@ -4,7 +4,7 @@
+     <meta charset="UTF-8" />
+     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+-    <title>ClinicSite.in — Clinic Websites for India</title>
++    <title>WaSpace — Clinic Websites for India</title>
+ 
+     <!-- Fonts used across all clinic templates — loaded once here instead
+          of each template injecting its own <link> tag on every mount. -->

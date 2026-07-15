@@ -77,13 +77,13 @@ function injectSEO(clinic, services, doctor, seoData) {
     canon.setAttribute("rel", "canonical");
     document.head.appendChild(canon);
   }
-  canon.setAttribute("href", `https://${clinic.slug}.clinicsite.in`);
+  canon.setAttribute("href", `https://${clinic.slug}.waspace.in`);
 
   // OG tags
   setOG("og:title",       `${name} — ${specialty} in ${city}`);
   setOG("og:description", desc);
   setOG("og:type",        "website");
-  setOG("og:url",         `https://${clinic.slug}.clinicsite.in`);
+  setOG("og:url",         `https://${clinic.slug}.waspace.in`);
 
   // JSON-LD schema — use stored schema if available, else auto-generate
   const schema = seoData?.schema_json || {
@@ -402,7 +402,7 @@ export default function ClinicSite({ slug }) {
       <div style={{ fontSize:40 }}>⚠️</div>
       <div style={{ color:"var(--color-danger)", fontWeight:600, fontSize:16 }}>Clinic not found</div>
       <div style={{ color:"var(--color-text-muted)", fontSize:14, textAlign:"center", maxWidth:400 }}>{error}</div>
-      <a href="/" style={{ marginTop:8, fontSize:13, color:"var(--color-primary)" }}>← Back to ClinicSite</a>
+      <a href="/" style={{ marginTop:8, fontSize:13, color:"var(--color-primary)" }}>← Back to WaSpace</a>
     </div>
   );
 

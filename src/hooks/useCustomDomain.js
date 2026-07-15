@@ -7,8 +7,8 @@ import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 
 const PLATFORM_DOMAINS = [
-  "clinicsite.in",
-  "www.clinicsite.in",
+  "waspace.in",
+  "www.waspace.in",
   "kdcv101.vercel.app",
   "localhost",
   "127.0.0.1",

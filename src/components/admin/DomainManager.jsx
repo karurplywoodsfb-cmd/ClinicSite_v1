@@ -108,7 +108,7 @@ export default function DomainManager({ clinic }) {
     <div style={{ maxWidth: 680, fontFamily: "'DM Sans', sans-serif" }}>
       <h2 style={{ fontSize: 20, fontWeight: 700, color: "#0f172a", marginBottom: 6 }}>Custom Domain</h2>
       <p style={{ fontSize: 14, color: "#64748b", marginBottom: 24 }}>
-        Point your own domain (e.g. <strong>www.drsmithclinic.in</strong>) to your ClinicSite page.
+        Point your own domain (e.g. <strong>www.drsmithclinic.in</strong>) to your WaSpace page.
       </p>
 
       {/* Current status */}

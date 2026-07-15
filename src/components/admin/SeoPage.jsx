@@ -32,7 +32,7 @@ export default function SeoPage({ clinic, hasRegNo }) {
   const metaTags = [
     ["TITLE", `${clinic?.name} | ${clinic?.specialty} in ${clinic?.city} | Book Appointment`],
     ["DESCRIPTION", `Expert ${(clinic?.specialty||"").toLowerCase()} care in ${clinic?.city}. Book appointment online.`],
-    ["CANONICAL", `https://${clinic?.slug}.clinicsite.in`],
+    ["CANONICAL", `https://${clinic?.slug}.waspace.in`],
   ];
 
   return (

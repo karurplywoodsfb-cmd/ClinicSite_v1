@@ -68,7 +68,7 @@ export default function PreviewPage({ clinic, hasRegNo, handlePublish, publishin
           </div>
           <div style={{ flex:1, background:"rgba(255,255,255,0.05)", borderRadius:6,
             padding:"4px 12px", fontSize:12, color:"#475569", fontFamily:"monospace" }}>
-            🔒 {clinic?.slug}.clinicsite.in
+            🔒 {clinic?.slug}.waspace.in
           </div>
         </div>
 

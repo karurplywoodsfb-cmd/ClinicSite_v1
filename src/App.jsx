@@ -39,7 +39,7 @@ function PageLoader() {
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: 40, animation: "spin 2s linear infinite" }}>🦷</div>
         <div style={{ color: "#475569", fontSize: 14, marginTop: 12, fontFamily: "sans-serif" }}>
-          Loading ClinicSite...
+          Loading WaSpace...
         </div>
         <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
       </div>
@@ -233,9 +233,9 @@ function CustomDomainSite({ clinicSlug }) {
       }}>
         <div style={{ fontSize: 40 }}>🔍</div>
         <div style={{ color: "#64748b", fontSize: 15 }}>Clinic not found on this domain.</div>
-        <a href="https://clinicsite.in"
+        <a href="https://waspace.in"
           style={{ color: "#1565c0", fontSize: 13, textDecoration: "none" }}>
-          Powered by ClinicSite.in
+          Powered by WaSpace
         </a>
       </div>
     );

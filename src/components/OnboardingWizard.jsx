@@ -1,12 +1,29 @@
 // src/components/OnboardingWizard.jsx
 // Self-onboarding wizard — replaces manual seed SQL
-// New clinic owner signs up → answers 6 steps → site is live
+// New clinic owner signs up → answers a few steps → site is live
 // Saves everything to Supabase automatically
+//
+// Visual design follows the WaSpace onboarding mockup: a single centered
+// card, numbered step badge + progress bar, light lavender background.
 
 import { useState } from "react";
 import { usePlanEnforcement } from "../hooks/usePlanEnforcement";
 import { PlanUpgradeModal } from "./PlanUpgradeModal";
 import { supabase } from "../lib/supabase";
+import { TEMPLATES } from "../templates";
+
+// ── Brand tokens ─────────────────────────────────────────────────
+const BRAND = {
+  primary:  "#5B5CEB",
+  primaryD: "#4645C7",
+  navy:     "#1E2A44",
+  green:    "#22C55E",
+  gold:     "#D4AF37",
+  bg:       "#F6F8FC",
+  border:   "#E7E9F3",
+  text:     "#1E2A44",
+  sub:      "#64748B",
+};
 
 // ── Specialty → keyword map ───────────────────────────────────────
 const SPECIALTY_DATA = {
@@ -64,25 +81,10 @@ function generateSEO(clinic, services) {
   };
 }
 
-// ── Step components ───────────────────────────────────────────────
-
-function StepWrap({ children }) {
-  return (
-    <div style={{ animation: "fadeUp .35s ease both" }}>
-      <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}`}</style>
-      {children}
-    <PlanUpgradeModal
-        isOpen={showUpgrade}
-        onClose={() => setShowUpgrade(false)}
-        requiredPlan="premium"
-        featureName={upgradeFeature}
-      />
-    </div>
-  );
-}
+// ── Shared UI primitives ────────────────────────────────────────
 
 function Label({ children }) {
-  return <div style={{ fontSize:11, fontFamily:"monospace", fontWeight:700, letterSpacing:1, color:"#64748b", textTransform:"uppercase", marginBottom:8 }}>{children}</div>;
+  return <div style={{ fontSize:13, fontWeight:600, color:BRAND.text, marginBottom:8 }}>{children}</div>;
 }
 
 function Input({ value, onChange, placeholder, type="text" }) {
@@ -90,44 +92,131 @@ function Input({ value, onChange, placeholder, type="text" }) {
   return (
     <input type={type} value={value} onChange={e => onChange(e.target.value)}
       placeholder={placeholder} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-      style={{ width:"100%", padding:"11px 14px", background:"rgba(255,255,255,0.05)", border:`1.5px solid ${focused?"rgba(21,101,192,0.6)":"rgba(255,255,255,0.1)"}`, color:"#e2e8f0", borderRadius:9, fontSize:14, fontFamily:"inherit", outline:"none", boxSizing:"border-box", transition:"border-color .2s" }}
+      style={{ width:"100%", padding:"11px 14px", background:"white",
+        border:`1.5px solid ${focused ? BRAND.primary : BRAND.border}`, color:BRAND.text,
+        borderRadius:9, fontSize:14, fontFamily:"inherit", outline:"none", boxSizing:"border-box",
+        transition:"border-color .2s" }}
     />
   );
 }
 
-// ── Main wizard ───────────────────────────────────────────────────
+function TextArea({ value, onChange, placeholder, rows=3 }) {
+  return (
+    <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} rows={rows}
+      style={{ width:"100%", padding:"11px 14px", background:"white", border:`1.5px solid ${BRAND.border}`,
+        color:BRAND.text, borderRadius:9, fontSize:14, fontFamily:"inherit", outline:"none",
+        boxSizing:"border-box", resize:"vertical", lineHeight:1.6 }} />
+  );
+}
 
-const TOTAL_STEPS = 6;
+function ChoiceCard({ selected, icon, label, onClick }) {
+  return (
+    <button onClick={onClick} style={{
+      padding:"16px 10px", borderRadius:12, cursor:"pointer", textAlign:"center", fontFamily:"inherit",
+      background: selected ? "rgba(91,92,235,0.08)" : "white",
+      border: `1.5px solid ${selected ? BRAND.primary : BRAND.border}`,
+      color: selected ? BRAND.primary : BRAND.sub,
+      position:"relative", transition:"all .15s",
+    }}>
+      {selected && (
+        <div style={{ position:"absolute", top:8, right:8, width:16, height:16, borderRadius:"50%",
+          background:BRAND.primary, color:"white", fontSize:10, display:"flex", alignItems:"center", justifyContent:"center" }}>✓</div>
+      )}
+      <div style={{ fontSize:22, marginBottom:6 }}>{icon}</div>
+      <div style={{ fontSize:12, fontWeight:600 }}>{label}</div>
+    </button>
+  );
+}
+
+function Progress({ step, total }) {
+  return (
+    <div style={{ display:"flex", gap:5, flex:1, margin:"0 14px" }}>
+      {Array.from({ length: total }).map((_, i) => (
+        <div key={i} style={{ height:5, flex:1, borderRadius:99, background: i < step ? BRAND.primary : BRAND.border, transition:"background .3s" }} />
+      ))}
+    </div>
+  );
+}
+
+// Every step (except welcome/done) is wrapped in this card shell.
+function Shell({ step, total, onSkip, children }) {
+  return (
+    <div style={{ minHeight:"100vh", background:BRAND.bg, display:"flex", alignItems:"center", justifyContent:"center", padding:24, fontFamily:"'DM Sans',sans-serif" }}>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+      <style>{`@keyframes waFadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}`}</style>
+      <div style={{ width:"100%", maxWidth:600, background:"white", borderRadius:20, border:`1px solid ${BRAND.border}`, boxShadow:"0 24px 60px rgba(30,42,68,0.10)", padding:32, animation:"waFadeUp .3s ease both" }}>
+        <div style={{ display:"flex", alignItems:"center", marginBottom:28 }}>
+          <div style={{ width:30, height:30, borderRadius:"50%", background:BRAND.primary, color:"white", fontSize:13, fontWeight:700, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>{step}</div>
+          <Progress step={step} total={total} />
+          {onSkip && <button onClick={onSkip} style={{ background:"none", border:"none", color:BRAND.sub, fontSize:13, cursor:"pointer", fontFamily:"inherit" }}>Skip</button>}
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function NavRow({ onBack, onNext, nextLabel="Next →", nextDisabled=false, loading=false }) {
+  return (
+    <div style={{ display:"flex", gap:12, marginTop:28 }}>
+      {onBack && (
+        <button onClick={onBack} style={{ padding:"12px 20px", background:"white", border:`1.5px solid ${BRAND.border}`, color:BRAND.text, borderRadius:10, fontSize:14, fontWeight:600, cursor:"pointer", fontFamily:"inherit" }}>
+          Back
+        </button>
+      )}
+      <button onClick={onNext} disabled={nextDisabled || loading} style={{
+        flex:1, padding:"12px", borderRadius:10, fontSize:14, fontWeight:700, fontFamily:"inherit",
+        border:"none", color:"white",
+        background: (nextDisabled || loading) ? "#C7CCE8" : BRAND.primary,
+        cursor: (nextDisabled || loading) ? "not-allowed" : "pointer",
+        boxShadow: (nextDisabled || loading) ? "none" : "0 8px 20px rgba(91,92,235,0.28)",
+        transition:"all .2s",
+      }}>
+        {loading ? "Working…" : nextLabel}
+      </button>
+    </div>
+  );
+}
+
+// ── Main wizard ───────────────────────────────────────────────────
+// Step numbering (matches the WaSpace onboarding flow — welcome and the
+// final success screen sit outside the numbered progress bar):
+//   1 Clinic type   2 Clinic details   3 Location   4 Contact
+//   5 Doctor        6 Template         7 Services   8 Hours & launch
+const TOTAL_STEPS = 8;
 
 export default function OnboardingWizard({ user, onComplete }) {
-  const [step, setStep]     = useState(1);
-  const [saving, setSaving] = useState(false);
-  const [error, setError]   = useState("");
-  const [done, setDone]     = useState(false);
+  const [started, setStarted] = useState(false);
+  const [step, setStep]       = useState(1);
+  const [saving, setSaving]   = useState(false);
+  const [error, setError]     = useState("");
+  const [done, setDone]       = useState(false);
   const [liveUrl, setLiveUrl] = useState("");
   const { limits } = usePlanEnforcement();
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [upgradeFeature, setUpgradeFeature] = useState("");
 
+  const maxServices = typeof limits?.features?.services === "number" ? limits.features.services : 5;
+
   const [data, setData] = useState({
-    // Step 1
-    clinicName:     "",
-    specialty:      "",
-    city:           "",
-    // Step 2
-    phone:          "",
-    whatsapp:       "",
-    email:          "",
-    address:        "",
-    // Step 3
-    doctorName:     "",
-    doctorDegree:   "",
-    doctorSpec:     "",
-    doctorExp:      "",
-    doctorBio:      "",
-    // Step 4
-    services:       [],
-    // Step 5
+    clinicName:   "",
+    specialty:    "",
+    tagline:      "",
+    city:         "",
+    pincode:      "",
+    state:        "",
+    address:      "",
+    phone:        "",
+    whatsapp:     "",
+    email:        "",
+    wantsContactForm: true,
+    doctorName:   "",
+    doctorDegree: "",
+    doctorSpec:   "",
+    doctorExp:    "",
+    doctorBio:    "",
+    template:     "",
+    services:     [],
     hours: {
       Monday: { open:"09:00", close:"20:00", closed:false },
       Tuesday: { open:"09:00", close:"20:00", closed:false },
@@ -137,20 +226,20 @@ export default function OnboardingWizard({ user, onComplete }) {
       Saturday: { open:"09:00", close:"18:00", closed:false },
       Sunday: { open:"", close:"", closed:true },
     },
-    // Step 6
     about: "",
   });
 
   const set = (key, val) => setData(p => ({ ...p, [key]: val }));
 
-  const progress = ((step - 1) / TOTAL_STEPS) * 100;
-
   // ── Validation per step ─────────────────────────────────────────
   const canNext = () => {
-    if (step === 1) return data.clinicName.trim() && data.specialty && data.city.trim();
-    if (step === 2) return data.phone.trim() && data.address.trim();
-    if (step === 3) return data.doctorName.trim() && data.doctorDegree.trim();
-    if (step === 4) return data.services.length > 0;
+    if (step === 1) return !!data.specialty;
+    if (step === 2) return data.clinicName.trim().length > 0;
+    if (step === 3) return data.address.trim() && data.city.trim();
+    if (step === 4) return data.phone.trim().length > 0;
+    if (step === 5) return data.doctorName.trim() && data.doctorDegree.trim();
+    if (step === 6) return !!data.template;
+    if (step === 7) return data.services.length > 0;
     return true;
   };
 
@@ -160,6 +249,7 @@ export default function OnboardingWizard({ user, onComplete }) {
     setError("");
     try {
       const slug = slugify(data.clinicName);
+      const fullAddress = [data.address, data.pincode, data.state].filter(Boolean).join(", ");
 
       // 1. Insert clinic
       const { data: clinic, error: clinicErr } = await supabase
@@ -173,8 +263,8 @@ export default function OnboardingWizard({ user, onComplete }) {
           phone:      data.phone,
           whatsapp:   data.whatsapp || data.phone,
           email:      data.email,
-          address:    data.address,
-          about:      data.about || `Expert ${data.specialty.toLowerCase()} care in ${data.city}.`,
+          address:    fullAddress,
+          about:      data.about || data.tagline || `Expert ${data.specialty.toLowerCase()} care in ${data.city}.`,
           plan:       "free",
           is_published: true,
         })
@@ -218,7 +308,11 @@ export default function OnboardingWizard({ user, onComplete }) {
       const seo = generateSEO({ name: data.clinicName, specialty: data.specialty, city: data.city, phone: data.phone }, data.services);
       await supabase.from("seo_data").insert({ clinic_id: clinic.id, ...seo });
 
-      const url = `${slug}.clinicsite.in`;
+      // NOTE: data.template ("chosen template id") is currently not persisted —
+      // the `clinics` table has no template/theme column in the live schema yet.
+      // Once that column exists, add `template: data.template` to the insert above.
+
+      const url = `${slug}.waspace.in`;
       setLiveUrl(url);
       setDone(true);
       onComplete?.(clinic);
@@ -230,36 +324,54 @@ export default function OnboardingWizard({ user, onComplete }) {
     }
   };
 
+  // ── WELCOME screen ──────────────────────────────────────────────
+  if (!started) {
+    return (
+      <div style={{ minHeight:"100vh", background:BRAND.bg, display:"flex", alignItems:"center", justifyContent:"center", padding:24, fontFamily:"'DM Sans',sans-serif" }}>
+        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+        <div style={{ width:"100%", maxWidth:440, background:"white", borderRadius:20, border:`1px solid ${BRAND.border}`, boxShadow:"0 24px 60px rgba(30,42,68,0.10)", padding:40, textAlign:"center" }}>
+          <div style={{ width:64, height:64, borderRadius:16, margin:"0 auto 22px", background:`linear-gradient(135deg, ${BRAND.primary}, ${BRAND.primaryD})`, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Pacifico','Segoe Script',cursive", fontSize:30, color:"white" }}>Wa</div>
+          <h1 style={{ fontSize:24, fontWeight:800, color:BRAND.text, marginBottom:10 }}>Welcome to <span style={{ color:BRAND.primary }}>WaSpace</span></h1>
+          <p style={{ fontSize:14, color:BRAND.sub, lineHeight:1.7, marginBottom:28 }}>
+            The easiest way for clinics to build beautiful, high-converting websites — no code, no hassle.
+          </p>
+          <button onClick={() => setStarted(true)} style={{ width:"100%", padding:"13px", background:BRAND.primary, border:"none", borderRadius:10, color:"white", fontSize:15, fontWeight:700, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 8px 20px rgba(91,92,235,0.28)" }}>
+            Get Started →
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // ── DONE screen ─────────────────────────────────────────────────
   if (done) {
     return (
-      <div style={{ minHeight:"100vh", background:"#080c14", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'DM Sans',sans-serif", padding:24 }}>
-        <div style={{ maxWidth:480, width:"100%", textAlign:"center" }}>
-          <div style={{ fontSize:64, marginBottom:16, animation:"bounce 1s ease" }}>🎉</div>
-          <style>{`@keyframes bounce{0%,100%{transform:translateY(0)}40%{transform:translateY(-20px)}60%{transform:translateY(-10px)}}`}</style>
-          <h1 style={{ fontSize:28, fontWeight:700, color:"#f1f5f9", marginBottom:8 }}>Your site is live!</h1>
-          <p style={{ color:"#64748b", fontSize:15, marginBottom:28 }}>
-            {data.clinicName} is now online and searchable on Google.
+      <div style={{ minHeight:"100vh", background:BRAND.bg, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'DM Sans',sans-serif", padding:24 }}>
+        <div style={{ maxWidth:480, width:"100%", background:"white", borderRadius:20, border:`1px solid ${BRAND.border}`, boxShadow:"0 24px 60px rgba(30,42,68,0.10)", padding:40, textAlign:"center" }}>
+          <div style={{ fontSize:56, marginBottom:16 }}>🎉</div>
+          <h1 style={{ fontSize:24, fontWeight:800, color:BRAND.text, marginBottom:8 }}>You're all set!</h1>
+          <p style={{ color:BRAND.sub, fontSize:14, marginBottom:26, lineHeight:1.6 }}>
+            {data.clinicName} is now live and searchable on Google.
           </p>
           <div style={{ background:"rgba(34,197,94,0.08)", border:"1px solid rgba(34,197,94,0.25)", borderRadius:12, padding:"16px 20px", marginBottom:24 }}>
-            <div style={{ fontSize:11, color:"#22c55e", fontFamily:"monospace", marginBottom:6 }}>YOUR LIVE URL</div>
-            <div style={{ fontSize:17, fontWeight:700, color:"#22c55e" }}>🌐 {liveUrl}</div>
+            <div style={{ fontSize:11, color:BRAND.green, fontWeight:700, letterSpacing:1, marginBottom:6 }}>YOUR LIVE URL</div>
+            <div style={{ fontSize:17, fontWeight:700, color:BRAND.green }}>🌐 {liveUrl}</div>
           </div>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:24 }}>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:26 }}>
             {[
               ["🔍","SEO Configured","Auto-applied for " + data.city],
               ["📅","Booking Ready","Patients can book online"],
               ["💬","WhatsApp Active","One-tap patient contact"],
               ["📊","Admin Panel","Manage everything"],
             ].map(([icon,title,sub]) => (
-              <div key={title} style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:10, padding:"14px 12px", textAlign:"left" }}>
+              <div key={title} style={{ background:BRAND.bg, border:`1px solid ${BRAND.border}`, borderRadius:10, padding:"14px 12px", textAlign:"left" }}>
                 <div style={{ fontSize:20, marginBottom:6 }}>{icon}</div>
-                <div style={{ fontSize:13, fontWeight:600, color:"#e2e8f0" }}>{title}</div>
-                <div style={{ fontSize:11, color:"#475569" }}>{sub}</div>
+                <div style={{ fontSize:13, fontWeight:600, color:BRAND.text }}>{title}</div>
+                <div style={{ fontSize:11, color:BRAND.sub }}>{sub}</div>
               </div>
             ))}
           </div>
-          <button onClick={() => onComplete?.()} style={{ width:"100%", padding:"13px", background:"linear-gradient(135deg,#1565c0,#1e88e5)", border:"none", borderRadius:10, color:"white", fontSize:15, fontWeight:700, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 4px 16px rgba(21,101,192,0.3)" }}>
+          <button onClick={() => onComplete?.()} style={{ width:"100%", padding:"13px", background:BRAND.primary, border:"none", borderRadius:10, color:"white", fontSize:15, fontWeight:700, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 8px 20px rgba(91,92,235,0.28)" }}>
             Go to Admin Panel →
           </button>
         </div>
@@ -267,275 +379,254 @@ export default function OnboardingWizard({ user, onComplete }) {
     );
   }
 
-  // ── Wizard shell ─────────────────────────────────────────────────
+  // ── Wizard steps ─────────────────────────────────────────────────
   return (
-    <div style={{ minHeight:"100vh", background:"#080c14", display:"flex", fontFamily:"'DM Sans',sans-serif" }}>
-      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+    <>
+      <Shell step={step} total={TOTAL_STEPS} onSkip={step < TOTAL_STEPS ? () => setStep(s => Math.min(s + 1, TOTAL_STEPS)) : null}>
 
-      {/* Left panel */}
-      <div style={{ width:280, flexShrink:0, background:"#0d1526", borderRight:"1px solid rgba(255,255,255,0.06)", padding:"32px 24px", display:"flex", flexDirection:"column" }}>
-        <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:40 }}>
-          <div style={{ width:36, height:36, borderRadius:10, background:"linear-gradient(135deg,#1565c0,#1e88e5)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>🦷</div>
+        {/* STEP 1: Clinic type */}
+        {step === 1 && (
           <div>
-            <div style={{ fontSize:13, fontWeight:700, color:"#f1f5f9" }}>ClinicSite</div>
-            <div style={{ fontSize:10, color:"#475569" }}>Setup Wizard</div>
-          </div>
-        </div>
-
-        {[
-          [1,"Clinic Basics","Name, specialty, city"],
-          [2,"Contact Info","Phone, address"],
-          [3,"Doctor Profile","Name, degree, bio"],
-          [4,"Services","What you offer"],
-          [5,"Working Hours","When you're open"],
-          [6,"About & Launch","Final details"],
-        ].map(([n, title, sub]) => (
-          <div key={n} style={{ display:"flex", gap:12, marginBottom:20, alignItems:"flex-start" }}>
-            <div style={{ width:28, height:28, borderRadius:"50%", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:700, fontFamily:"monospace",
-              background: step > n ? "#22c55e" : step === n ? "#1565c0" : "rgba(255,255,255,0.06)",
-              color: step >= n ? "white" : "#334155",
-              border: `2px solid ${step > n ? "#22c55e" : step === n ? "#1565c0" : "rgba(255,255,255,0.08)"}`,
-              transition:"all .3s",
-            }}>
-              {step > n ? "✓" : n}
-            </div>
-            <div style={{ paddingTop:4 }}>
-              <div style={{ fontSize:13, fontWeight:600, color: step >= n ? "#e2e8f0" : "#334155", transition:"color .3s" }}>{title}</div>
-              <div style={{ fontSize:11, color:"#334155", marginTop:1 }}>{sub}</div>
+            <h2 style={{ fontSize:22, fontWeight:800, color:BRAND.text, marginBottom:4 }}>What type of clinic do you run?</h2>
+            <p style={{ fontSize:13.5, color:BRAND.sub, marginBottom:22 }}>This helps us personalize your website experience.</p>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10 }}>
+              {Object.entries(SPECIALTY_DATA).map(([sp, info]) => (
+                <ChoiceCard key={sp} icon={info.icon} label={sp} selected={data.specialty === sp} onClick={() => set("specialty", sp)} />
+              ))}
             </div>
           </div>
-        ))}
+        )}
 
-        <div style={{ marginTop:"auto", background:"rgba(34,197,94,0.06)", border:"1px solid rgba(34,197,94,0.2)", borderRadius:10, padding:"12px 14px" }}>
-          <div style={{ fontSize:10, color:"#22c55e", fontFamily:"monospace", marginBottom:4 }}>ESTIMATED TIME</div>
-          <div style={{ fontSize:18, fontWeight:700, color:"#22c55e" }}>~5 minutes</div>
-          <div style={{ fontSize:11, color:"#475569", marginTop:2 }}>Then your site is live</div>
-        </div>
-      </div>
+        {/* STEP 2: Clinic details */}
+        {step === 2 && (
+          <div>
+            <h2 style={{ fontSize:22, fontWeight:800, color:BRAND.text, marginBottom:4 }}>Tell us about your clinic</h2>
+            <p style={{ fontSize:13.5, color:BRAND.sub, marginBottom:22 }}>Add basic information to get started.</p>
+            <div style={{ marginBottom:16 }}>
+              <Label>Clinic Name</Label>
+              <Input value={data.clinicName} onChange={v => set("clinicName", v)} placeholder="e.g. Bright Smile Dental Clinic" />
+            </div>
+            <div style={{ marginBottom:16 }}>
+              <Label>Specialization (Optional)</Label>
+              <Input value={data.doctorSpec} onChange={v => set("doctorSpec", v)} placeholder="Cosmetic Dentistry, Implantology" />
+            </div>
+            <div>
+              <Label>Tagline (Optional)</Label>
+              <Input value={data.tagline} onChange={v => set("tagline", v.slice(0,60))} placeholder="Creating Healthy Smiles, Every Day 😊" />
+              <div style={{ textAlign:"right", fontSize:11, color:"#B4B9D6", marginTop:4 }}>{data.tagline.length}/60</div>
+            </div>
+          </div>
+        )}
 
-      {/* Right panel */}
-      <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
-        {/* Progress bar */}
-        <div style={{ height:3, background:"rgba(255,255,255,0.06)" }}>
-          <div style={{ height:"100%", width:`${progress}%`, background:"linear-gradient(90deg,#1565c0,#22c55e)", transition:"width .4s ease", borderRadius:"0 2px 2px 0" }} />
-        </div>
+        {/* STEP 3: Location */}
+        {step === 3 && (
+          <div>
+            <h2 style={{ fontSize:22, fontWeight:800, color:BRAND.text, marginBottom:4 }}>Where is your clinic located?</h2>
+            <p style={{ fontSize:13.5, color:BRAND.sub, marginBottom:22 }}>This helps us show your location on the website.</p>
+            <div style={{ marginBottom:16 }}>
+              <Label>Address</Label>
+              <Input value={data.address} onChange={v => set("address", v)} placeholder="123, Anna Salai, T. Nagar" />
+            </div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14, marginBottom:16 }}>
+              <div>
+                <Label>City</Label>
+                <Input value={data.city} onChange={v => set("city", v)} placeholder="Chennai" />
+              </div>
+              <div>
+                <Label>Pincode</Label>
+                <Input value={data.pincode} onChange={v => set("pincode", v)} placeholder="600017" />
+              </div>
+            </div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
+              <div>
+                <Label>State</Label>
+                <Input value={data.state} onChange={v => set("state", v)} placeholder="Tamil Nadu" />
+              </div>
+              <div>
+                <Label>Country</Label>
+                <Input value="India" onChange={() => {}} />
+              </div>
+            </div>
+          </div>
+        )}
 
-        <div style={{ flex:1, overflowY:"auto", padding:"40px 48px" }}>
-          <div style={{ maxWidth:560 }}>
+        {/* STEP 4: Contact */}
+        {step === 4 && (
+          <div>
+            <h2 style={{ fontSize:22, fontWeight:800, color:BRAND.text, marginBottom:4 }}>Add your contact details</h2>
+            <p style={{ fontSize:13.5, color:BRAND.sub, marginBottom:22 }}>These details will be visible on your website.</p>
+            <div style={{ marginBottom:16 }}>
+              <Label>Phone Number</Label>
+              <Input value={data.phone} onChange={v => set("phone", v)} placeholder="98765 43210" type="tel" />
+            </div>
+            <div style={{ marginBottom:16 }}>
+              <Label>Email Address</Label>
+              <Input value={data.email} onChange={v => set("email", v)} placeholder="info@brightsmiledental.com" type="email" />
+            </div>
+            <div style={{ marginBottom:16 }}>
+              <Label>WhatsApp Number (Optional)</Label>
+              <Input value={data.whatsapp} onChange={v => set("whatsapp", v)} placeholder="98765 43210" type="tel" />
+            </div>
+            <label style={{ display:"flex", alignItems:"center", gap:8, fontSize:13, color:BRAND.text, cursor:"pointer" }}>
+              <input type="checkbox" checked={data.wantsContactForm} onChange={e => set("wantsContactForm", e.target.checked)} />
+              Yes, I want a contact form on my website
+            </label>
+          </div>
+        )}
 
-            {/* ── STEP 1: Clinic basics ── */}
-            {step === 1 && (
-              <StepWrap>
-                <div style={{ fontSize:11, color:"#1565c0", fontFamily:"monospace", fontWeight:700, letterSpacing:2, marginBottom:8 }}>STEP 1 OF 6</div>
-                <h2 style={{ fontSize:26, fontWeight:700, color:"#f1f5f9", marginBottom:6 }}>Tell us about your clinic</h2>
-                <p style={{ fontSize:14, color:"#64748b", marginBottom:28, lineHeight:1.6 }}>This is what patients will see when they find you on Google.</p>
+        {/* STEP 5: Doctor */}
+        {step === 5 && (
+          <div>
+            <h2 style={{ fontSize:22, fontWeight:800, color:BRAND.text, marginBottom:4 }}>Doctor profile</h2>
+            <p style={{ fontSize:13.5, color:BRAND.sub, marginBottom:22 }}>Builds patient trust. You can add more doctors later.</p>
+            {[
+              ["Doctor's Full Name","doctorName","Dr. Ramesh Kumar"],
+              ["Degree / Qualification","doctorDegree","BDS, MDS – Periodontology"],
+              ["Years of Experience","doctorExp","12 Years"],
+            ].map(([label, key, placeholder]) => (
+              <div key={key} style={{ marginBottom:16 }}>
+                <Label>{label}</Label>
+                <Input value={data[key]} onChange={v => set(key, v)} placeholder={placeholder} />
+              </div>
+            ))}
+            <div>
+              <Label>Short Bio</Label>
+              <TextArea value={data.doctorBio} onChange={v => set("doctorBio", v)} placeholder="Brief background about the doctor's experience and expertise…" />
+            </div>
+          </div>
+        )}
 
-                <div style={{ marginBottom:18 }}>
-                  <Label>Clinic Name *</Label>
-                  <Input value={data.clinicName} onChange={v => set("clinicName",v)} placeholder="e.g. Karur Dental Clinic" />
-                </div>
-
-                <div style={{ marginBottom:18 }}>
-                  <Label>Specialty *</Label>
-                  <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10 }}>
-                    {Object.entries(SPECIALTY_DATA).map(([sp, info]) => (
-                      <button key={sp} onClick={() => set("specialty", sp)} style={{
-                        padding:"10px 8px", borderRadius:9, cursor:"pointer", textAlign:"center", fontFamily:"inherit",
-                        background: data.specialty === sp ? "rgba(21,101,192,0.15)" : "rgba(255,255,255,0.03)",
-                        border: `1.5px solid ${data.specialty === sp ? "rgba(21,101,192,0.5)" : "rgba(255,255,255,0.08)"}`,
-                        color: data.specialty === sp ? "#7dd3fc" : "#64748b",
-                        transition:"all .15s",
-                      }}>
-                        <div style={{ fontSize:20, marginBottom:4 }}>{info.icon}</div>
-                        <div style={{ fontSize:11, fontWeight:600 }}>{sp}</div>
-                      </button>
-                    ))}
+        {/* STEP 6: Template */}
+        {step === 6 && (
+          <div>
+            <h2 style={{ fontSize:22, fontWeight:800, color:BRAND.text, marginBottom:4 }}>Choose your template</h2>
+            <p style={{ fontSize:13.5, color:BRAND.sub, marginBottom:22 }}>You can change it anytime later.</p>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12 }}>
+              {Object.values(TEMPLATES).slice(0, 6).map(t => (
+                <button key={t.id} onClick={() => set("template", t.id)} style={{
+                  borderRadius:12, overflow:"hidden", cursor:"pointer", textAlign:"left", fontFamily:"inherit", padding:0,
+                  background:"white", border:`1.5px solid ${data.template === t.id ? BRAND.primary : BRAND.border}`,
+                  position:"relative",
+                }}>
+                  {data.template === t.id && (
+                    <div style={{ position:"absolute", top:6, right:6, width:16, height:16, borderRadius:"50%", background:BRAND.primary, color:"white", fontSize:10, display:"flex", alignItems:"center", justifyContent:"center", zIndex:1 }}>✓</div>
+                  )}
+                  <div style={{ height:56, background:`linear-gradient(135deg, ${BRAND.navy}, ${BRAND.primary})`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:22 }}>{t.icon}</div>
+                  <div style={{ padding:"8px 10px" }}>
+                    <div style={{ fontSize:11.5, fontWeight:700, color:BRAND.text }}>{t.name}</div>
+                    <div style={{ fontSize:10, color:BRAND.sub }}>{t.desc}</div>
                   </div>
-                </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
-                <div style={{ marginBottom:18 }}>
-                  <Label>City *</Label>
-                  <Input value={data.city} onChange={v => set("city",v)} placeholder="e.g. Karur, Coimbatore, Chennai" />
-                </div>
-              </StepWrap>
-            )}
-
-            {/* ── STEP 2: Contact ── */}
-            {step === 2 && (
-              <StepWrap>
-                <div style={{ fontSize:11, color:"#1565c0", fontFamily:"monospace", fontWeight:700, letterSpacing:2, marginBottom:8 }}>STEP 2 OF 6</div>
-                <h2 style={{ fontSize:26, fontWeight:700, color:"#f1f5f9", marginBottom:6 }}>Contact information</h2>
-                <p style={{ fontSize:14, color:"#64748b", marginBottom:28 }}>Patients will use these to reach you.</p>
-
-                {[
-                  ["Phone Number *","phone","tel","+91 98400 00000"],
-                  ["WhatsApp Number","whatsapp","tel","Same as phone if same"],
-                  ["Email Address","email","email","clinic@email.com"],
-                  ["Full Address *","address","text","Street, Area, City, Pincode"],
-                ].map(([label, key, type, placeholder]) => (
-                  <div key={key} style={{ marginBottom:16 }}>
-                    <Label>{label}</Label>
-                    <Input value={data[key]} onChange={v => set(key,v)} placeholder={placeholder} type={type} />
-                  </div>
-                ))}
-              </StepWrap>
-            )}
-
-            {/* ── STEP 3: Doctor ── */}
-            {step === 3 && (
-              <StepWrap>
-                <div style={{ fontSize:11, color:"#1565c0", fontFamily:"monospace", fontWeight:700, letterSpacing:2, marginBottom:8 }}>STEP 3 OF 6</div>
-                <h2 style={{ fontSize:26, fontWeight:700, color:"#f1f5f9", marginBottom:6 }}>Doctor profile</h2>
-                <p style={{ fontSize:14, color:"#64748b", marginBottom:28 }}>Builds patient trust. You can add more doctors later.</p>
-
-                {[
-                  ["Doctor's Full Name *","doctorName","Dr. Ramesh Kumar"],
-                  ["Degree / Qualification *","doctorDegree","BDS, MDS – Periodontology"],
-                  ["Specialization","doctorSpec","Periodontist & Implantologist"],
-                  ["Years of Experience","doctorExp","12 Years"],
-                ].map(([label, key, placeholder]) => (
-                  <div key={key} style={{ marginBottom:16 }}>
-                    <Label>{label}</Label>
-                    <Input value={data[key]} onChange={v => set(key,v)} placeholder={placeholder} />
-                  </div>
-                ))}
-                <div style={{ marginBottom:16 }}>
-                  <Label>Short Bio</Label>
-                  <textarea value={data.doctorBio} onChange={e => set("doctorBio",e.target.value)}
-                    placeholder="Brief background about the doctor's experience and expertise..."
-                    rows={3} style={{ width:"100%", padding:"11px 14px", background:"rgba(255,255,255,0.05)", border:"1.5px solid rgba(255,255,255,0.1)", color:"#e2e8f0", borderRadius:9, fontSize:14, fontFamily:"inherit", outline:"none", boxSizing:"border-box", resize:"vertical", lineHeight:1.6 }} />
-                </div>
-              </StepWrap>
-            )}
-
-            {/* ── STEP 4: Services ── */}
-            {step === 4 && (
-              <StepWrap>
-                <div style={{ fontSize:11, color:"#1565c0", fontFamily:"monospace", fontWeight:700, letterSpacing:2, marginBottom:8 }}>STEP 4 OF 6</div>
-                <h2 style={{ fontSize:26, fontWeight:700, color:"#f1f5f9", marginBottom:6 }}>Select your services</h2>
-                <p style={{ fontSize:14, color:"#64748b", marginBottom:28 }}>Choose what you offer. You can add more from the admin panel.</p>
-
-                <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                  {(DEFAULT_SERVICES[data.specialty] || DEFAULT_SERVICES["General Practice"]).map(svc => {
-                    const selected = data.services.includes(svc);
-                    const atLimit = data.services.length >= maxServices && !selected;
-                    return (
-                      <button key={svc} onClick={() => { if (atLimit) { setUpgradeFeature("services"); setShowUpgrade(true); return; } set("services", selected ? data.services.filter(s=>s!==svc) : [...data.services, svc]); }}
-                        style={{ display:"flex", alignItems:"center", gap:12, padding:"12px 16px", borderRadius:10, cursor:"pointer", fontFamily:"inherit", textAlign:"left",
-                          background: selected ? "rgba(21,101,192,0.12)" : "rgba(255,255,255,0.03)",
-                          border: `1.5px solid ${selected ? "rgba(21,101,192,0.4)" : "rgba(255,255,255,0.08)"}`,
-                          transition:"all .15s",
-                        }}>
-                        <div style={{ width:22, height:22, borderRadius:6, background: selected ? "#1565c0" : "rgba(255,255,255,0.08)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, flexShrink:0, transition:"all .15s" }}>
-                          {selected ? "✓" : SERVICE_ICONS[svc] || "🏥"}
-                        </div>
-                        <span style={{ fontSize:14, color: selected ? "#7dd3fc" : "#94a3b8", fontWeight: selected ? 600 : 400 }}>{svc}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-                <div style={{ marginTop:12, fontSize:12, color: data.services.length >= maxServices ? "#f87171" : "#334155" }}>{data.services.length} of {maxServices > 100000 ? "Unlimited" : maxServices} selected</div>
-              </StepWrap>
-            )}
-
-            {/* ── STEP 5: Hours ── */}
-            {step === 5 && (
-              <StepWrap>
-                <div style={{ fontSize:11, color:"#1565c0", fontFamily:"monospace", fontWeight:700, letterSpacing:2, marginBottom:8 }}>STEP 5 OF 6</div>
-                <h2 style={{ fontSize:26, fontWeight:700, color:"#f1f5f9", marginBottom:6 }}>Working hours</h2>
-                <p style={{ fontSize:14, color:"#64748b", marginBottom:28 }}>Shown on your website. Patients know when to visit.</p>
-
-                {Object.entries(data.hours).map(([day, h]) => (
-                  <div key={day} style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
-                    <div style={{ width:100, fontSize:13, color: h.closed ? "#334155" : "#94a3b8", flexShrink:0 }}>{day}</div>
-                    {h.closed ? (
-                      <div style={{ flex:1, fontSize:13, color:"#ef4444" }}>Closed</div>
-                    ) : (
-                      <div style={{ display:"flex", gap:8, alignItems:"center", flex:1 }}>
-                        <input type="time" value={h.open} onChange={e => set("hours",{...data.hours,[day]:{...h,open:e.target.value}})}
-                          style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", color:"#e2e8f0", borderRadius:7, padding:"6px 10px", fontSize:13, fontFamily:"monospace", outline:"none", width:100 }} />
-                        <span style={{ color:"#334155" }}>to</span>
-                        <input type="time" value={h.close} onChange={e => set("hours",{...data.hours,[day]:{...h,close:e.target.value}})}
-                          style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", color:"#e2e8f0", borderRadius:7, padding:"6px 10px", fontSize:13, fontFamily:"monospace", outline:"none", width:100 }} />
-                      </div>
-                    )}
-                    <button onClick={() => set("hours",{...data.hours,[day]:{...h,closed:!h.closed}})}
-                      style={{ background: h.closed ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)", border:`1px solid ${h.closed?"rgba(34,197,94,0.3)":"rgba(239,68,68,0.3)"}`, color: h.closed ? "#22c55e" : "#f87171", borderRadius:7, padding:"5px 12px", fontSize:11, cursor:"pointer", fontFamily:"inherit", fontWeight:600, whiteSpace:"nowrap" }}>
-                      {h.closed ? "Set Open" : "Mark Closed"}
-                    </button>
-                  </div>
-                ))}
-              </StepWrap>
-            )}
-
-            {/* ── STEP 6: About + launch ── */}
-            {step === 6 && (
-              <StepWrap>
-                <div style={{ fontSize:11, color:"#1565c0", fontFamily:"monospace", fontWeight:700, letterSpacing:2, marginBottom:8 }}>STEP 6 OF 6</div>
-                <h2 style={{ fontSize:26, fontWeight:700, color:"#f1f5f9", marginBottom:6 }}>Almost done!</h2>
-                <p style={{ fontSize:14, color:"#64748b", marginBottom:28 }}>One last thing — a short intro about your clinic.</p>
-
-                <div style={{ marginBottom:20 }}>
-                  <Label>About Your Clinic</Label>
-                  <textarea value={data.about} onChange={e => set("about",e.target.value)}
-                    placeholder={`e.g. ${data.clinicName} has been serving ${data.city} with expert ${(data.specialty||"").toLowerCase()} care for over 10 years...`}
-                    rows={4} style={{ width:"100%", padding:"11px 14px", background:"rgba(255,255,255,0.05)", border:"1.5px solid rgba(255,255,255,0.1)", color:"#e2e8f0", borderRadius:9, fontSize:14, fontFamily:"inherit", outline:"none", boxSizing:"border-box", resize:"vertical", lineHeight:1.6 }} />
-                </div>
-
-                {/* Summary card */}
-                <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:12, padding:20, marginBottom:24 }}>
-                  <div style={{ fontSize:11, color:"#64748b", fontFamily:"monospace", marginBottom:14 }}>REVIEW YOUR SETUP</div>
-                  {[
-                    ["Clinic", data.clinicName],
-                    ["Specialty", `${SPECIALTY_DATA[data.specialty]?.icon} ${data.specialty}`],
-                    ["City", data.city],
-                    ["Doctor", data.doctorName],
-                    ["Services", `${data.services.length} services`],
-                    ["Your URL", `${slugify(data.clinicName)}.clinicsite.in`],
-                  ].map(([k,v]) => (
-                    <div key={k} style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:"1px solid rgba(255,255,255,0.04)", fontSize:13 }}>
-                      <span style={{ color:"#475569" }}>{k}</span>
-                      <span style={{ color:"#e2e8f0", fontWeight:600 }}>{v}</span>
+        {/* STEP 7: Services */}
+        {step === 7 && (
+          <div>
+            <h2 style={{ fontSize:22, fontWeight:800, color:BRAND.text, marginBottom:4 }}>Select your services</h2>
+            <p style={{ fontSize:13.5, color:BRAND.sub, marginBottom:22 }}>Choose what you offer. You can add more from the admin panel.</p>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+              {(DEFAULT_SERVICES[data.specialty] || DEFAULT_SERVICES["General Practice"]).map(svc => {
+                const selected = data.services.includes(svc);
+                const atLimit = data.services.length >= maxServices && !selected;
+                return (
+                  <button key={svc} onClick={() => {
+                    if (atLimit) { setUpgradeFeature("services"); setShowUpgrade(true); return; }
+                    set("services", selected ? data.services.filter(s => s !== svc) : [...data.services, svc]);
+                  }} style={{
+                    display:"flex", alignItems:"center", gap:10, padding:"10px 12px", borderRadius:10, cursor:"pointer", fontFamily:"inherit", textAlign:"left",
+                    background: selected ? "rgba(91,92,235,0.08)" : "white",
+                    border:`1.5px solid ${selected ? BRAND.primary : BRAND.border}`,
+                  }}>
+                    <div style={{ width:20, height:20, borderRadius:6, background: selected ? BRAND.primary : BRAND.bg, color:"white", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, flexShrink:0 }}>
+                      {selected ? "✓" : ""}
                     </div>
-                  ))}
-                </div>
+                    <span style={{ fontSize:13, color: selected ? BRAND.primary : BRAND.text, fontWeight: selected ? 600 : 400 }}>{svc}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{ marginTop:12, fontSize:12, color: data.services.length >= maxServices ? "#EF4444" : BRAND.sub }}>
+              {data.services.length} of {maxServices > 100000 ? "Unlimited" : maxServices} selected
+            </div>
+          </div>
+        )}
 
-                {error && (
-                  <div style={{ background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.25)", borderRadius:8, padding:"10px 14px", fontSize:13, color:"#f87171", marginBottom:16 }}>
-                    ⚠️ {error}
+        {/* STEP 8: Hours + about + review + launch */}
+        {step === 8 && (
+          <div>
+            <h2 style={{ fontSize:22, fontWeight:800, color:BRAND.text, marginBottom:4 }}>Working hours & final details</h2>
+            <p style={{ fontSize:13.5, color:BRAND.sub, marginBottom:18 }}>Shown on your website, then we'll build it.</p>
+
+            {Object.entries(data.hours).map(([day, h]) => (
+              <div key={day} style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 0", borderBottom:`1px solid ${BRAND.border}` }}>
+                <div style={{ width:88, fontSize:12.5, color: h.closed ? "#B4B9D6" : BRAND.text, flexShrink:0 }}>{day}</div>
+                {h.closed ? (
+                  <div style={{ flex:1, fontSize:12.5, color:"#EF4444" }}>Closed</div>
+                ) : (
+                  <div style={{ display:"flex", gap:6, alignItems:"center", flex:1 }}>
+                    <input type="time" value={h.open} onChange={e => set("hours",{...data.hours,[day]:{...h,open:e.target.value}})}
+                      style={{ background:"white", border:`1px solid ${BRAND.border}`, color:BRAND.text, borderRadius:7, padding:"5px 8px", fontSize:12, outline:"none", width:92 }} />
+                    <span style={{ color:"#B4B9D6", fontSize:12 }}>to</span>
+                    <input type="time" value={h.close} onChange={e => set("hours",{...data.hours,[day]:{...h,close:e.target.value}})}
+                      style={{ background:"white", border:`1px solid ${BRAND.border}`, color:BRAND.text, borderRadius:7, padding:"5px 8px", fontSize:12, outline:"none", width:92 }} />
                   </div>
                 )}
-              </StepWrap>
-            )}
+                <button onClick={() => set("hours",{...data.hours,[day]:{...h,closed:!h.closed}})}
+                  style={{ background: h.closed ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.08)", border:`1px solid ${h.closed?"rgba(34,197,94,0.3)":"rgba(239,68,68,0.25)"}`, color: h.closed ? BRAND.green : "#EF4444", borderRadius:7, padding:"4px 10px", fontSize:10.5, cursor:"pointer", fontFamily:"inherit", fontWeight:600, whiteSpace:"nowrap" }}>
+                  {h.closed ? "Set Open" : "Close"}
+                </button>
+              </div>
+            ))}
 
-            {/* ── Navigation ── */}
-            <div style={{ display:"flex", gap:12, marginTop:32 }}>
-              {step > 1 && (
-                <button onClick={() => setStep(s => s-1)} style={{ flex:1, padding:"12px", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", color:"#94a3b8", borderRadius:10, fontSize:14, cursor:"pointer", fontFamily:"inherit" }}>
-                  ← Back
-                </button>
-              )}
-              {step < TOTAL_STEPS ? (
-                <button onClick={() => canNext() && setStep(s=>s+1)} disabled={!canNext()}
-                  style={{ flex:2, padding:"12px", background: canNext() ? "linear-gradient(135deg,#1565c0,#1e88e5)" : "rgba(255,255,255,0.05)", border:"none", borderRadius:10, color: canNext() ? "white" : "#334155", fontSize:14, fontWeight:700, cursor: canNext() ? "pointer" : "not-allowed", fontFamily:"inherit", transition:"all .2s", boxShadow: canNext() ? "0 4px 16px rgba(21,101,192,0.3)" : "none" }}>
-                  Continue →
-                </button>
-              ) : (
-                <button onClick={handleFinish} disabled={saving}
-                  style={{ flex:2, padding:"12px", background: saving ? "rgba(21,101,192,0.4)" : "linear-gradient(135deg,#1565c0,#22c55e)", border:"none", borderRadius:10, color:"white", fontSize:14, fontWeight:700, cursor: saving ? "not-allowed" : "pointer", fontFamily:"inherit", boxShadow:"0 4px 16px rgba(21,101,192,0.3)" }}>
-                  {saving ? "🚀 Launching your site..." : "🚀 Launch My Site!"}
-                </button>
-              )}
+            <div style={{ margin:"18px 0" }}>
+              <Label>About Your Clinic (Optional)</Label>
+              <TextArea value={data.about} onChange={v => set("about", v)}
+                placeholder={`e.g. ${data.clinicName || "Your clinic"} has been serving ${data.city || "your city"} with expert care for over 10 years…`} />
             </div>
+
+            <div style={{ background:BRAND.bg, border:`1px solid ${BRAND.border}`, borderRadius:12, padding:16, marginBottom:20 }}>
+              <div style={{ fontSize:11, color:BRAND.sub, fontWeight:700, letterSpacing:1, marginBottom:10 }}>REVIEW YOUR SETUP</div>
+              {[
+                ["Clinic", data.clinicName],
+                ["Specialty", `${SPECIALTY_DATA[data.specialty]?.icon || ""} ${data.specialty}`],
+                ["City", data.city],
+                ["Doctor", data.doctorName],
+                ["Services", `${data.services.length} services`],
+                ["Your URL", `${slugify(data.clinicName || "your-clinic")}.waspace.in`],
+              ].map(([k,v]) => (
+                <div key={k} style={{ display:"flex", justifyContent:"space-between", padding:"6px 0", borderBottom:`1px solid ${BRAND.border}`, fontSize:12.5 }}>
+                  <span style={{ color:BRAND.sub }}>{k}</span>
+                  <span style={{ color:BRAND.text, fontWeight:600 }}>{v}</span>
+                </div>
+              ))}
+            </div>
+
+            {error && (
+              <div style={{ background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.25)", borderRadius:8, padding:"10px 14px", fontSize:13, color:"#EF4444", marginBottom:16 }}>
+                ⚠️ {error}
+              </div>
+            )}
           </div>
-        </div>
-      </div>
-    <PlanUpgradeModal
+        )}
+
+        <NavRow
+          onBack={step > 1 ? () => setStep(s => s - 1) : () => setStarted(false)}
+          onNext={step < TOTAL_STEPS ? () => canNext() && setStep(s => s + 1) : handleFinish}
+          nextLabel={step < TOTAL_STEPS ? "Next →" : "🚀 Create My Website"}
+          nextDisabled={!canNext()}
+          loading={saving}
+        />
+      </Shell>
+
+      <PlanUpgradeModal
         isOpen={showUpgrade}
         onClose={() => setShowUpgrade(false)}
         requiredPlan="premium"
         featureName={upgradeFeature}
       />
-    </div>
+    </>
   );
 }

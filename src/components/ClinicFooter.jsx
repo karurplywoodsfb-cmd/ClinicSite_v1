@@ -104,7 +104,7 @@ export default function ClinicFooter({ clinic, doctor, hours = [] }) {
               <a href={`/${clinic?.slug}/privacy-policy`} style={{ fontSize:11, color:"rgba(255,255,255,0.35)", textDecoration:"none" }}>Privacy Policy</a>
               <a href={`/${clinic?.slug}/terms`} style={{ fontSize:11, color:"rgba(255,255,255,0.35)", textDecoration:"none" }}>Terms of Use</a>
               <span style={{ fontSize:11, color:"rgba(255,255,255,0.2)", fontFamily:"monospace" }}>
-                Powered by ClinicSite.in
+                Powered by WaSpace
               </span>
             </div>
           </div>

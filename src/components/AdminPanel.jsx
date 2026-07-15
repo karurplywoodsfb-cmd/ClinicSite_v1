@@ -234,7 +234,7 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
             display:"flex", alignItems:"center", justifyContent:"center", fontSize:16, flexShrink:0 }}>🦷</div>
           {sideOpen && (
             <div style={{ overflow:"hidden" }}>
-              <div style={{ fontSize:12, fontWeight:700, color:"#f1f5f9", whiteSpace:"nowrap" }}>ClinicSite</div>
+              <div style={{ fontSize:12, fontWeight:700, color:"#f1f5f9", whiteSpace:"nowrap" }}>WaSpace</div>
               <div style={{ fontSize:10, color:"#475569", whiteSpace:"nowrap" }}>Admin Panel</div>
             </div>
           )}
@@ -302,7 +302,7 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
               {NAV_ITEMS.find(n => n.id === page)?.label}
             </div>
             <div style={{ fontSize:11, color:"#475569", fontFamily:"monospace" }}>
-              {clinic?.slug}.clinicsite.in
+              {clinic?.slug}.waspace.in
               {" · "}
               <span style={{ color: clinic?.is_published ? "#22c55e" : "#64748b" }}>
                 {clinic?.is_published ? "🟢 Live" : "⚫ Hidden"}
@@ -530,7 +530,7 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
                   <div style={{ fontSize:18, fontWeight:700, color:"#e2e8f0", marginBottom:8 }}>Custom Domain — Premium Feature</div>
                   <div style={{ fontSize:14, color:"#64748b", maxWidth:380, lineHeight:1.7, marginBottom:24 }}>
                     Connect your own domain (e.g. <em>www.drsharma.com</em>) on the Premium or Enterprise plan.
-                    Your clinic is currently live at <strong style={{ color:"#7dd3fc" }}>{clinic?.slug}.clinicsite.in</strong>
+                    Your clinic is currently live at <strong style={{ color:"#7dd3fc" }}>{clinic?.slug}.waspace.in</strong>
                   </div>
                   <button onClick={() => setShowUpgrade(true)} style={{
                     background:"#1565c0", color:"white", border:"none", borderRadius:10,

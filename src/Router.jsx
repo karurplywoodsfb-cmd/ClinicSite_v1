@@ -19,7 +19,7 @@ function getSubdomainSlug() {
   const h = window.location.hostname;
   if (h.includes("localhost")) return null;
   if (h.endsWith(".vercel.app")) return null;
-  if (!h.endsWith(".clinicsite.in")) return null;
+  if (!h.endsWith(".waspace.in")) return null;
   const p = h.split(".");
   if (p.length >= 3) return p[0];
   return null;
@@ -97,7 +97,7 @@ function Spinner() {
   return (
     <div style={{ minHeight:"100vh", background:"#080c14", display:"flex", alignItems:"center", justifyContent:"center", flexDirection:"column", gap:16, fontFamily:"sans-serif" }}>
       <div style={{ fontSize:40, animation:"spin 2s linear infinite" }}>🦷</div>
-      <div style={{ color:"#475569", fontSize:14 }}>Loading ClinicSite...</div>
+      <div style={{ color:"#475569", fontSize:14 }}>Loading WaSpace...</div>
       <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
     </div>
   );

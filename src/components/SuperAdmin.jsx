@@ -124,7 +124,7 @@ export default function SuperAdmin({ user }) {
           <div style={{ display:"flex", alignItems:"center", gap:10 }}>
             <div style={{ width:34, height:34, borderRadius:9, background:"linear-gradient(135deg,#dc2626,#ea580c)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16 }}>⚡</div>
             <div>
-              <div style={{ fontSize:13, fontWeight:700, color:"#f1f5f9" }}>ClinicSite</div>
+              <div style={{ fontSize:13, fontWeight:700, color:"#f1f5f9" }}>WaSpace</div>
               <div style={{ fontSize:10, color:"#dc2626", fontFamily:"monospace", fontWeight:600 }}>SUPERADMIN</div>
             </div>
           </div>
@@ -501,9 +501,9 @@ export default function SuperAdmin({ user }) {
               <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:12, padding:24 }}>
                 <div style={{ fontFamily:"monospace", fontSize:12, color:"#64748b", marginBottom:16 }}>PLATFORM SETTINGS</div>
                 {[
-                  { label:"Platform Name",  value:"ClinicSite" },
-                  { label:"Platform URL",   value:"clinicsite.in" },
-                  { label:"Support Email",  value:"support@clinicsite.in" },
+                  { label:"Platform Name",  value:"WaSpace" },
+                  { label:"Platform URL",   value:"waspace.in" },
+                  { label:"Support Email",  value:"support@waspace.in" },
                   { label:"Free Plan Limit", value:"3 pages, 1 doctor" },
                 ].map(s => (
                   <div key={s.label} style={{ marginBottom:16 }}>

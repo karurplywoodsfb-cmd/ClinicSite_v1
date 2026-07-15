@@ -123,7 +123,7 @@ export async function openCheckout({ plan, clinic, user, onSuccess, onError }) {
       subscription_id: subscriptionId,
       name:            "ClinicSite",
       description:     `${PLANS[plan].name} Plan — ₹${PLANS[plan].price}/month`,
-      image:           `${import.meta.env.VITE_APP_URL || "https://clinicsite.in"}/logo.png`,
+      image:           `${import.meta.env.VITE_APP_URL || "https://waspace.in"}/logo.png`,
 
       prefill: {
         name:    clinic.name,

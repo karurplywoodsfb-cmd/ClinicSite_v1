@@ -99,7 +99,7 @@ export default function Login({ onLogin }) {
             boxShadow: "0 8px 32px rgba(21,101,192,0.35)",
           }}>🦷</div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: "#f1f5f9", margin: "0 0 6px" }}>
-            ClinicSite Admin
+            WaSpace Admin
           </h1>
           <p style={{ fontSize: 14, color: "#475569", margin: 0 }}>
             {step === "email" ? "Sign in to manage your clinic website" : "Check your inbox for the code"}
