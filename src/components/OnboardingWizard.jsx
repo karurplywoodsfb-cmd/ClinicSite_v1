@@ -273,6 +273,7 @@ export default function OnboardingWizard({ user, onComplete }) {
           owner_id:            user.id,
           slug:                tempSlug,
           name:                tempSlug,
+          city:                "", // NOT NULL in live schema — real value set at step 4 (Location)
           specialty:           specialtyFor(),
           custom_clinic_type:  data.clinicType === "other" ? data.customClinicType : null,
           onboarding_status:   "in_progress",
