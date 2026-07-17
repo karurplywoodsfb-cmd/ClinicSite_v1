@@ -1,6 +1,8 @@
 // src/components/SymptomTriage.jsx
 // AI-powered symptom triage → smart service recommendation.
-// Uses Anthropic API (via claude-sonnet-4-6).
+// Uses Groq (via the "groq-generate" Supabase Edge Function, which
+// keeps GROQ_API_KEY server-side — never call the AI provider
+// directly from the browser).
 // No other Indian clinic website builder has this.
 //
 // Flow:
@@ -10,6 +12,7 @@
 //   → shows confidence + disclaimer
 
 import { useState, useRef } from "react";
+import { supabase } from "../lib/supabase";
 
 const EXAMPLES = [
   "tooth pain when eating cold food",
@@ -41,13 +44,7 @@ export default function SymptomTriage({ services = [], specialty = "General", on
     setLoading(true); setError(""); setResult(null);
 
     try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-6",
-          max_tokens: 400,
-          system: `You are a medical triage assistant for a ${specialty} clinic in India.
+      const system = `You are a medical triage assistant for a ${specialty} clinic in India.
 Your job is to map patient-described symptoms to the most relevant service from the clinic's service list.
 
 CLINIC SERVICES: ${serviceNames || "General Consultation"}
@@ -66,17 +63,16 @@ RULES:
   "urgency": "routine|soon|urgent",
   "urgency_note": "brief note about timing",
   "disclaimer": "This is not a diagnosis. Please consult our doctor in person."
-}`,
-          messages: [{
-            role: "user",
-            content: `Patient symptoms: ${trimmed}`
-          }]
-        })
+}`;
+
+      const { data, error: fnError } = await supabase.functions.invoke("groq-generate", {
+        body: { system, prompt: `Patient symptoms: ${trimmed}`, max_tokens: 400, json: true },
       });
 
-      const data  = await response.json();
-      const text  = data.content?.[0]?.text || "";
-      const clean = text.replace(/```json|```/g, "").trim();
+      if (fnError) throw fnError;
+      if (data?.error) throw new Error(data.error);
+
+      const clean = (data?.text || "").replace(/```json|```/g, "").trim();
       const parsed = JSON.parse(clean);
 
       // Verify recommended service exists in clinic's list

@@ -24,6 +24,7 @@ import FeedbackInbox   from "./admin/FeedbackInbox";
 import ReceptionistDashboard from "./admin/ReceptionistDashboard";
 import StaffManagement       from "./admin/StaffManagement";
 import PrescriptionPad       from "./admin/PrescriptionPad";
+import PrescriptionViewer    from "./admin/PrescriptionViewer";
 import CrossClinicRequestPanel from "./admin/CrossClinicRequestPanel";
 import BillingForm           from "./admin/BillingForm";
 import { useRoleContext }    from "./RoleProvider";
@@ -86,7 +87,7 @@ const NAV_PERMISSIONS = {
   compliance:   ["manage_clinic_settings"],
   domain:       ["manage_clinic_settings"],
   staff:        ["manage_staff"],
-  prescriptions:["view_medical_records"],
+  prescriptions:["view_medical_records", "edit_medical_records"],
   "health-share": ["view_medical_records"],
   billing:      ["manage_billing"],
 };
@@ -455,11 +456,20 @@ export default function AdminPanel({ user, clinic: initClinic, onClinicUpdate, o
             <SeoPage clinic={clinic} hasRegNo={hasRegNo} />
           )}
 
-          {/* ═══ PRESCRIPTIONS (Phase 4: EMR) ═══ */}
+          {/* ═══ PRESCRIPTIONS (Phase 4: EMR) ═══
+              Doctor: entry/edit form. Everyone else with view access
+              (owner, nurse): read-only viewer with print — they can never
+              reach the entry form, and RLS backs this up at the DB level. */}
           {page === "prescriptions" && (
-            <PermissionGate permission="view_medical_records">
-              <PrescriptionPad clinicId={clinic.id} doctorId={doctorId} lockedToDoctor={role === "doctor"} />
-            </PermissionGate>
+            hasPermission("edit_medical_records") ? (
+              <PermissionGate permission="edit_medical_records">
+                <PrescriptionPad clinicId={clinic.id} doctorId={doctorId} lockedToDoctor={role === "doctor"} />
+              </PermissionGate>
+            ) : (
+              <PermissionGate permission="view_medical_records">
+                <PrescriptionViewer clinicId={clinic.id} />
+              </PermissionGate>
+            )
           )}
 
           {/* ═══ BILLING (Phase 4: OPD invoicing) ═══ */}

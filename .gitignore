@@ -26,3 +26,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Contains real secrets when filled in — run manually in Supabase SQL Editor, never commit
+*_RUN_MANUALLY_DO_NOT_COMMIT.sql

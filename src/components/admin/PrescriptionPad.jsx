@@ -128,23 +128,52 @@ export default function PrescriptionPad({ clinicId, doctorId, lockedToDoctor = f
   if (savedRx) {
     return (
       <div style={{ maxWidth: 600, textAlign: "center", padding: 40 }}>
-        <div style={{ fontSize: 32, marginBottom: 8 }}>✅</div>
-        <p style={{ color: "#e2e8f0", fontSize: 15, fontWeight: 600, marginBottom: 4 }}>Prescription saved</p>
-        <p style={{ color: "#64748b", fontSize: 13, marginBottom: 20 }}>
+        <div className="no-print" style={{ fontSize: 32, marginBottom: 8 }}>✅</div>
+        <p className="no-print" style={{ color: "#e2e8f0", fontSize: 15, fontWeight: 600, marginBottom: 4 }}>Prescription saved</p>
+        <p className="no-print" style={{ color: "#64748b", fontSize: 13, marginBottom: 20 }}>
           {savedRx.sent_at ? "Sent to the patient's WhatsApp." : "Not sent yet."}
         </p>
-        <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+
+        {/* Printable summary — same layout PrescriptionViewer uses, so a printout
+            looks identical whether the doctor prints it here or a nurse prints
+            it later from the Prescriptions list. */}
+        <div id="rx-print-area" style={{ textAlign: "left", background: "#0d1526", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: 20, marginBottom: 20 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0", marginBottom: 8 }}>{patient?.name}</div>
+          {diagnosis && <div style={{ fontSize: 13, color: "#94a3b8", marginBottom: 8 }}>Diagnosis: {diagnosis}</div>}
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#94a3b8", marginBottom: 6 }}>Rx</div>
+          {items.filter(it => it.drugName.trim()).map((it, i) => (
+            <div key={i} style={{ padding: "6px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "#e2e8f0" }}>{it.drugName}{it.strength ? ` — ${it.strength}` : ""}{it.quantity ? ` × ${it.quantity}` : ""}</div>
+              <div style={{ fontSize: 12, color: "#94a3b8" }}>{it.dosageInstructions}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="no-print" style={{ display: "flex", gap: 8, justifyContent: "center" }}>
           {!savedRx.sent_at && (
             <button onClick={async () => { await sendPrescription(savedRx.id); setSavedRx({ ...savedRx, sent_at: new Date().toISOString() }); }}
               style={{ background: "#1565c0", color: "white", border: "none", borderRadius: 8, padding: "10px 18px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
               Send via WhatsApp
             </button>
           )}
+          <button onClick={() => window.print()}
+            style={{ background: "#1565c0", color: "white", border: "none", borderRadius: 8, padding: "10px 18px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+            🖨️ Print now
+          </button>
           <button onClick={resetForm}
             style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "#94a3b8", borderRadius: 8, padding: "10px 18px", fontSize: 13, cursor: "pointer" }}>
             New prescription
           </button>
         </div>
+
+        <style>{`
+          @media print {
+            body * { visibility: hidden; }
+            #rx-print-area, #rx-print-area * { visibility: visible; }
+            #rx-print-area { position: absolute; left: 0; top: 0; width: 100%; border: none !important; background: white !important; color: black !important; }
+            #rx-print-area * { color: black !important; border-color: #ccc !important; }
+          }
+        `}</style>
       </div>
     );
   }

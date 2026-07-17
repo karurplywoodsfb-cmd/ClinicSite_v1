@@ -66,7 +66,10 @@ export default function ReceptionistDashboard({ clinicId, avgApptMinutesDefault 
       const updates = computeSnoozePositions(waiting, t.id);
       if (updates.length === 0) return; // nothing ahead to snooze past
       await updateTokenPositions(updates);
-      // TODO (edge function): fire "you've moved to position N" WhatsApp — see queue-notify function
+      // No call needed here — the "queue-notify" Edge Function fires
+      // automatically via a Database Webhook on queue_tokens UPDATE
+      // (see supabase/migrations/20260717_db_webhooks.sql). It reads
+      // old vs new position/status itself to decide whether to WhatsApp.
     });
 
   const handleResurrect = (t) =>

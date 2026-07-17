@@ -1,5 +1,6 @@
 // src/components/AIBlogGenerator.jsx
-// AI-powered blog generator using Anthropic Claude API (claude-sonnet-4-6)
+// AI-powered blog generator using Groq (via the "groq-generate" Supabase
+// Edge Function, which keeps GROQ_API_KEY server-side).
 // Props: clinic, supabaseClient
 
 import { useState, useEffect } from "react";
@@ -145,22 +146,14 @@ Respond ONLY in this JSON format (no other text):
 }`;
 
     try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-6",
-          max_tokens: 1000,
-          messages: [{ role: "user", content: prompt }],
-        }),
+      const { data, error: fnError } = await supabaseClient.functions.invoke("groq-generate", {
+        body: { prompt, max_tokens: 1500, json: true },
       });
 
-      const data = await response.json();
+      if (fnError) throw fnError;
+      if (data?.error) throw new Error(data.error);
 
-      if (!response.ok) throw new Error(data?.error?.message || "API error");
-
-      const raw  = data.content?.[0]?.text || "";
-      const clean = raw.replace(/```json|```/g, "").trim();
+      const clean = (data?.text || "").replace(/```json|```/g, "").trim();
       const parsed = JSON.parse(clean);
 
       setGenerated(parsed);

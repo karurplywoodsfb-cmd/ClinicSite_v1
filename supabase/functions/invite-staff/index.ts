@@ -17,7 +17,7 @@ const SERVICE_KEY   = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
-const VALID_ROLES = ["doctor", "receptionist", "accountant"];
+const VALID_ROLES = ["doctor", "nurse", "receptionist", "accountant"];
 
 serve(async (req) => {
   try {

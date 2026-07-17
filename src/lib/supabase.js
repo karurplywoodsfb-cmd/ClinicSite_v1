@@ -817,6 +817,44 @@ export async function getPatientHistory(patientId) {
   return data || [];
 }
 
+// Fetch ONE prescription with everything needed to display/print it.
+// This was the missing piece — until now there was no way to retrieve a
+// saved prescription except by re-selecting the same patient in
+// PrescriptionPad during the same session.
+export async function getPrescription(prescriptionId) {
+  const { data, error } = await supabase
+    .from("prescriptions")
+    .select("*, prescription_items(*), doctors(name, degree, reg_number, council_name), patients(name, phone, dob, allergies)")
+    .eq("id", prescriptionId)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// List/search prescriptions clinic-wide — used by the read-only viewer
+// (nurse role, and doctor/owner browsing past prescriptions to print).
+export async function listPrescriptions(clinicId, { search = "", limit = 50 } = {}) {
+  let query = supabase
+    .from("prescriptions")
+    .select("*, prescription_items(*), doctors(name), patients(name, phone)")
+    .eq("clinic_id", clinicId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  const { data, error } = await query;
+  if (error) throw error;
+
+  const trimmed = search.trim().toLowerCase();
+  if (!trimmed) return data || [];
+
+  // Client-side filter on patient name/phone — dataset per clinic is small
+  // enough that this is simpler and cheaper than an RPC/full-text setup.
+  return (data || []).filter(rx =>
+    rx.patients?.name?.toLowerCase().includes(trimmed) ||
+    rx.patients?.phone?.includes(trimmed)
+  );
+}
+
 export async function createPrescription(clinicId, { doctorId, patientId, appointmentId, diagnosis, notes, items }) {
   const { data: rx, error } = await supabase
     .from("prescriptions")

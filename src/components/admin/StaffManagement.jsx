@@ -7,7 +7,8 @@ import { getClinicStaff, inviteStaffMember, updateStaffMember, removeStaffMember
 import { ROLE_LABELS } from "../../config/permissions";
 
 const ROLE_OPTIONS = [
-  { value: "doctor",       label: "Doctor",       hint: "Sees only their own patients & calendar" },
+  { value: "doctor",       label: "Doctor",       hint: "Sees only their own patients & calendar; only role that can write/edit prescriptions" },
+  { value: "nurse",        label: "Nurse",        hint: "Can view & print prescriptions the doctor wrote; cannot create or edit" },
   { value: "receptionist", label: "Receptionist", hint: "Manages calendar & queue, no financials" },
   { value: "accountant",   label: "Accountant",    hint: "Billing & financial reports only" },
 ];

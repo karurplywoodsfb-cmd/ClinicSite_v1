@@ -1,0 +1,24 @@
+# supabase/config.toml
+# ─────────────────────────────────────────────────────────────────
+# Cron schedules for Edge Functions that aren't triggered by a DB
+# Webhook or by the frontend. Applied automatically the next time
+# you deploy these functions (or run `supabase functions deploy`
+# after `supabase link`) — no Dashboard clicking needed for these two.
+#
+# Everything else (appointment-trigger, feedback-alert, queue-notify,
+# send-sms-hook) still needs one-time Dashboard wiring — see
+# supabase/migrations/20260717_db_webhooks.sql and the setup notes
+# in send-sms-hook/index.ts.
+# ─────────────────────────────────────────────────────────────────
+
+project_id = "your-project-ref"   # ← replace with your actual Supabase project ref
+
+[functions.daily-reminders]
+# 12:30 UTC = 6:00 PM IST, once daily — sends "tomorrow's appointment" reminders
+schedule = "30 12 * * *"
+
+[functions.queue-travel-check]
+# Every 2 minutes — recomputes ETA and fires "leave now" alerts for patients
+# who set a travel time. Narrow this to clinic hours (e.g. "*/2 3-12 * * *"
+# = 8:30am–5:30pm IST) if you want to cut down on invocation count.
+schedule = "*/2 * * * *"
